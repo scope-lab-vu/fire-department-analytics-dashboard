@@ -4,6 +4,8 @@
  */
 var map;
 var centerNash = {lat: 36.1627, lng: -86.7816};
+
+// Create an initial map - plain, center at centerNash
 function initMap() {
     map = new google.maps.Map(document.getElementById('map'), {
         zoom: 11,
@@ -21,6 +23,9 @@ function initMap() {
 
 }
 
+/* On submit button: get data from left menu bar, if date is not filled,
+ * alert message until user fills in data;
+ * calls to formulate data correctly */
 function getData() {
     var mongo_Address = document.getElementById('mongoDB').value;
     var chart_Option = document.getElementById('chartList').value;
@@ -28,18 +33,18 @@ function getData() {
     var start_Hour = document.getElementById('hour1').value;
     var end_Date = document.getElementById('date2').value;
     var end_Hour = document.getElementById('hour2').value;
-    console.log(start_Date);
 
     if (start_Date==="") {
         alert("Date must be filled!!!");
     } else {
-        console.log(start_Date);
         formulateDate(start_Date, end_Date, start_Hour, end_Hour);
 
     }
 
 }
 
+/* formulate date entered, if hours are left blank, enter default values
+ * set markers based on data and start and end date/time */
 function formulateDate(date1, date2, hour1, hour2) {
     var start_year = date1.substring(0,4);
     var start_month = date1.substring(5,7);
@@ -59,19 +64,17 @@ function formulateDate(date1, date2, hour1, hour2) {
     var startDate = new Date();
     startDate.setFullYear(Number(start_year), Number(start_month)-1, Number(start_day));
     startDate.setHours(Number(start_hour),0,0,0);
-    console.log("start date: "+startDate);
 
     var endDate = new Date();
     endDate.setFullYear(Number(end_year), Number(end_month)-1, Number(end_day));
     endDate.setHours(Number(end_hour),0,0,0);
-    console.log("end date: "+ endDate);
-
 
     setMarkers(startDate, endDate);
 }
 
-function CenterControl(controlDiv, map) {
 
+// create floating panel for map
+function CenterControl(controlDiv, map) {
     // Set CSS for the control border.
     var controlUI = document.createElement('div');
     controlUI.style.backgroundColor = '#fff';
@@ -106,7 +109,7 @@ function CenterControl(controlDiv, map) {
     );
 }
 
-// turn json file to js
+// turn json file to .js file
 var json = (function() {
     var json = null;
     $.ajax({
@@ -121,25 +124,96 @@ var json = (function() {
     return json;
 })();
 
-// set markers
-var heatData = [];
-var markers = [];
-function setMarkers(startDate, endDate) {
-    // remove markers from the map, but still keeps them in the array
-    for (var i = 0; i < markers.length; i++) {
-        markers[i].setMap(null);
-    }
-    // delete all by removing reference to them,
-    // so that when user hit "submit" again, previous markers are gone
-    markers = [];
-    heatData.length = 0;
+// read csv file
+$(document).ready(function() {
+    $.ajax({
+        type: "GET",
+        url: "burglarySnapshot.csv",
+        dataType: "text",
+        success: function(data) {getBurglary(data);}
+    });
+});
 
-    var months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October",
-        "November", "December"];
+// get csv data, turn results into array of objects
+var lines = [];
+function getBurglary(allText) {
+    var allTextLines = allText.split("\r");
+    var headers = allTextLines[0].split("	");
+
+    for (var i=1; i<allTextLines.length; i++) {
+        var data = allTextLines[i].split("	");
+        if (data.length === headers.length) {
+            var tarr = [];
+            for (var j=0; j<headers.length; j++) {
+                tarr[headers[j]]=data[j];
+            }
+            lines.push(tarr);
+        }
+    }
+    // console.log(lines[1]);
+}
+
+
+var markers = [];  // an array of all markers objects
+var markersArr = []; // an array of markers according to types of incidents
+var heatDataTraffic = [];
+var heatDataBurglary = [];
+var types = [];  // types of markers already on map
+
+
+// set burglary data
+function setBurglary(startDate, endDate) {
+    arr = [];
+    var r1 = lines;
+    var image = {
+        url: 'http://paybefore.com/wp-content/uploads/2016/09/burglar-icon-208x300.png',
+        scaledSize: new google.maps.Size(20, 30)
+    };
+    for (var i = 0; i < r1.length; i++) {
+        var d = r1[i]._date;
+        var t = r1[i]._time;
+        var hour;
+        if (t.length===4) {
+            hour = t.substring(0,1);
+        } else {
+            hour = t.substring(0,2)
+        }
+        var incident_date = new Date();
+        incident_date.setFullYear(Number(d.substring(0,4)), Number(d.substring(4,6))-1, Number(d.substring(6,8)));
+        incident_date.setHours(hour, 0, 0, 0);
+
+        if (incident_date >= startDate && incident_date <= endDate) {
+            console.log("burglary: "+incident_date);
+
+            var latLng = new google.maps.LatLng(r1[i].LATITUDE, r1[i].LONGITUDE);
+            heatDataBurglary.push(latLng);
+            var marker = new google.maps.Marker({
+                position: latLng,
+                map: map,
+                icon: image,
+                contentString: "Occured: "+incident_date +"</br>" +"Reported: " + r1[i].IncidentReported
+            });
+
+            setInfoWindow(marker);
+            arr.push(marker);
+            markers.push(marker);
+        }
+    }
+    markersArr["Burglary"] = arr;
+    types.push("Burglary");
+}
+
+// set traffic incidents markers
+function setTraffic(startDate, endDate) {
+    var months = ["January", "February", "March", "April", "May", "June", "July", "August",
+        "September", "October", "November", "December"];
     var r = json.incidents;
     // console.log(Object.keys(r[0]));
 
-
+    var sumOfTraffic = [];
+    sumOfTraffic.length=0;
+    sumOfTraffic = [0,0,0,0,0,0];  // sum of incidents happened at each level of severity
+    var arr = [];
     for (var i = 0; i < r.length; i++) {
         var hour;
         var d = r[i].alarmDate;
@@ -158,7 +232,7 @@ function setMarkers(startDate, endDate) {
             console.log("accident: "+incident_date);
 
             var latLng = new google.maps.LatLng(r[i]._lat, r[i]._lng);
-            heatData.push(latLng);
+            heatDataTraffic.push(latLng);
             var content = '<b>Incident Number: </b>' + r[i].incidentNumber +
                 '</br><b>Alarm Date: </b>' + r[i].alarmDate +
                 '</br><b>Location: </b>' + r[i].streetNumber + " " + r[i].streetPrefix + " "
@@ -173,7 +247,10 @@ function setMarkers(startDate, endDate) {
             var colors = ['#00a6ff', '#bbec26', '#ffe12f', '#ff9511', '#ff0302'];
             content = content.replace(/nan/g, "");
             var indexDCBA = severity.indexOf(r[i].severity);
+
+            // if severity is known:
             if (indexDCBA > -1) {
+                sumOfTraffic[indexDCBA]++;
                 marker = new google.maps.Marker({
                     position: latLng,
                     map: map,
@@ -188,7 +265,9 @@ function setMarkers(startDate, endDate) {
                     },
                     contentString: content
                 });
+            // if severity is unknown
             } else {
+                sumOfTraffic[5]++;
                 marker = new google.maps.Marker({
                     position: latLng,
                     map: map,
@@ -204,29 +283,118 @@ function setMarkers(startDate, endDate) {
                 });
             }
             setInfoWindow(marker);
+            arr.push(marker);
             markers.push(marker);
         }
-    }
-        // after markers got displayed, change button to hide markers
-        // // document.getElementById('markers').innerHTML = 'Hide Markers';
-        // document.getElementById('markers').onclick = function () {
-        //
-        // }
+    } // for loop ends
+    types.push("Traffic Accidents");
+    markersArr["Traffic Accidents"] = arr;
+    setBar(sumOfTraffic);
+    // setPie(sumOfTraffic);
 }
+
 
 // set info windows
 var infowindow;
 function setInfoWindow(marker) {
+    // make markers bounce 3 times
+    marker.addListener('click', function() {
+        if (marker.getAnimation() !== null) {
+            marker.setAnimation(null);
+        } else {
+            marker.setAnimation(google.maps.Animation.BOUNCE);
+            setTimeout(function () {
+                marker.setAnimation(null);
+            }, 750*3);
+        }
+    });
+
+    // add pop up info window
     infowindow = new google.maps.InfoWindow();
     marker.addListener('click', function() {
         infowindow.close(map,this); // close previous window first
         infowindow.setContent(this.contentString);
         infowindow.open(map, this);
+
     });
 }
 
+/*
+ * SET ALL MARKERS
+ */
+function setMarkers(startDate, endDate) {
+    document.getElementById('markers').innerHTML = 'Hide Markers';
+    // remove markers from the map, but still keeps them in the array
+    for (var i = 0; i < markers.length; i++) {
+        markers[i].setMap(null);
+    }
+    // delete all by removing reference to them,
+    // so that when user hit "submit" again, previous markers are gone
+    markers = [];
+    heatDataTraffic.length = 0;
+    heatDataBurglary.length = 0;
+
+    setTraffic(startDate,endDate);
+    setBurglary(startDate, endDate);
+    console.log(markersArr); // should look like [Traffic Accidents: Array(x), Burglary: Array(y)]
+
+    printSummary();
+}
+
+/* print a summary of total of incidents,
+ * generate checkbox for each type of incidents
+ */
+function printSummary() {
+    document.getElementById('total').innerHTML = "Total incidents: "+ (heatDataBurglary.length+heatDataTraffic.length);
+    document.getElementById('chooseType').innerHTML = "Check type: ";
+
+    var div = document.querySelector(".subplayground1");
+
+    for (var i=0; i<types.length; i++) {
+        if (document.getElementById(types[i]) === null) {
+            var typeCheckbox = document.createElement("input");
+            typeCheckbox.type = "checkbox";
+            typeCheckbox.id = types[i];
+            var label = document.createTextNode(types[i]);
+            div.appendChild(typeCheckbox);
+            div.appendChild(label)
+        }
+    }
+
+    // generate submit button
+    if (document.getElementById("submitButton") === null) {
+        var submit = document.createElement("button");
+        submit.innerHTML = "Only see these types of incidents";
+        submit.id = "submitButton";
+        submit.style.float = "right";
+        submit.onclick = getType;
+        div.appendChild(submit);
+    }
+}
+
+// Hide or Show markers according to user check box
+function getType() {
+    for (var i=0; i<types.length; i++) {
+        console.log(types[i]+ ": "+ document.getElementById(types[i]).checked);
+        var arr = markersArr[types[i]];
+        if (document.getElementById(types[i]).checked === true) {
+            for (var j=0; j<arr.length; j++) {
+                if (!arr[j].getVisible()) {
+                    arr[j].setVisible(true);
+                }
+            }
+        } else {
+            for (var k=0; k<arr.length; k++) {
+                if (arr[k].getVisible()) {
+                    arr[k].setVisible(false);
+                }
+            }
+        }
+    }
+}
+
 // toggle markers by changing their visibility
-function toggleMarkers() {
+function toggleMarkers(markers) {
     for (var i in markers) {
         if (markers[i].getVisible()) {
             markers[i].setVisible(false);
@@ -238,11 +406,12 @@ function toggleMarkers() {
     }
 }
 
+
 // generate heat mao layer, after which change button
 var heatmap;
 function setHeatMap() {
     heatmap= new google.maps.visualization.HeatmapLayer({
-        data: heatData,
+        data: heatDataTraffic,
         dissipating: false,
         map: map,
         opacity:0.8,
@@ -280,10 +449,78 @@ function changeGradient() {
     heatmap.set('gradient', heatmap.get('gradient') ? null : gradient);
 }
 
-// When the user clicks on div, open the popup
+// When the user clicks on "help", open the popup
 function help() {
     var popup = document.getElementById("pop");
     popup.classList.toggle("show");
 }
 
 
+// set a bar chart according to data passed
+function setBar(data) {
+    // remove current bar chart first
+    d3.select(".bar").selectAll("div").remove();
+    var sum = 0;
+    for (var i=0; i<data.length; i++) {
+        sum += data[i];
+    }
+    var x = d3.scaleLinear()
+        .domain([0, d3.max(data)])
+        .range([0, 250]);
+
+    var colors = ['#00a6ff', '#bbec26', '#ffe12f', '#ff9511', '#ff0302', '#797A7A'];
+
+    d3.select(".bar")
+        .selectAll("div")
+        .data(data)
+        .enter().append("div")
+        .style("width", function (d) {
+            return x(d) + "px";
+        })
+        .style("background-color", function(d,i){
+            return colors[i];
+        })
+        .text(function (d) {
+            return parseInt(d*100/sum, 10)+"%";
+        });
+
+    var severity = ["E","D","C","B","A","N.A"];
+
+}
+
+// can't clear current canvas
+function setPie(data) {
+    var canvas = document.querySelector("canvas"),
+        context = canvas.getContext("2d");
+
+    var width = canvas.width,
+        height = canvas.height,
+        radius = Math.min(width, height) / 2;
+
+    var colors = ['#00a6ff', '#bbec26', '#ffe12f', '#ff9511', '#ff0302', '#797A7A'];
+
+    var arc = d3.arc()
+        .outerRadius(radius - 10)
+        .innerRadius(0)
+        .context(context);
+
+    var pie = d3.pie();
+
+    var arcs = pie(data);
+
+    context.translate(width / 2, height / 2);
+
+    context.globalAlpha = 0.5;
+    arcs.forEach(function(d, i) {
+        context.beginPath();
+        arc(d);
+        context.fillStyle = colors[i];
+        context.fill();
+    });
+
+    context.globalAlpha = 1;
+    context.beginPath();
+    arcs.forEach(arc);
+    context.strokeStyle = "#c2d6d9";
+    context.stroke();
+}

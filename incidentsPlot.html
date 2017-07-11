@@ -4,47 +4,54 @@
     <meta charset="UTF-8">
     <title>Fire Department incident plot</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    <link href="https://fonts.googleapis.com/css?family=Lobster" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css?family=PT+Sans" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Alegreya+Sans+SC:100|Montserrat+Subrayada|Lato:100i|Zilla+Slab" rel="stylesheet">
+
     <style>
 
         /* <html> <div> <body> */
+        html {
+            background-color: whitesmoke;
+        }
         body {
-            background-color: white;
             position: fixed;
             height: 100%;
             margin: 0;
             padding: 0;
             border: 1px solid;
             border-color: antiquewhite;
-            left: 5%;
-            right: 5%;
+            left: 1%;
+            right: 1%;
+            background-color: dimgrey;
         }
 
         #logo {
             position: fixed;
-            top: 7px;
-            width: 90%;
-            height:75px;
-            border-bottom: 1px solid midnightblue;
-            border-color: rgba(203, 203, 203, 0.5);
+            top: 2px;
+            width: 98%;
+            height:60px;
+            padding-top: 15px;
             text-align: center;
-            font-family: 'Lobster', cursive;
-            font-size: 48px;
-            background-image: url("http://www.commonapp.org/files/school/image/vanderbilt%20header_8.17.15.jpg");
-            background-color: rgba(255, 255, 255, 0.2);
+            font-family: 'Montserrat Subrayada', sans-serif;
+            font-size: 40px;
+            color: white;
+            text-shadow: 4px 4px 4px rgba(255, 235, 100, 0.45);
+            /*background-image: url("https://az589735.vo.msecnd.net/images/profilepics/1022817/203.jpg");*/
+            background-color: #242424;
         }
 
         #menubar {
             position: absolute;
-            font-family: 'PT Sans', sans-serif;
+            font-family: 'Alegreya Sans SC', sans-serif;
+            padding: 10px;
+            color: white;
             top: 11%;
-            left: 7px;
-            width: 300px;
+            left: 12px;
+            width: 264px;
             height: 88%;
-            background-color: rgba(203, 203, 203, 0.1);
+            background-color: rgba(52, 52, 52, 0.72);
             background-repeat: no-repeat;
-            border: solid 2px lightgray;
+            border-left:  solid 4px #D9AC42;
             line-height: 200%;
         }
 
@@ -55,29 +62,90 @@
 
         .playground {
             position: fixed;
-            top: 11%;
+            top: 89px;
             height: 88%;
-            width: 66%;
-            left: 380px;
-            border: 2px solid lightgray;
+            left: 320px;
+            right: 26px;
+            padding: 5px;
         }
 
         /* element name */
         #map {
             position: absolute;
             height: 100%;
-            width: 100%;
+            width: 70%;
         }
 
         #floating-panel {
             position: relative;
             top: 1px;
-            /*left: 63%;*/
+            left: 23%;
             padding: 6px;
             border: 1px;
-            text-align: center;
             line-height: 30px;
             padding-left: 10px;
+        }
+
+        .subplayground1 {
+            position: absolute;
+            right: 10px;
+            top: 0;
+            padding: 8px;
+            border-top: solid 3px #D9AC42;
+            height: 38%;
+            width: 26%; /* map width = 73% */
+            background-color: rgba(52, 52, 52, 0.72);
+            font-family: 'Zilla Slab', serif;
+            color: white;
+
+        }
+
+        .subplayground2 {
+            position: absolute;
+            right: 10px;
+            top: 39%;
+            height: 30%;
+            padding: 8px;
+            width: 26%; /* map width = 73% */
+            border-top: solid 3px #D9AC42;
+            font-family: 'PT Sans', sans-serif;
+            background-color: rgba(42, 52, 58, 0.72);
+
+        }
+
+        text {
+            font: 10px sans-serif;
+            color: white;
+        }
+        text.value {
+            font-size: 120%;
+            fill: white;
+        }
+
+        .subplayground3 {
+            position: absolute;
+            right: 10px;
+            top: 70%;
+            padding: 8px;
+            height: 30%;
+            width: 26%; /* map width = 73% */
+            font-family: 'PT Sans', sans-serif;
+            border-top: solid 3px #D9AC42;
+            background-color: rgba(42, 58, 52, 0.72);
+
+        }
+
+        .bar div{
+            font: 10px sans-serif;
+            background-color: steelblue;
+            text-align: right;
+            padding: 3px;
+            margin: 3px;
+            color: white;
+        }
+
+        .pie div{
+            font: 10px sans-serif;
         }
 
         /* Popup container - "help" */
@@ -88,11 +156,12 @@
             width: 3%;
             bottom: 40px;
             left: 20px;
-            border-style: inset;
-            border-color: green;
+            border-style: outset;
+            border-color: #9eacaf;
             border-width: 5px;
             z-index: 5;
-            background-color: cadetblue;
+            background-color: #c2d6d9;
+            opacity: 0.5;
         }
 
         /* The actual popup */
@@ -129,6 +198,12 @@
             animation: fadeIn 1s;
         }
 
+        hr {
+            margin-left: 2px;
+            margin-right: 20px;
+            opacity: 0.5;
+        }
+
     </style>
     <!--<script data-main="scriincidentscode.jse.js" src="scripts/require.js"></script>-->
     <script src="jquery-3.2.1.js"></script>
@@ -141,12 +216,15 @@
         <img src="https://admissions.vanderbilt.edu/insidedores/manage/wp-content/uploads/vanderbilt-logo-2008.gif"
              width="60" height="60">
     </div>
-    <i class="fa fa-line-chart" style="color: cornflowerblue"></i>
+    <i class="fa fa-line-chart" style="color: #D9AC42"></i>
     Data Visualizer
 </div>
 
 <div id="menubar">
-    <label style="font-family: Avenir; font-size: larger; font-style: italic"> Enter Info Here: </label><br>
+    <label style="font-family: Copperplate;font-size: larger; font-style: italic">
+        <i class="fa fa-hand-o-down" aria-hidden="true"></i>
+        Enter Info Here: </label><br>
+    <hr>
 
     <i class="fa fa-file-text"></i>
     Mongo DB Address:<br>
@@ -176,22 +254,45 @@
     Date: <input type="date" min="2014-01-01" max="2017-01-01" id="date2"/>
     Hour: <input type="number" min="0" max="24" id="hour2"/><br>
 
-    <input type="button" onclick="getData()" value="submit">
+    <input type="button" onclick="getData()" value="submit" style="float: right">
 
 </div>
 <div class="playground">
     <div id="map"></div>
+
     <div id="floating-panel">
         <button id='markers' onclick='toggleMarkers()'>Hide Markers</button>
         <button id='heat' onclick='setHeatMap()'>Generate heatmap</button>
         <button onclick="changeGradient()">Change gradient</button>
     </div>
+
+    <div class="subplayground1">
+        <label style="font-family: Copperplate; font-size: larger; font-style: italic">
+            <i class="fa fa-hand-o-down" aria-hidden="true"></i>
+            <b>Summary:</b>
+        </label><br>
+        <hr>
+
+        <p id="total"></p>
+        <div id="chooseType" style="display: block"></div>
+    </div>
+
+    <div class="subplayground2">
+        <div class="bar"></div>
+
+    </div>
+
+    <div class="subplayground3">
+        <canvas width="250" height="200"></canvas>
+    </div>
+
 </div>
 
 <div class="popup" onclick="help()">?help
     <span class="popuptext" id="pop">Click on the dots to view more details of an accident</span>
 </div>
 
+<script src="https://d3js.org/d3.v4.js"></script>
 <script src="incidentscode.js"></script>
 
 <script async defer src=
