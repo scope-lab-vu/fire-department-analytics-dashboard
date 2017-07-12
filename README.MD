@@ -6,4 +6,5 @@ The myapp folder utilizes flask-socket to get data from the server and transfer 
 
 "package.json" is part of the JSON file copy and pasted from PyMongo or socket can take care of the data download online
 
+"burglarySnapshot" is a snapshot of the sample data
 
