@@ -10,26 +10,19 @@
     <style>
 
         /* <html> <div> <body> */
-        html {
-            background-color: whitesmoke;
-        }
-        body {
-            position: fixed;
-            height: 100%;
-            margin: 0;
-            padding: 0;
-            border: 1px solid;
-            border-color: antiquewhite;
-            left: 1%;
-            right: 1%;
+        html, body {
+            position: static;
+            height: 3000px;
             background-color: dimgrey;
         }
 
         #logo {
             position: fixed;
+            z-index: 5;
             top: 2px;
-            width: 98%;
+            right: 0;
             height:60px;
+            left: 0;
             padding-top: 15px;
             text-align: center;
             font-family: 'Montserrat Subrayada', sans-serif;
@@ -41,18 +34,18 @@
         }
 
         #menubar {
-            position: absolute;
+            position: fixed;
             font-family: 'Alegreya Sans SC', sans-serif;
             padding: 10px;
             color: white;
-            top: 11%;
+            top: 12%;
             left: 12px;
             width: 264px;
-            height: 88%;
+            height: 1000px;
             background-color: rgba(52, 52, 52, 0.72);
             background-repeat: no-repeat;
             border-left:  solid 4px #D9AC42;
-            line-height: 200%;
+            line-height: 35px;
         }
 
         .topleft {
@@ -61,39 +54,38 @@
         }
 
         .playground {
-            position: fixed;
-            top: 89px;
-            height: 88%;
+            position: relative;
+            top: 82px;
+            height: 1500px;
             left: 320px;
-            right: 26px;
-            padding: 5px;
+            width: 795px ;
+            /*border: 1px solid yellow;*/
         }
 
         /* element name */
         #map {
             position: absolute;
-            height: 100%;
-            width: 70%;
+            height: 500px;
+            width: 790px;
+            border: outset 4px #ebe8de;
         }
 
         #floating-panel {
-            position: relative;
-            top: 1px;
-            left: 23%;
-            padding: 6px;
+            position: absolute;
+            top: 10px;
+            left: 30%;
             border: 1px;
             line-height: 30px;
-            padding-left: 10px;
         }
 
         .subplayground1 {
-            position: absolute;
-            right: 10px;
-            top: 0;
+            position: fixed;
+            height: 600px;
+            width: 264px;
+            right: 12px;
+            top: 12%;
             padding: 8px;
             border-top: solid 3px #D9AC42;
-            height: 38%;
-            width: 26%; /* map width = 73% */
             background-color: rgba(52, 52, 52, 0.72);
             font-family: 'Zilla Slab', serif;
             color: white;
@@ -101,37 +93,46 @@
         }
 
         .subplayground2 {
-            position: absolute;
-            right: 10px;
-            top: 39%;
-            height: 30%;
-            padding: 8px;
-            width: 26%; /* map width = 73% */
-            border-top: solid 3px #D9AC42;
+            position: relative;
+            left: 0;
+            top: 35%;
+            height: 250px;
+            width: 360px;
+            padding: 18px;
+            border-left: solid 3px #a7d99b;
             font-family: 'PT Sans', sans-serif;
-            background-color: rgba(42, 52, 58, 0.72);
+            /*background-color: rgba(42, 52, 58, 0.72);*/
 
         }
 
         text {
             font: 10px sans-serif;
             color: white;
+            text-align: left;
         }
         text.value {
             font-size: 120%;
             fill: white;
         }
 
+        .arc text {
+            font: 10px sans-serif;
+            text-anchor: middle;
+        }
+
+        .arc path {
+            stroke: #fff;
+        }
+
         .subplayground3 {
-            position: absolute;
-            right: 10px;
-            top: 70%;
-            padding: 8px;
-            height: 30%;
-            width: 26%; /* map width = 73% */
-            font-family: 'PT Sans', sans-serif;
-            border-top: solid 3px #D9AC42;
-            background-color: rgba(42, 58, 52, 0.72);
+            position: relative;
+            top: 16%;
+            left: 400px;
+            height: 250px;
+            width: 360px;
+            padding: 18px;
+            border-left: solid 3px #a5d9c1;
+            /*background-color: rgba(42, 58, 52, 0.72);*/
 
         }
 
@@ -151,7 +152,7 @@
         /* Popup container - "help" */
         /* class */
         .popup {
-            position: absolute;
+            position: fixed;
             cursor: pointer;
             width: 3%;
             bottom: 40px;
@@ -204,6 +205,7 @@
             opacity: 0.5;
         }
 
+
     </style>
     <!--<script data-main="scriincidentscode.jse.js" src="scripts/require.js"></script>-->
     <script src="jquery-3.2.1.js"></script>
@@ -245,13 +247,13 @@
     <i class="fa fa-calendar" aria-hidden="true"></i>
     From (Default start hour is 00:00)<br>
      &gt;
-    Date: <input type="date" min="2014-01-01" max="2016-12-31" id="date1"/>
+    Date: <input type="date" min="2014-01-01" max="2016-12-31" value="2014-03-01" id="date1"/>
     Hour: <input type="number" min="0" max="24" id="hour1"/><br>
 
     <i class="fa fa-calendar" aria-hidden="true"></i>
     To (Default end hour is 24:00)<br>
      &gt;
-    Date: <input type="date" min="2014-01-01" max="2017-01-01" id="date2"/>
+    Date: <input type="date" min="2014-01-01" max="2017-01-01" value="2014-03-02" id="date2"/>
     Hour: <input type="number" min="0" max="24" id="hour2"/><br>
 
     <input type="button" onclick="getData()" value="submit" style="float: right">
@@ -261,7 +263,7 @@
     <div id="map"></div>
 
     <div id="floating-panel">
-        <button id='markers' onclick='toggleMarkers()'>Hide Markers</button>
+        <button id='markers' onclick='toggleMarkers(markersArr)'>Hide Markers</button>
         <button id='heat' onclick='setHeatMap()'>Generate heatmap</button>
         <button onclick="changeGradient()">Change gradient</button>
     </div>
@@ -279,11 +281,10 @@
 
     <div class="subplayground2">
         <div class="bar"></div>
-
     </div>
 
     <div class="subplayground3">
-        <canvas width="250" height="200"></canvas>
+        <div id = "pieForType" style="width: 300px; height: 200px; position: absolute"></div>
     </div>
 
 </div>
@@ -292,7 +293,10 @@
     <span class="popuptext" id="pop">Click on the dots to view more details of an accident</span>
 </div>
 
+
+
 <script src="https://d3js.org/d3.v4.js"></script>
+<script src="https://www.gstatic.com/charts/loader.js"></script>
 <script src="incidentscode.js"></script>
 
 <script async defer src=
