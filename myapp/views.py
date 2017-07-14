@@ -1,18 +1,18 @@
 from myapp import app
-from flask import jsonify, render_template, session, request
-from flask_socketio import SocketIO, send, emit
+from flask import Flask, render_template, session, request
+from flask_socketio import SocketIO
+from flask_socketio import send, emit
 from myapp import socketio
-from pymongo import MongoClient
+import time
+import datetime
 import json
-
-
+import requests
+import pytz
 
 @app.route('/')
 @app.route('/index')
 def index():
-    print "->index()"
-    return render_template("incidentsPlot.html")
-
+	return render_template("incidentsPlot.html")
 
 @socketio.on('connect')
 def socketio_connet():

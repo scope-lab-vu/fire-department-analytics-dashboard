@@ -215,13 +215,12 @@ function createMarkerObj(position, map, icon, content) {
     obj["contentString"] = content;
     return obj;
 }
-function 
 
 // set traffic incidents markers
 function setIncident(startDate, endDate) {
     var months = ["January", "February", "March", "April", "May", "June", "July", "August",
         "September", "October", "November", "December"];
-    var r = data_incidents;
+    var r = json.incidents;
     // console.log(Object.keys(r[0]));
 
     var sumOfIncidents = [];
