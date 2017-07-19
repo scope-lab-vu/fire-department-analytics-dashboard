@@ -105,7 +105,7 @@ def getIncidentData(start, end):
 # retrieve data from csv file
 def getBurglaryData(start, end):
     arr = []
-    with open('/Users/wangshibao/SummerProjects/dashboard(socket)/myapp/burglarySnapshot.csv','rU') as f:
+    with open('/Users/wangshibao/SummerProjects/dashboard-socket/myapp/burglarySnapshot.csv','rU') as f:
         reader = csv.reader(f)
         header = (reader.next())[0].split("\t")
         for item in reader:

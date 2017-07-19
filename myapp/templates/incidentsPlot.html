@@ -67,7 +67,6 @@
             position: absolute;
             height: 500px;
             width: 780px;
-            border: outset 4px #ebe8de;
         }
 
         #floating-panel {
@@ -76,6 +75,24 @@
             left: 30%;
             border: 1px;
             line-height: 30px;
+        }
+
+        #loader {
+            position: fixed;
+            border: 8px solid #5a5a5a;
+            border-radius: 50%;
+            border-top: 8px solid #D9AC42;
+            width: 45px;
+            height: 45px;
+            top: 40%;
+            left:48%;
+            animation: spin 1.5s cubic-bezier(0.1, 0.5, 0.2, 0.1) infinite;
+            z-index: 2;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         .subplayground1 {
@@ -207,9 +224,7 @@
 
 
     </style>
-    <!--<script data-main="scriincidentscode.jse.js" src="scripts/require.js"></script>-->
-<!--     <script src="./static/jquery-3.2.1.js"></script>
- --></head>
+</head>
 
 <body>
 
@@ -222,16 +237,12 @@
     Data Visualizer
 </div>
 
+<!-- Ask for user input -->
 <div id="menubar">
     <label style="font-family: Copperplate;font-size: larger; font-style: italic">
         <i class="fa fa-hand-o-down" aria-hidden="true"></i>
         Enter Info Here: </label><br>
     <hr>
-
-    <i class="fa fa-file-text"></i>
-    Mongo DB Address:<br>
-     &gt;
-    <input type="text" id="mongoDB"><br>
 
     <i class="fa fa-bar-chart" aria-hidden="true"></i>
     Chart Options: <br>
@@ -256,9 +267,12 @@
     Date: <input type="date" min="2014-01-01" max="2017-01-01" value="2014-03-02" id="date2"/>
     Hour: <input type="number" min="0" max="24" id="hour2"/><br>
 
+    <!-- On submit button, call to get data from server according to the inputs -->
     <input type="button" onclick="getData()" value="submit" style="float: right">
 
 </div>
+
+<!-- where maps, graphs, charts live -->
 <div class="playground">
     <div id="map"></div>
 
@@ -267,6 +281,8 @@
         <button id='heat' onclick='setHeatMap()'>Generate heatmap</button>
         <button onclick="changeGradient()">Change gradient</button>
     </div>
+
+    <div id="loader" style="display: none"></div>
 
     <div class="subplayground1">
         <label style="font-family: Copperplate; font-size: larger; font-style: italic">
@@ -286,9 +302,9 @@
     <div class="subplayground3">
         <div id = "pieForType" style="width: 300px; height: 200px; position: absolute"></div>
     </div>
-
 </div>
 
+<!-- help button pop up message-->
 <div class="popup" onclick="help()">?help
     <span class="popuptext" id="pop">Click on the dots to view more details of an accident</span>
 </div>

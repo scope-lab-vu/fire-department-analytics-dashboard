@@ -11,7 +11,7 @@ function initMap() {
         zoom: 11,
         center: centerNash,
         mapTypeId: 'roadmap',
-        scrollwheel: false
+        scrollwheel: false  // disable scroll wheel
     });
 
     // Create the DIV to hold the control and call the CenterControl()
@@ -24,7 +24,10 @@ function initMap() {
 
 }
 
+// create socket connect
 var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+// on success, log success
 socket.on('success', function() {
     console.log("socketio success");
 });
@@ -46,8 +49,9 @@ function getData() {
     prepMarkers();
     types.length = 0;
     types = [];
-    var mongo_Address = document.getElementById('mongoDB').value,
-        chart_Option = document.getElementById('chartList').value,
+    document.getElementById("loader").style.display = "block";
+    
+    var chart_Option = document.getElementById('chartList').value,
         start_Date = document.getElementById('date1').value,
         start_Hour = document.getElementById('hour1').value,
         end_Date = document.getElementById('date2').value,
@@ -90,7 +94,8 @@ function prepMarkers() {
     console.log("markersArr length:   "+ markersArr.length+ "\n   "+markersArr);    
 }
 
-// create floating panel for map
+
+/* create floating panel for map, on click can center map */
 function CenterControl(controlDiv, map) {
     // Set CSS for the control border.
     var controlUI = document.createElement('div');
@@ -127,7 +132,7 @@ function CenterControl(controlDiv, map) {
 }
 
 
-// socket 
+/* socket to get burglary data from server*/
 var data_burglary;
 socket.on('burglary_data', function(msg) {
     // console.log(msg);
@@ -144,8 +149,9 @@ function setBurglary() {
         scaledSize: new google.maps.Size(20, 30)
     };
     for (var i = 0; i < r1.length; i++) {
-        var contentString = "Occured: "+r1[i].AlarmDateTime +"</br>" +"Reported: " + r1[i].IncidentReported +
-            "</br>Incident Status: " + r1[i]["Incident Status"] + "</br>Number of Victims: " + r1[i].VICTIM_NO;
+        var contentString = "Occured: "+r1[i].AlarmDateTime +"</br>" +"Reported: " + 
+            r1[i].IncidentReported + "</br>Incident Status: " + r1[i]["Incident Status"] + 
+            "</br>Number of Victims: " + r1[i].VICTIM_NO;
         
         var latLng = new google.maps.LatLng(r1[i].LATITUDE, r1[i].LONGITUDE),
             marker = new google.maps.Marker(createMarkerObj(latLng,map,image,contentString));
@@ -156,6 +162,7 @@ function setBurglary() {
         markers.push(marker);
         
     }
+    // if there is at least one marker for burglary 
     if (arr.length !== 0) {
         markersArr["Burglary"] = arr;
         markersArr.length++;
@@ -163,6 +170,7 @@ function setBurglary() {
     }
 }
 
+/* set a marker of "position" on "map" with "icon" and "content" */
 function createMarkerObj(position, map, icon, content) {
     var obj = {};
     obj["position"] =  position;
@@ -173,15 +181,17 @@ function createMarkerObj(position, map, icon, content) {
 }
 
 
-// socket
+/* socket to get incident_data from server */
 var data_incidents;
 socket.on('incident_data', function(msg) {
     // console.log(msg);
     data_incidents = msg;
+    document.getElementById("loader").style.display = "none";
     setIncident();
 });
 
-// set traffic incidents markers
+/* set traffic incidents markers, markers are circles color-coded to indicate
+ * level of severity */
 function setIncident() {
     var r = data_incidents.incidents;
     var sumOfIncidents = [];
@@ -206,8 +216,9 @@ function setIncident() {
         var severity = "ABCDE",
             colors = ['#00a6ff', '#bbec26', '#ffe12f', '#ff9511', '#ff0302'];
         
-        /* emdCardNumber is a digit that has length [3,5], the letter in between is the response determinant,
-         * a.k.a, the level of severity; or it has the value of "ctran" or "dupont"*/
+        /* emdCardNumber is a digit that has length [3,5], the letter in between is the 
+         * response determinant, a.k.a, the level of severity; or it has the value of 
+         * "ctran" or "dupont"*/
         var emdCardNumber = r[i].emdCardNumber;
         var responseDeterminant;
         if (emdCardNumber === "CTRAN") {
@@ -279,18 +290,18 @@ function setIncident() {
         arr.push(marker);
         markers.push(marker);
         
-    } // for loop ends
+    }
+    // if there is at least one incident
     if (arr.length !== 0) {
         types.push("Incidents");
         markersArr["Incidents"] = arr;
         markersArr.length++;
         setBar(sumOfIncidents);
     }
-    // setPie(sumOfIncidents);
 }
 
 
-// set info windows
+/* set info windows and make markers bounce 3 times*/
 var infowindow;
 function setInfoWindow(marker) {
     // make markers bounce 3 times
@@ -315,7 +326,7 @@ function setInfoWindow(marker) {
     });
 }
 
-// socket after markers are drawn on map
+/* socket after markers are drawn on map: set up pie charts*/
 socket.on('markers-success', function() {
     console.log("-->All markers success")
     console.log(markersArr); // should look like [Incidents: Array(x), Burglary: Array(y)]
@@ -370,7 +381,7 @@ function printSummary() {
     }
 }
 
-// Hide or Show markers according to user check box
+/* Hide or Show markers according to user check box */
 function getType() {
     for (var i=0; i<types.length; i++) {
         console.log(types[i]+ ": "+ document.getElementById(types[i]).checked);
@@ -391,7 +402,7 @@ function getType() {
     }
 }
 
-// toggle markers by changing their visibility
+/* toggle markers by changing their visibility */
 function toggleMarkers(arrOfArr) {
     if (types.length !== arrOfArr.length) {
         alert("Mismatch of numbers of elements in 'types' and 'arrOfArr'");
@@ -414,7 +425,7 @@ function toggleMarkers(arrOfArr) {
 }
 
 
-// generate heat mao layer, after which change button
+// generate heat map layer, after which change button
 var heatmap;
 function setHeatMap() {
     heatmap= new google.maps.visualization.HeatmapLayer({
@@ -490,12 +501,10 @@ function setBar(data) {
         .text(function (d,i) {
             return "Severity"+ "["+severity[i]+"]"+(d*100/sum).toFixed(1)+"%";
         });
-
-
-
+    console.log("-->Bar chart success");
 }
 
-// set pie chart with google charts
+/* set pie chart with google charts */
 function setPie(arr) {
     google.charts.load('current', {'packages':['corechart']});
     var data = google.visualization.arrayToDataTable(arr);
@@ -510,7 +519,8 @@ function setPie(arr) {
     console.log("-->pie chart success");
 }
 
-// can't clear current canvas
+/* set pie chart with d3
+ * PROBLEM IS: I can't clear current canvas */
 function setPiej3(data) {
     var canvas = document.querySelector("canvas"),
         context = canvas.getContext("2d");
@@ -559,3 +569,22 @@ function setPiej3(data) {
         context.fillText((data[i]*100/sum).toFixed(1)+"%", c[0], c[1]);
     });
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
