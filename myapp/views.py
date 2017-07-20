@@ -30,6 +30,7 @@ def getDate (msg):
     getBurglaryData(start, end)
     socketio.emit("markers-success")
 
+
 # retrieve data from mongo db
 def getIncidentData(start, end):
     
@@ -46,6 +47,7 @@ def getIncidentData(start, end):
     dictOut = {}
     dictArr = []
     dictOut['incidents'] = dictArr
+    types = []
 
     count = 0
     for item in items:
@@ -97,13 +99,16 @@ def getIncidentData(start, end):
             else: 
                 dictIn['apartment'] = "na"
 
-            dictArr.append(dictIn)
-        
+            
 
-    socketio.emit("incident_data", dictOut)
+            socketio.emit("incident_data", dictIn)
+
+            dictArr.append(dictIn)
+
 
 # retrieve data from csv file
 def getBurglaryData(start, end):
+    socketio.emit("incident_success")
     arr = []
     with open('/Users/wangshibao/SummerProjects/dashboard-socket/myapp/burglarySnapshot.csv','rU') as f:
         reader = csv.reader(f)

@@ -59,7 +59,7 @@
             height: 1500px;
             left: 320px;
             width: 784px;
-            border: 0.3px solid white;
+/*            border: 0.3px solid white;*/       
         }
 
         /* element name */
@@ -97,7 +97,7 @@
 
         .subplayground1 {
             position: fixed;
-            height: 1000px;
+            height: 800px;
             width: 264px;
             right: 12px;
             top: 12%;
@@ -106,20 +106,19 @@
             background-color: rgba(52, 52, 52, 0.72);
             font-family: 'Zilla Slab', serif;
             color: white;
-
+            overflow-y: scroll;
+            z-index: 2;
         }
 
         .subplayground2 {
             position: relative;
             left: 0;
             top: 35%;
-            height: 250px;
-            width: 360px;
+            height: 140px;
+            width: 700px;
             padding: 18px;
             border-left: solid 3px #a7d99b;
             font-family: 'PT Sans', sans-serif;
-            /*background-color: rgba(42, 52, 58, 0.72);*/
-
         }
 
         text {
@@ -143,14 +142,11 @@
 
         .subplayground3 {
             position: relative;
-            top: 16%;
-            left: 400px;
-            height: 250px;
-            width: 360px;
-            padding: 18px;
+            top: 36%;
+            height: 600px;
+            width: 700px;
+            padding-left: 18px;
             border-left: solid 3px #a5d9c1;
-            /*background-color: rgba(42, 58, 52, 0.72);*/
-
         }
 
         .bar div{
@@ -300,7 +296,7 @@
     </div>
 
     <div class="subplayground3">
-        <div id = "pieForType" style="width: 300px; height: 200px; position: absolute"></div>
+        <div id = "pieForType" style="width: 750px; height: 550px; position: absolute"></div>
     </div>
 </div>
 
