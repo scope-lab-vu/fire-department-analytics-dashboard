@@ -38,6 +38,7 @@ var markers = [],  // an array of all markers objects
     heatDataAll = [],
     heatDataTraffic = [],
     heatDataBurglary = [];
+var sumOfIncidents = [];
 
 
 /* On submit button: get data from left menu bar, if date is not filled,
@@ -91,6 +92,9 @@ function prepMarkers() {
     markersArr = [];
     markersArr.length = 0;
 
+    sumOfIncidents.length=0;
+    sumOfIncidents = [0,0,0,0,0,0,0];  // sum of incidents happened at each level of severity
+
     console.log("markersArr length:   "+ markersArr.length+ "\n   "+markersArr);    
 }
 
@@ -131,10 +135,13 @@ function CenterControl(controlDiv, map) {
     );
 }
 
-
+socket.on('incident_success', function() {
+    document.getElementById("loader").style.display = "block";
+})
 /* socket to get burglary data from server*/
 var data_burglary;
 socket.on('burglary_data', function(msg) {
+
     // console.log(msg);
     data_burglary = msg;
     setBurglary();
@@ -164,10 +171,11 @@ function setBurglary() {
     }
     // if there is at least one marker for burglary 
     if (arr.length !== 0) {
-        markersArr["Burglary"] = arr;
+        markersArr[80] = arr;
         markersArr.length++;
-        types.push("Burglary");
+        types.push("80");
     }
+    document.getElementById("loader").style.display = "none";
 }
 
 /* set a marker of "position" on "map" with "icon" and "content" */
@@ -181,123 +189,106 @@ function createMarkerObj(position, map, icon, content) {
 }
 
 
+
+var strCardiac = "6/9/11/12/19/28/31/32",
+    strTrauma = "1/2/3/4/5/7/8/10/13/14/15/16/17/18/20/21/22/23/24/25/26/27/30",
+    strMVA = "29",
+    strFire = "51/52/53/54/55/56/57/58/59/60/61/62/63/64/65/66/67/68/69/70/71/72/73/74/75";
+
+var severity = "ABCDEO",
+    colors = ['#00a6ff', '#bbec26', '#ffe12f', '#ff9511', '#ff0302', '#66060A'];
+
 /* socket to get incident_data from server */
-var data_incidents;
+var data_incident;
 socket.on('incident_data', function(msg) {
-    // console.log(msg);
-    data_incidents = msg;
+    console.log(msg);
+    data_incident = msg;
+    /* emdCardNumber is a digit that has length [3,5], the letter in between is the 
+     * response determinant, a.k.a, the level of severity; or it has the value of 
+     * "ctran" or "dupont"*/
+    var emdCardNumber = data_incident.emdCardNumber;
+    var protocol;
+    var u=0;
+    if (! ("0123456789".includes(emdCardNumber.charAt(0)))) {
+        protocol = emdCardNumber;
+        u = protocol.length;
+    } else {
+        while (u<emdCardNumber.length && severity.indexOf(emdCardNumber.charAt(u))<0) {
+            u++
+        }
+        protocol = emdCardNumber.substring(0,u);
+    }
+    if (! (protocol in markersArr)) {
+        markersArr[""+protocol] = [];
+        // markersArr.length++;
+        types.push(protocol);
+        console.log("-------------------");
+        console.log(types);
+    }
+    setIncident(data_incident, u)
     document.getElementById("loader").style.display = "none";
-    setIncident();
 });
 
 /* set traffic incidents markers, markers are circles color-coded to indicate
  * level of severity */
-function setIncident() {
-    var r = data_incidents.incidents;
-    var sumOfIncidents = [];
-    sumOfIncidents.length=0;
-    sumOfIncidents = [0,0,0,0,0,0];  // sum of incidents happened at each level of severity
-    
-    var arr = [];
-    for (var i = 0; i < r.length; i++) {
-        var latLng = new google.maps.LatLng(r[i]._lat, r[i]._lng);
-        heatDataAll.push(latLng);
-        var content = '<b>Incident Number: </b>' + r[i].incidentNumber +
-            '</br><b>Alarm Date: </b>' + r[i].alarmDate +
-            '</br><b>Location: </b>' + r[i].streetNumber + " " + r[i].streetPrefix + " "
-            + r[i].streetName + " " + r[i].streetSuffix + " " + r[i].streetType + ", "
-            + r[i].city + ", " + r[i].county + ", TN" +
-            '</br><b>EMD Card Number: </b>' + r[i].emdCardNumber +
-            '</br><b>Fire Zone: </b>' + r[i].fireZone +
-            '</br>Object Id: ' + r[i]._id;
-        content = content.replace(/na/g, "");
+function setIncident(r, index) {
+    var r_severity = (r.emdCardNumber).charAt(index);
+    if (severity.indexOf(r_severity) >= 0) {
+        sumOfIncidents[severity.indexOf(r_severity)]++;
+    } else {
+        sumOfIncidents[severity.length]++;
+    }
+    var latLng = new google.maps.LatLng(r._lat, r._lng);
+    heatDataAll.push(latLng);
+    var content = '<b>Incident Number: </b>' + r.incidentNumber +
+        '</br><b>Alarm Date: </b>' + r.alarmDate +
+        '</br><b>Location: </b>' + r.streetNumber + " " + r.streetPrefix + " "
+        + r.streetName + " " + r.streetSuffix + " " + r.streetType + ", "
+        + r.city + ", " + r.county + ", TN" +
+        '</br><b>EMD Card Number: </b>' + r.emdCardNumber +
+        '</br><b>Fire Zone: </b>' + r.fireZone +
+        '</br>Object Id: ' + r._id;
+    content = content.replace(/na/g, "");
 
-        var marker;
-        var severity = "ABCDE",
-            colors = ['#00a6ff', '#bbec26', '#ffe12f', '#ff9511', '#ff0302'];
-        
-        /* emdCardNumber is a digit that has length [3,5], the letter in between is the 
-         * response determinant, a.k.a, the level of severity; or it has the value of 
-         * "ctran" or "dupont"*/
-        var emdCardNumber = r[i].emdCardNumber;
-        var responseDeterminant;
-        if (emdCardNumber === "CTRAN") {
-            responseDeterminant = "A"
-        } else if (emdCardNumber === "DUPONT") {
-            responseDeterminant = "F"
-        } else {
-            var u = 0;
-            while (u<emdCardNumber.length && severity.indexOf(emdCardNumber.charAt(u))<0) {
-                u++;
-            }
-            responseDeterminant = emdCardNumber.charAt(u);
-        }
-        
-
-        var imgCardiac = {
-            url: 'https://cdn1.iconfinder.com/data/icons/medicine-healthcare-disease/100/07-512.png',
+    var protocol = (r.emdCardNumber).substring(0,index);
+    var img;
+    var imgCardiac = {
+            url: 'https://www.monash.edu/__data/assets/image/0020/352091/cardio.png',
+            scaledSize: new google.maps.Size(15, 15)
+        },
+        imgTrauma = {
+            url: 'http://www.otorrinoguadalajara.com.mx/wp-content/uploads/2016/02/3.png',
             scaledSize: new google.maps.Size(20, 20)
-            },
-            imgTrauma = {
-                url: 'https://cdn3.iconfinder.com/data/icons/health-medicine/512/Injury-512.png',
-                scaledSize: new google.maps.Size(20, 30)
-            },
-            imgMVA = {
-                url: 'https://image.flaticon.com/icons/png/128/65/65788.png',
-                scaledSize: new google.maps.Size(20, 30)
-            },
-            imgFire = {
-                url: 'https://cdn2.iconfinder.com/data/icons/fire-department/500/burning-512.png',
-                scaledSize: new google.maps.Size(20, 30)
-            };
-
-        // if severity is known:
-        if (severity.indexOf(responseDeterminant) > -1) {
-            sumOfIncidents[severity.indexOf(responseDeterminant)]++;
-            marker = new google.maps.Marker({
-                position: latLng,
-                map: map,
-                icon: {
-                    path: google.maps.SymbolPath.CIRCLE,
-                    fillColor: colors[severity.indexOf(responseDeterminant)],
-                    fillOpacity: .9, // number between 0.0 and 1.0, 1.0 means not opaque at all
-                    // scale: Math.pow(1.3, responseDeterminant+2)+2,
-                    scale: 5,
-                    strokeColor: 'black',
-                    strokeWeight: .1
-                },
-                contentString: content
-            });
-        // if severity is unknown
-        } else {
-            sumOfIncidents[5]++;
-            marker = new google.maps.Marker({
-                position: latLng,
-                map: map,
-                icon: {
-                    path: google.maps.SymbolPath.CIRCLE,
-                    fillColor: '#797A7A',
-                    fillOpacity: .75,
-                    scale: 4,
-                    strokeColor: 'white',
-                    strokeWeight: .1
-                },
-                contentString: content
-            });
-        }
-
-        setInfoWindow(marker);
-        arr.push(marker);
-        markers.push(marker);
-        
+        },
+        imgMVA = {
+            url: 'https://cdn3.iconfinder.com/data/icons/flat-icons-2/600/traffic.png',
+            scaledSize: new google.maps.Size(15, 15)
+        },
+        imgFire = {
+            url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Emoji_u1f525.svg/2000px-Emoji_u1f525.svg.png',
+            scaledSize: new google.maps.Size(20, 20)
+        },
+        imgOther = {
+            url: 'http://icon-park.com/imagefiles/location_map_pin_blue5.png',
+            scaledSize: new google.maps.Size(15, 20)
+        };
+    
+    if (strCardiac.includes(protocol)) {
+        img = imgCardiac;
+    } else if (strTrauma.includes(protocol)) {
+        img = imgTrauma;
+    } else if (strFire.includes(protocol)) {
+        img = imgFire;
+    } else if (strMVA.includes(protocol)) {
+        img = imgMVA;
+    } else {
+        img = imgOther;
     }
-    // if there is at least one incident
-    if (arr.length !== 0) {
-        types.push("Incidents");
-        markersArr["Incidents"] = arr;
-        markersArr.length++;
-        setBar(sumOfIncidents);
-    }
+
+    var marker = new google.maps.Marker(createMarkerObj(latLng,map,img,content));
+    setInfoWindow(marker);
+    markers.push(marker);
+    markersArr[protocol].push(marker);
 }
 
 
@@ -326,14 +317,80 @@ function setInfoWindow(marker) {
     });
 }
 
+var meaningList = {0: "",
+        1: "Abdominal Pain/Problems", 
+        2: "Allergies",
+        3: "Animal Bites/Attacks",
+        4: "Assualt/Sexual Assault",
+        5: "Back Pain",
+        6: "Breathing Problems",
+        7: "Burns",
+        8: "Carbon Monoxide/CBRN",
+        9: "Cardiac Arrest/Death",
+        10: "Chest Pain",
+        11: "Choking",
+        12: "Convulsion/Seizure",
+        13: "Diabetic",
+        14: "Drowning(near)",
+        15: "Electrocution/Lightning",
+        16: "Eye Problems",
+        17: "Fall",
+        18: "Headache",
+        19: "Heart Problems",
+        20: "Heat And Cold Exposure",
+        21: "Hemorrhage/Laceration",
+        22: "Inaccessible Incident",
+        23: "Overdose",
+        24: "Pregnancy/Childbirth/Miscarriage",
+        25: "Psychiatric/Suicidal",
+        26: "Sick Person",
+        27: "Stab/Gunshot/Penetrating Trauma",
+        28: "Stroke",
+        29: "Traffic/Transportation",
+        30: "Traumatic Injuries",
+        31: "Unconscious/Fainting(near)",
+        32: "Unknown Problem(man down)",
+        51: "Aircraft Emergency",
+        52: "Alarm",
+        53: "Citizen Assist/Service Call",
+        54: "Confined Space/Structure Collapse",
+        55: "Electrical Hazard",
+        56: "Elevator/Escalator Rescue",
+        57: "Explosion",
+        58: "Extrication/Entrapped",
+        59: "Fuel Spill",
+        60: "Gas Leak/Gas Odor(natural)",
+        61: "Hazmat",
+        62: "High Angle Rescue",
+        63: "Lightning Strike(investigation)",
+        64: "Marine Fire",
+        65: "Mutual Aid",
+        66: "Odor(Strange/Unknow)",
+        67: "Outside Fire",
+        68: "Somke Investigation(outside)",
+        69: "Structure Fire",
+        70: "Train/Rail Inident",
+        71: "Vehicle Fire",
+        72: "Water Rescue",
+        73: "Watercraft in Distress",
+        74: "Suspicious Package",
+        75: "Train/Rail Fire",
+        80: "Burglary",
+        CTRAN: "Critcal Transfer",
+        DUPONT: "Dupont Alarm"
+    }
+
 /* socket after markers are drawn on map: set up pie charts*/
 socket.on('markers-success', function() {
     console.log("-->All markers success")
+    console.log("types[]: ")
+    console.log(types)
     console.log(markersArr); // should look like [Incidents: Array(x), Burglary: Array(y)]
+    setBar(sumOfIncidents);
     var arr = [['Types', 'Number']];
     for (var j=0; j<types.length; j++) {
         var a = [];
-        a.push(types[j]);
+        a.push(meaningList[types[j]]);    
         a.push(markersArr[types[j]].length);
         arr.push(a);
     }
@@ -364,9 +421,12 @@ function printSummary() {
             typeCheckbox.type = "checkbox";
             typeCheckbox.id = types[i];
             typeCheckbox.checked = true;
-            var label = document.createTextNode(types[i]);
+            // typeCheckbox.style.display = "block";
+            typeCheckbox.overflow = "hidden";
+            var label = document.createTextNode(meaningList[types[i]]);
             div.appendChild(typeCheckbox);
-            div.appendChild(label)
+            div.appendChild(label);
+            
         }
     }
 
@@ -404,20 +464,16 @@ function getType() {
 
 /* toggle markers by changing their visibility */
 function toggleMarkers(arrOfArr) {
-    if (types.length !== arrOfArr.length) {
-        alert("Mismatch of numbers of elements in 'types' and 'arrOfArr'");
-    } else {
-        for (var j = 0; j < types.length; j++) {
-            if (document.getElementById(types[j]).checked) {
-                var arr = arrOfArr[types[j]];
-                for (var i = 0; i < arr.length; i++) {
-                    if (arr[i].getVisible()) {
-                        arr[i].setVisible(false);
-                        document.getElementById('markers').innerHTML = 'Show Markers';
-                    } else {
-                        arr[i].setVisible(true);
-                        document.getElementById('markers').innerHTML = 'Hide Markers';
-                    }
+    for (var j = 0; j < types.length; j++) {
+        if (document.getElementById(types[j]).checked) {
+            var arr = arrOfArr[types[j]];
+            for (var i = 0; i < arr.length; i++) {
+                if (arr[i].getVisible()) {
+                    arr[i].setVisible(false);
+                    document.getElementById('markers').innerHTML = 'Show Markers';
+                } else {
+                    arr[i].setVisible(true);
+                    document.getElementById('markers').innerHTML = 'Hide Markers';
                 }
             }
         }
@@ -486,8 +542,8 @@ function setBar(data) {
         .domain([0, d3.max(data)])
         .range([0, 250]);
 
-    var colors = ['#00a6ff', '#bbec26', '#ffe12f', '#ff9511', '#ff0302', '#797A7A'];
-    var severity = ["A","B","C","D","E","N.A"];
+    var colors = ['#00a6ff', '#bbec26', '#ffe12f', '#ff9511', '#ff0302', '#66060A','#797A7A'];
+    var severity = ["A","B","C","D","E","O","N.A"];
     d3.select(".bar")
         .selectAll("div")
         .data(data)
@@ -512,7 +568,7 @@ function setPie(arr) {
     var options = {
         title: 'Percentage of incidents',
         is3D: true,
-        backgroundColor: "dimgrey",
+        backgroundColor: "7EA08E"
     };
     var chart = new google.visualization.PieChart(document.getElementById('pieForType'));
     chart.draw(data, options);
@@ -569,22 +625,3 @@ function setPiej3(data) {
         context.fillText((data[i]*100/sum).toFixed(1)+"%", c[0], c[1]);
     });
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
