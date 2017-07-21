@@ -23,12 +23,43 @@ def socketio_connet():
 
 @socketio.on('get_date')
 def getDate (msg):
+    # findMinMax()
     print "-> got date, start = " + msg['start'] +", end = "+ msg['end']
     start = datetime.datetime.strptime(msg['start'], "%Y-%m-%d %H %M")
     end = datetime.datetime.strptime(msg['end'], "%Y-%m-%d %H %M")
     getIncidentData(start, end)
     getBurglaryData(start, end)
     socketio.emit("markers-success")
+
+'''
+max time is;;;;;;;;;;;;;;;;;
+2016-02-05 13:12:00
+min time is;;;;;;;;;;;;;;;;;
+2014-02-20 10:24:00
+'''
+
+# def findMinMax():
+#     client = MongoClient("mongodb://zilinwang:Mongo0987654321@129.59.107.60:27017/fire_department")
+#     db = client["fire_department"]["simple__incident"]
+#     items = db.find()
+#     pretime = (items[0])['alarmDateTime']
+#     print pretime
+#     maxT = pretime
+#     minT = pretime
+#     for item in items:
+#         if (type(item['alarmDateTime'])!=datetime.datetime):
+#             break
+#         time = item['alarmDateTime']
+#         if (time>maxT):
+#             maxT = time
+        
+#         if (time<minT):
+#             minT = time
+#     print "max time is;;;;;;;;;;;;;;;;;"
+#     print maxT
+#     print "min time is;;;;;;;;;;;;;;;;;"
+#     print minT
+        
 
 
 # retrieve data from mongo db
@@ -67,7 +98,10 @@ def getIncidentData(start, end):
             dictIn['alarmDate'] = str(item['alarmDateTime'])
             dictIn['fireZone'] = item['fireZone']
             dictIn['city'] = item['city']
-            dictIn['county'] = item['county']
+            if 'county' in item:
+                dictIn['county'] = item['county']
+            else:
+                dictIn['county'] = "na"
             dictIn['emdCardNumber'] = item['emdCardNumber']
             if 'streetNumber' in item:
                 dictIn['streetNumber'] = item['streetNumber']
@@ -100,20 +134,23 @@ def getIncidentData(start, end):
                 dictIn['apartment'] = "na"
 
             
-
             socketio.emit("incident_data", dictIn)
 
             dictArr.append(dictIn)
 
 
+
 # retrieve data from csv file
 def getBurglaryData(start, end):
-    socketio.emit("incident_success")
+    print(" --> get Burglary")
     arr = []
+    i=0
     with open('/Users/wangshibao/SummerProjects/dashboard-socket/myapp/burglarySnapshot.csv','rU') as f:
         reader = csv.reader(f)
         header = (reader.next())[0].split("\t")
+
         for item in reader:
+            print i
             obj = {}
             content = item[0].split("\t")
             for j in range(len(header)):
@@ -122,12 +159,17 @@ def getBurglaryData(start, end):
             date = obj['_date']
             date_time = date[:4] +"/"+date[4:6] +"/"+date[6:8]+" "+obj['_time']
             date_time = datetime.datetime.strptime(date_time, "%Y/%m/%d %H:%M")
+            i +=1
 
             if (start <= date_time <= end): 
                 obj['AlarmDateTime'] = str(date_time)
                 arr.append(obj)
-
-    socketio.emit("burglary_data", arr)
+    if (arr != []):
+        print "-----> arr is NOT empty"
+        socketio.emit("burglary_data", arr)
+    else:
+        print "-----> arr is empty"
+        socketio.emit("burglary_none")
 
 
 
