@@ -3,12 +3,12 @@
  * Script for setting markers, heat maps, info windows for Json data
  */
 var map;
-var centerNash = {lat: 36.1627, lng: -86.7816};
+var centerNash = {lat: 36.18, lng: -86.7816};
 
 // Create an initial map - plain, center at centerNash
 function initMap() {
     map = new google.maps.Map(document.getElementById('map'), {
-        zoom: 11,
+        zoom: 10,
         center: centerNash,
         mapTypeId: 'roadmap',
         scrollwheel: false  // disable scroll wheel
@@ -130,20 +130,25 @@ function CenterControl(controlDiv, map) {
         'click',
         function() {
             map.setCenter(centerNash);
-            map.setZoom(11);
+            map.setZoom(10);
         }
     );
 }
 
-socket.on('incident_success', function() {
-    document.getElementById("loader").style.display = "block";
-})
+socket.on('success', function() {
+    console.log("socketio success");
+});
+
+socket.on('burglary_none', function() {
+    document.getElementById("loader").style.display = "none";
+});
 /* socket to get burglary data from server*/
 var data_burglary;
 socket.on('burglary_data', function(msg) {
 
     // console.log(msg);
     data_burglary = msg;
+    document.getElementById("loader").style.display = "none";
     setBurglary();
 });
 
@@ -175,7 +180,6 @@ function setBurglary() {
         markersArr.length++;
         types.push("80");
     }
-    document.getElementById("loader").style.display = "none";
 }
 
 /* set a marker of "position" on "map" with "icon" and "content" */
@@ -225,8 +229,9 @@ socket.on('incident_data', function(msg) {
         console.log("-------------------");
         console.log(types);
     }
-    setIncident(data_incident, u)
     document.getElementById("loader").style.display = "none";
+    setIncident(data_incident, u)
+
 });
 
 /* set traffic incidents markers, markers are circles color-coded to indicate
@@ -289,6 +294,7 @@ function setIncident(r, index) {
     setInfoWindow(marker);
     markers.push(marker);
     markersArr[protocol].push(marker);
+    document.getElementById("loader").style.display = "block";
 }
 
 

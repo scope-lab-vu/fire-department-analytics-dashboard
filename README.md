@@ -1,4 +1,8 @@
-# The myapp folder utilizes flask-socket to get data from the server and transfer data to and from the html ide
+# Dashboard
+
+The myapp folder utilizes flask-socket to get data from the server and transfer data to and from the html ide
+
+pymongo is used to read data from Mongo Express 
 
 "incidentsPlot.html" is the dashboard interface
 
