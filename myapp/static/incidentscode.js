@@ -4,6 +4,8 @@
  */
 var map;
 var centerNash = {lat: 36.18, lng: -86.7816};
+var minDate = new Date("2014-02-20T00:00:00.00");
+var maxDate = new Date("2016-02-06T00:00:00.00");
 
 // Create an initial map - plain, center at centerNash
 function initMap() {
@@ -22,6 +24,114 @@ function initMap() {
     centerControlDiv.index = 1;
     map.controls[google.maps.ControlPosition.TOP_CENTER].push(centerControlDiv);
 
+    createSlider();
+}
+
+/* generate a data slider that follows the date input box;
+ * input box also follows the handle on slider */
+function createSlider() {
+    var start_Date = document.getElementById('date1'),
+        start_Hour = document.getElementById('hour1'),
+        end_Date = document.getElementById('date2'),
+        end_Hour = document.getElementById('hour2');
+
+    var start = start_Date.value + 'T' + (start_Hour.value).toString() + ":00:00.00",
+        end = end_Date.value + "T" + (end_Hour.value).toString() + ":00:00.00";
+
+    var dateSlider = document.getElementById('slider');
+    noUiSlider.create(dateSlider, {
+        // Create two timestamps to define a range.
+        range: {
+            min: minDate.getTime(),
+            max: maxDate.getTime()
+        },
+        connect: true,
+        behaviour: 'drag',
+        // Min interval: half an hour
+        margin: 60 * 60 * 1000,
+        // Max interval: two months
+        limit: 60 * 24 * 60 * 60 * 1000,
+        // Steps of one hour
+        step: 60 * 60 * 1000,
+        // Two more timestamps indicate the handle starting positions.
+        start: [timestamp(start), timestamp(end)],
+        pips: {
+            mode: 'range',
+            density: 1,
+            stepped: true
+        }
+    });
+
+    // input tables change along with handle
+    var inputs = [start_Date, end_Date, start_Hour, end_Hour];
+    dateSlider.noUiSlider.on('update', function(values, handle) {
+        var date = new Date(+values[handle]);
+        inputs[handle].value = date.getFullYear()+"-"+ addZero((date.getMonth()+1).toString())+(date.getMonth()+1) +
+            "-"+addZero((date.getDate()).toString())+date.getDate();
+        inputs[handle+2].value = date.getHours();
+    });
+
+    var dateValues = document.getElementById('event');
+    dateSlider.noUiSlider.on('update', function(values) {
+        dateValues.innerHTML = formatDate(new Date(+values[0]))+ " ~ " + formatDate(new Date(+values[1]));
+    });
+
+    // handle changes along input tables
+    var tmpdate;
+    start_Date.addEventListener('change', function(){
+        tmpdate = this.value;
+        dateSlider.noUiSlider.set([timestamp(this.value), null]);
+    });
+    start_Hour.addEventListener('change', function(){
+        tmpdate = tmpdate + "T" + (start_Hour.value).toString() + ":00:00.00";
+        dateSlider.noUiSlider.set([timestamp(tmpdate), null]);
+    });
+    end_Date.addEventListener('change', function(){
+        tmpdate = this.value;
+        dateSlider.noUiSlider.set([null, timestamp(this.value)]);
+    });
+    end_Hour.addEventListener('change', function(){
+        tmpdate = tmpdate + "T" + (end_Hour.value).toString() + ":00:00.00";
+        dateSlider.noUiSlider.set([null, timestamp(tmpdate)]);
+    });
+}
+
+// if day or month is only one digit, add zero in front
+function addZero(m) {
+    if (m.length===1) {
+        return "0";
+    } else {
+        return "";
+    }
+}
+
+// return new date object given string
+function timestamp(str){
+    return new Date(str).getTime();
+}
+
+var weekdays = [
+        "Sunday", "Monday", "Tuesday",
+        "Wednesday", "Thursday", "Friday",
+        "Saturday"
+    ];
+
+// Append a suffix to dates.
+// Example: 23 => 23rd, 1 => 1st.
+function nth (d) {
+    if(d>3 && d<21) return 'th';
+    switch (d % 10) {
+        case 1:  return "st";
+        case 2:  return "nd";
+        case 3:  return "rd";
+        default: return "th";
+    }
+}
+
+// Create a string representation of the date.
+function formatDate (date) {
+    return weekdays[date.getDay()] + ", " +date.getFullYear() + "/"
+    + (date.getMonth()+1)+"/"+date.getDate() + nth(date.getDate())+"  "+date.getHours()+":00";
 }
 
 // create socket connect
@@ -205,7 +315,6 @@ var severity = "ABCDEO",
 /* socket to get incident_data from server */
 var data_incident;
 socket.on('incident_data', function(msg) {
-    console.log(msg);
     data_incident = msg;
     /* emdCardNumber is a digit that has length [3,5], the letter in between is the 
      * response determinant, a.k.a, the level of severity; or it has the value of 
@@ -226,8 +335,6 @@ socket.on('incident_data', function(msg) {
         markersArr[""+protocol] = [];
         // markersArr.length++;
         types.push(protocol);
-        console.log("-------------------");
-        console.log(types);
     }
     document.getElementById("loader").style.display = "none";
     setIncident(data_incident, u)
@@ -546,7 +653,7 @@ function setBar(data) {
     }
     var x = d3.scaleLinear()
         .domain([0, d3.max(data)])
-        .range([0, 250]);
+        .range([0, 700]);
 
     var colors = ['#00a6ff', '#bbec26', '#ffe12f', '#ff9511', '#ff0302', '#66060A','#797A7A'];
     var severity = ["A","B","C","D","E","O","N.A"];
@@ -574,7 +681,8 @@ function setPie(arr) {
     var options = {
         title: 'Percentage of incidents',
         is3D: true,
-        backgroundColor: "7EA08E"
+        backgroundColor: "transparent",
+        sliceVisibilityThreshold: .04
     };
     var chart = new google.visualization.PieChart(document.getElementById('pieForType'));
     chart.draw(data, options);

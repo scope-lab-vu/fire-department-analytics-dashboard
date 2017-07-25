@@ -6,6 +6,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link href="https://fonts.googleapis.com/css?family=PT+Sans" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css?family=Alegreya+Sans+SC:100|Montserrat+Subrayada|Lato:100i|Zilla+Slab" rel="stylesheet">
+    <link href="./static/nouislider.css" rel="stylesheet">
 
     <style>
 
@@ -103,11 +104,23 @@
             top: 12%;
             padding: 8px;
             border-top: solid 3px #D9AC42;
-            background-color: rgba(52, 52, 52, 0.72);
             font-family: 'Zilla Slab', serif;
             color: white;
             overflow-y: scroll;
             z-index: 2;
+        }
+
+        .sliderGround {
+            position: relative;
+            left: 0;
+            top: 34%;
+            height: 50px;
+            width: 770px;
+            padding: 5px;
+            /*border: solid 3px #a7d99b;*/
+            font-family: 'PT Sans', sans-serif;
+            line-height: 48px;
+            color: white;
         }
 
         .subplayground2 {
@@ -119,7 +132,6 @@
             padding: 18px;
             border-left: solid 3px #a7d99b;
             font-family: 'PT Sans', sans-serif;
-            background-color: #1F3A26;
         }
 
         text {
@@ -219,12 +231,67 @@
             opacity: 0.5;
         }
 
+        #slider {
+            width: 770px;
+        }
 
+        #submitDates {
+            position: relative;
+            top: 1px;
+        }
+
+        .example-val {
+            color: white;
+            display: inline-block;
+        }
+
+
+        /* over-writing the nouislider css */
+        .noUi-connect {
+            background: #D9AC42;
+        }
+
+        /* the actual handle */
+        .noUi-horizontal .noUi-handle {
+            width: 15px;
+            height: 28px;
+            left: -7px;
+            top: -6px;
+            background: rgba(255, 255, 255, 0.76);
+        }
+
+        /* two strips on handle*/
+        .noUi-handle:before,
+        .noUi-handle:after {
+            content: "";
+            display: block;
+            position: absolute;
+            height: 14px;
+            width: 1px;
+            background: #855f18;
+            left: 5px;
+            top: 6px;
+        }
+
+        .button {
+            background-color: #D9AC42; 
+            border: none;
+            color: white;
+            padding: 10px 15px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 12px;
+            margin: 2px 1px;
+            cursor: pointer;
+            border-radius: 8px;
+            color: black;
+        }
     </style>
 </head>
 
 <body>
-
+<script src="./static/nouislider.js"></script>
 <div id="logo">
     <div class="topleft">
         <img src="https://admissions.vanderbilt.edu/insidedores/manage/wp-content/uploads/vanderbilt-logo-2008.gif"
@@ -250,23 +317,13 @@
         <option value = "bar">Bar Chart(N.A.)</option>
         <option value = "pie">Pie Chart(N.A.)</option>
     </select><br>
-
-
-    <i class="fa fa-calendar" aria-hidden="true"></i>
-    From (Default start hour is 00:00)<br>
-     &gt;
-    Date: <input type="date" min="2014-01-01" max="2016-12-31" value="2014-03-01" id="date1"/>
-    Hour: <input type="number" min="0" max="24" id="hour1"/><br>
-
-    <i class="fa fa-calendar" aria-hidden="true"></i>
-    To (Default end hour is 24:00)<br>
-     &gt;
-    Date: <input type="date" min="2014-01-01" max="2017-01-01" value="2014-03-02" id="date2"/>
-    Hour: <input type="number" min="0" max="24" id="hour2"/><br>
-
-    <!-- On submit button, call to get data from server according to the inputs -->
-    <input type="button" onclick="getData()" value="submit" style="float: right">
-
+    Year: <br>
+     &gt;
+    <select id = "incidentYear">
+        <option id = "2014">2014</option>
+        <option id = "2015">2015</option>
+        <option id = "2016">2016</option>
+    </select>
 </div>
 
 <!-- where maps, graphs, charts live -->
@@ -288,8 +345,23 @@
         </label><br>
         <hr>
 
+        <div class="example-val" id="event"></div>
         <p id="total"></p>
         <div id="chooseType" style="display: block"></div>
+    </div>
+
+    <div class="sliderGround">
+        <div id="slider"></div>
+        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;
+        <i class="fa fa-calendar" aria-hidden="true"></i>
+        From: <input type="date" min="2014-01-01" max="2016-12-31" value="2014-06-01" id="date1"/>
+        Hour: <input type="number" min="0" max="23" id="hour1" value = "10"/>
+        &nbsp;&nbsp; &nbsp;
+        <i class="fa fa-calendar" aria-hidden="true"></i>
+        To: <input type="date" min="2014-01-01" max="2017-01-01" value="2014-07-01" id="date2"/>
+        Hour: <input type="number" min="0" max="23" id="hour2" value="10"/>
+        &nbsp;&nbsp; &nbsp;
+        <button class="button" id="submitDates" onclick="getData()">Submit dates</button></br>
     </div>
 
     <div class="subplayground2">
