@@ -97,7 +97,10 @@ def getIncidentData(start, end):
             dictIn['_lng'] = item['longitude']
             dictIn['alarmDate'] = str(item['alarmDateTime'])
             dictIn['fireZone'] = item['fireZone']
-            dictIn['city'] = item['city']
+            if 'city' in item:
+                dictIn['city'] = item['city']
+            else:
+                dictIn['city'] = "na"
             if 'county' in item:
                 dictIn['county'] = item['county']
             else:

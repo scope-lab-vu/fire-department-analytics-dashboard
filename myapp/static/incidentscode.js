@@ -10,7 +10,7 @@ var maxDate = new Date("2016-02-06T00:00:00.00");
 // Create an initial map - plain, center at centerNash
 function initMap() {
     map = new google.maps.Map(document.getElementById('map'), {
-        zoom: 10,
+        zoom: 11,
         center: centerNash,
         mapTypeId: 'roadmap',
         scrollwheel: false  // disable scroll wheel
@@ -55,11 +55,11 @@ function createSlider() {
         step: 60 * 60 * 1000,
         // Two more timestamps indicate the handle starting positions.
         start: [timestamp(start), timestamp(end)],
-        pips: {
-            mode: 'range',
-            density: 1,
-            stepped: true
-        }
+        // pips: {
+        //     mode: 'range',
+        //     density: 1,
+        //     stepped: true
+        // }
     });
 
     // input tables change along with handle
@@ -213,14 +213,13 @@ function prepMarkers() {
 function CenterControl(controlDiv, map) {
     // Set CSS for the control border.
     var controlUI = document.createElement('div');
-    controlUI.style.backgroundColor = '#fff';
-    controlUI.style.border = 'solid #fff';
+    controlUI.style.backgroundColor = 'floralwhite';
+    controlUI.style.border = '0.2px solid #BEBEBE';
     controlUI.style.borderRadius = '5px';
-    controlUI.style.boxShadow = '0 6px 6px rgba(0,0,0,.3)';
+    // controlUI.style.boxShadow = '0 6px 6px rgba(0,0,0,.3)';
     controlUI.style.cursor = 'pointer';
     controlUI.style.marginBottom = '12px';
-    // controlUI.style.textAlign = 'right';
-    controlUI.style.marginTop = "37px";
+    controlUI.style.marginTop = "45px";
     controlUI.title = 'Click to recenter the map';
     controlDiv.appendChild(controlUI);
 
@@ -229,7 +228,7 @@ function CenterControl(controlDiv, map) {
     controlText.style.color = 'rgb(25,25,25)';
     controlText.style.fontFamily = 'Roboto,Arial,sans-serif';
     controlText.style.fontSize = '12px';
-    controlText.style.lineHeight = '10px';
+    controlText.style.lineHeight = '22px';
     controlText.style.paddingLeft = '5px';
     controlText.style.paddingRight = '5px';
     controlText.innerHTML = 'Center Map';
@@ -381,7 +380,7 @@ function setIncident(r, index) {
             scaledSize: new google.maps.Size(20, 20)
         },
         imgOther = {
-            url: 'http://icon-park.com/imagefiles/location_map_pin_blue5.png',
+            url: 'http://www.clker.com/cliparts/F/S/M/2/p/w/map-marker-hi.png',
             scaledSize: new google.maps.Size(15, 20)
         };
     
@@ -524,23 +523,56 @@ socket.on('markers-success', function() {
  */
 function printSummary() {
     document.getElementById('total').innerHTML = "Total incidents: "+ (markers.length);
-    document.getElementById('chooseType').innerHTML = "Check type: ";
+    document.getElementById('chooseType').innerHTML = "Choose type: ";
 
-    var div = document.querySelector(".subplayground1");
+    if (document.getElementById("selectType") !== null) {
+        var t = document.getElementById("selectType");
+        t.parentNode.removeChild(t);
+    }
+
+    var div = document.querySelector(".columnSummary");
+    var selectList = document.createElement("select");
+    selectList.id = "selectType";
+    selectList.multiple = "multiple";
+    div.appendChild(selectList);
+
+    var optionGroup1 = document.createElement("optGroup");
+    optionGroup1.label = "Cardiac";
+    selectList.appendChild(optionGroup1);
+
+    var optionGroup2 = document.createElement("optGroup");
+    optionGroup2.label = "Trauma";
+    selectList.appendChild(optionGroup2);
+
+    var optionGroup3 = document.createElement("optGroup");
+    optionGroup3.label = "Fire";
+    selectList.appendChild(optionGroup3);
+
+    var optionGroup4 = document.createElement("optGroup");
+    optionGroup4.label = "MVA";
+    selectList.appendChild(optionGroup4);
+
+    var optionGroup5 = document.createElement("optGroup");
+    optionGroup5.label = "Other";
+    selectList.appendChild(optionGroup5);
+
 
     for (var i=0; i<types.length; i++) {
-        if (document.getElementById(types[i]) === null) {
-            var typeCheckbox = document.createElement("input");
-            typeCheckbox.type = "checkbox";
-            typeCheckbox.id = types[i];
-            typeCheckbox.checked = true;
-            // typeCheckbox.style.display = "block";
-            typeCheckbox.overflow = "hidden";
-            var label = document.createTextNode(meaningList[types[i]]);
-            div.appendChild(typeCheckbox);
-            div.appendChild(label);
-            
-        }
+        var option = document.createElement("option");
+        option.id = types[i];
+        option.text = meaningList[types[i]];
+
+        if (strCardiac.includes(types[i])) {
+            optionGroup1.appendChild(option);
+        } else if (strTrauma.includes(types[i])) {
+            optionGroup2.appendChild(option);
+        } else if (strFire.includes(types[i])) {
+            optionGroup3.appendChild(option);
+        } else if (strMVA.includes(types[i])) {
+            optionGroup4.appendChild(option);
+        } else {
+            optionGroup5.appendChild(option);
+        }        
     }
 
     // generate submit button
@@ -559,7 +591,7 @@ function getType() {
     for (var i=0; i<types.length; i++) {
         console.log(types[i]+ ": "+ document.getElementById(types[i]).checked);
         var arr = markersArr[types[i]];
-        if (document.getElementById(types[i]).checked === true) {
+        if (document.getElementById(types[i]).selected === true) {
             for (var j=0; j<arr.length; j++) {
                 if (!arr[j].getVisible()) {
                     arr[j].setVisible(true);
@@ -653,7 +685,7 @@ function setBar(data) {
     }
     var x = d3.scaleLinear()
         .domain([0, d3.max(data)])
-        .range([0, 700]);
+        .range([0, 400]);
 
     var colors = ['#00a6ff', '#bbec26', '#ffe12f', '#ff9511', '#ff0302', '#66060A','#797A7A'];
     var severity = ["A","B","C","D","E","O","N.A"];
@@ -682,7 +714,14 @@ function setPie(arr) {
         title: 'Percentage of incidents',
         is3D: true,
         backgroundColor: "transparent",
-        sliceVisibilityThreshold: .04
+        sliceVisibilityThreshold: .04,
+        legend: {
+            position: 'right', 
+            textStyle: {color: 'white', fontSize: 12}
+        },
+        titleTextStyle: {
+            color: 'white', 
+        }
     };
     var chart = new google.visualization.PieChart(document.getElementById('pieForType'));
     chart.draw(data, options);
@@ -738,4 +777,17 @@ function setPiej3(data) {
         var c = arc.centroid(d);
         context.fillText((data[i]*100/sum).toFixed(1)+"%", c[0], c[1]);
     });
+}
+
+/* side nav bar 
+ * "bar" to "x" function
+ * show/hide side nav bar */
+function barToX(x) {
+    x.classList.toggle("change");
+    var w = document.getElementById("mySideNav");
+    if(w.style.width === "0px" || w.style.width ==="") {
+        w.style.width = "350px";
+    } else {
+        w.style.width = "0px";
+    }
 }

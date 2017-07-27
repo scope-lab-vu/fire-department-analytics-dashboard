@@ -5,79 +5,204 @@
     <title>Fire Department incident plot</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link href="https://fonts.googleapis.com/css?family=PT+Sans" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css?family=Alegreya+Sans+SC:100|Montserrat+Subrayada|Lato:100i|Zilla+Slab" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Alegreya+Sans+SC:100|Shadows+Into+Light|Lato:100i|Zilla+Slab"
+          rel="stylesheet">
     <link href="./static/nouislider.css" rel="stylesheet">
 
     <style>
-
         /* <html> <div> <body> */
         html, body {
             position: static;
             height: 3000px;
-            background-color: dimgrey;
+            background-color: black;
         }
 
         #logo {
             position: fixed;
             z-index: 5;
-            top: 2px;
+            top: 0;
             right: 0;
-            height:60px;
+            height: 57px;
             left: 0;
-            padding-top: 15px;
+            padding-top: 0;
             text-align: center;
-            font-family: 'Montserrat Subrayada', sans-serif;
+            font-family: 'Shadows Into Light', cursive;
             font-size: 40px;
-            color: white;
-            text-shadow: 4px 4px 4px rgba(255, 235, 100, 0.45);
-            /*background-image: url("https://az589735.vo.msecnd.net/images/profilepics/1022817/203.jpg");*/
-            background-color: #242424;
+            color: whitesmoke;
+            background-color: #292823;
         }
 
-        #menubar {
+        .container {
             position: fixed;
-            font-family: 'Alegreya Sans SC', sans-serif;
-            padding: 10px;
-            color: white;
-            top: 12%;
-            left: 12px;
-            width: 264px;
-            height: 1000px;
-            background-color: rgba(52, 52, 52, 0.72);
-            background-repeat: no-repeat;
-            border-left:  solid 4px #D9AC42;
-            line-height: 35px;
+            top: 80px;
+            width: 55px;
+            display: inline-block;
+            cursor: pointer;
+            z-index: 10;
         }
 
-        .topleft {
-            position: absolute;
-            left: 10px;
+        .socialMediaBox {
+            position: fixed;
+            top: 80px;
+            width: 55px;
+            display: inline-block;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        .bar1, .bar2, .bar3 {
+            width: 35px;
+            height: 5px;
+            background-color: #9aff59;
+            margin: 6px 0;
+            transition: 0.4s;
+            z-index: 10;
+        }
+        .container:hover {
+            opacity: 0.7;
+        }
+
+        .change .bar1 {
+            -webkit-transform: rotate(-45deg) translate(-9px, 6px);
+            transform: rotate(-45deg) translate(-9px, 6px);
+        }
+
+        .change .bar2 {
+            opacity: 0;
+        }
+
+        .change .bar3 {
+            -webkit-transform: rotate(45deg) translate(-8px, -8px);
+            transform: rotate(45deg) translate(-8px, -8px);
+        }
+
+        .sidenav {
+            height: 100%;
+            width: 0;
+            position: fixed;
+            z-index: 8;
+            top: 75px;
+            left: 0;
+            overflow-x: hidden;
+            overflow-y: auto;
+            transition: 0.5s;
+            padding-top: 130px;
+            font-family: 'Alegreya Sans SC', sans-serif;
+            color: white;
+            background-color: rgba(24, 24, 24, 0.9);
+            background-repeat: no-repeat;
+            line-height: 20px;
+            /*border-left:  solid 4px #D9AC42;*/
+        }
+
+        .sidenav a {
+            padding: 8px 8px 8px 10px;
+            font-size: 25px;
+            color: #bbbbbb;
+            transition: 0.3s;
+        }
+
+        .sidenav b {
+            display: block;
+            padding: 8px 8px 8px 32px;
+            font-size: 18px;
+            color: #bbbbbb;
+            transition: 0.3s;
+        }
+
+        .sidenav a:hover, .offcanvas a:focus {
+            color: #f1f1f1;
+        }
+
+        @media screen and (max-height: 1000px) {
+            .sidenav {
+                padding-top: 75px;
+            }
+
+            .sidenav a {
+                font-size: 18px;
+            }
         }
 
         .playground {
             position: relative;
-            top: 94px;
-            height: 1500px;
-            left: 320px;
-            width: 784px;
-/*            border: 0.3px solid white;*/       
+            width: 90%;
+            height: inherit;
+            top: 80px;
+            left: 5%;
+            padding: 0 8px;
+            color: white;
+            font-size: 40px;
+            font-family: 'Alegreya Sans SC', sans-serif;
+            /*border: 0.3px solid white;*/
+        }
+        .playground a {
+            color: white;
+            font-size: 25px;
+        }
+
+        .card {
+            padding: 15px;
+        }
+
+        .title {
+            background-color: #1e1e1e;
+            width: 100%;
+            height: 20px;
+            color: white;
+            font-family: "Copperplate";
+            font-size: larger;
+            padding: 0;
+        }
+
+        .column {
+            float: left;
+            font-size: 15px;
+            height: 500px;
+            border: 1px solid #424139;
+            box-shadow: 0 0 1em #261a00;
+            padding: 0;
+            margin-bottom: 25px;
+            margin-left: 30px;
+            background-color: #252420;
+        }
+
+        .columnSummary {
+            float: left;
+            font-size: 15px;
+            height: 500px;
+            border: 1px solid #424139;
+            box-shadow: 0 0 1em #261a00;
+            padding: 0;
+            margin-bottom: 25px;
+            margin-left: 30px;
+            background-color: #252420;
         }
 
         /* element name */
         #map {
-            position: absolute;
-            height: 500px;
-            width: 780px;
+            height: 410px;
+            width: inherit;
         }
 
         #floating-panel {
             position: absolute;
-            top: 10px;
-            left: 30%;
+            top: 125px;
+            left:19%;
             border: 1px;
-            line-height: 30px;
+            z-index: 2;
         }
 
+        #sliderGround {
+            position: absolute;
+            height: 50px;
+            width: inherit;
+            /*border: solid 3px #a7d99b;*/
+            font-family: 'PT Sans', sans-serif;
+            color: white;
+        }
+
+        /* loader */
         #loader {
             position: fixed;
             border: 8px solid #5a5a5a;
@@ -86,64 +211,33 @@
             width: 45px;
             height: 45px;
             top: 40%;
-            left:48%;
+            left: 48%;
             animation: spin 1.5s cubic-bezier(0.1, 0.5, 0.2, 0.1) infinite;
             z-index: 2;
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
-        .subplayground1 {
-            position: fixed;
-            height: 800px;
-            width: 264px;
-            right: 12px;
-            top: 12%;
-            padding: 8px;
-            border-top: solid 3px #D9AC42;
-            font-family: 'Zilla Slab', serif;
-            color: white;
-            overflow-y: scroll;
-            z-index: 2;
-        }
-
-        .sliderGround {
-            position: relative;
-            left: 0;
-            top: 34%;
-            height: 50px;
-            width: 770px;
-            padding: 5px;
-            /*border: solid 3px #a7d99b;*/
-            font-family: 'PT Sans', sans-serif;
-            line-height: 48px;
-            color: white;
-        }
-
-        .subplayground2 {
-            position: relative;
-            left: 0;
-            top: 35%;
-            height: 140px;
-            width: 750px;
-            padding: 18px;
-            border-left: solid 3px #a7d99b;
-            font-family: 'PT Sans', sans-serif;
-        }
-
+        /* d3 bar */
         text {
             font: 10px sans-serif;
             color: white;
             text-align: left;
         }
+
         text.value {
             font-size: 120%;
             fill: white;
         }
 
+        /* d3 pie */
         .arc text {
             font: 10px sans-serif;
             text-anchor: middle;
@@ -153,16 +247,7 @@
             stroke: #fff;
         }
 
-        .subplayground3 {
-            position: relative;
-            top: 36%;
-            height: 600px;
-            width: 700px;
-            padding-left: 18px;
-            border-left: solid 3px #a5d9c1;
-        }
-
-        .bar div{
+        .bar div {
             font: 10px sans-serif;
             background-color: steelblue;
             text-align: right;
@@ -171,7 +256,7 @@
             color: white;
         }
 
-        .pie div{
+        .pie div {
             font: 10px sans-serif;
         }
 
@@ -183,20 +268,22 @@
             width: 3%;
             bottom: 40px;
             left: 20px;
-            border-style: outset;
-            border-color: #9eacaf;
-            border-width: 5px;
+            border-style: solid;
+            border-radius: 3px;
+            border-color: #424139;
+            border-width: 1px;
             z-index: 5;
-            background-color: #c2d6d9;
-            opacity: 0.5;
+            text-align: center;
+            background-color: #000000;
+            color: #4eff35;
         }
 
         /* The actual popup */
         .popup .popuptext {
             visibility: hidden;
             width: 400px;
-            background-color: #555;
-            color: #fff;
+            background-color: #1e1e1e;
+            color: #4eff35;
             text-align: center;
             border-radius: 6px;
             padding: 8px 0;
@@ -215,7 +302,7 @@
             margin-left: -5px;
             border-width: 5px;
             border-style: solid;
-            border-color: #555 transparent transparent transparent;
+            border-color: #4eff35 transparent transparent transparent;
         }
 
         /* Toggle this class - hide and show the popup */
@@ -231,8 +318,9 @@
             opacity: 0.5;
         }
 
+        /* no ui slider */
         #slider {
-            width: 770px;
+            width: inherit;
         }
 
         #submitDates {
@@ -244,7 +332,6 @@
             color: white;
             display: inline-block;
         }
-
 
         /* over-writing the nouislider css */
         .noUi-connect {
@@ -273,111 +360,198 @@
             top: 6px;
         }
 
+        /* submit button */
         .button {
-            background-color: #D9AC42; 
-            border: none;
+            background-color: #D9AC42;
+            border: 0.2px solid #BEBEBE;
             color: white;
-            padding: 10px 15px;
+            padding: 5px 8px;
             text-align: center;
             text-decoration: none;
             display: inline-block;
             font-size: 12px;
-            margin: 2px 1px;
             cursor: pointer;
-            border-radius: 8px;
-            color: black;
+            border-radius: 3px;
         }
+
+        /* social media */
+        .fa {
+            padding: 10px;
+            font-size: 25px;
+            width: 40px;
+            text-align: center;
+        }
+
+
+        .fa:hover {
+            opacity: 0.7;
+        }
+
+        .fa-facebook {
+            background: #3B5998;
+            color: white;
+        }
+
+        .fa-twitter {
+            background: #55ACEE;
+            color: white;
+        }
+
+        .fa-google {
+            background: #dd4b39;
+            color: white;
+        }
+
+        .fa-linkedin {
+            background: #007bb5;
+            color: white;
+        }
+
+        #input {
+            float: left;
+        }
+
+        .loading {
+            text-align: match-parent;
+        }
+
     </style>
 </head>
 
 <body>
 <script src="./static/nouislider.js"></script>
 <div id="logo">
-    <div class="topleft">
+    <div style="position: absolute; left: 5px">
         <img src="https://admissions.vanderbilt.edu/insidedores/manage/wp-content/uploads/vanderbilt-logo-2008.gif"
-             width="60" height="60">
+             width="45" height="45">
     </div>
-    <i class="fa fa-line-chart" style="color: #D9AC42"></i>
-    Data Visualizer
+    vData
+</div>
+
+<!-- Menu sign - wiz animation -->
+<div class="container" onclick="barToX(this)">
+    <div class="bar1"></div>
+    <div class="bar2"></div>
+    <div class="bar3"></div>
+</div>
+
+<div class="socialMediaBox" style="right:0">
+    <i class="fa fa-facebook"></i>
+    <i class="fa fa-twitter"></i>
+    <i class="fa fa-google"></i>
+    <i class="fa fa-linkedin"></i>
 </div>
 
 <!-- Ask for user input -->
-<div id="menubar">
-    <label style="font-family: Copperplate;font-size: larger; font-style: italic">
-        <i class="fa fa-hand-o-down" aria-hidden="true"></i>
-        Enter Info Here: </label><br>
+<div class="sidenav" id="mySideNav">
+    <a>Fire Department</a><br>
+    <b>simple incident</b>
     <hr>
 
-    <i class="fa fa-bar-chart" aria-hidden="true"></i>
-    Chart Options: <br>
-     &gt;
-    <select id = "chartList">
-        <option value = "markers">Markers On Map</option>
-        <option value = "heat">Heat Map</option>
-        <option value = "bar">Bar Chart(N.A.)</option>
-        <option value = "pie">Pie Chart(N.A.)</option>
-    </select><br>
-    Year: <br>
-     &gt;
-    <select id = "incidentYear">
-        <option id = "2014">2014</option>
-        <option id = "2015">2015</option>
-        <option id = "2016">2016</option>
-    </select>
+    <a><i class="fa fa-file-text"></i>&nbsp;&nbsp;Mongo DB Address:</a><br>
+    <b>127.0.0/simple-incident</b><br>
+
+    <a><i class="fa fa-bar-chart"></i>&nbsp;Chart Options: </a><br>
+    <b>
+        <select id="chartList">
+            <option value="markers">Markers On Map</option>
+            <option value="heat">Heat Map</option>
+            <option value="bar">Bar Chart(N.A.)</option>
+            <option value="pie">Pie Chart(N.A.)</option>
+        </select><br>
+    </b>
+    <a><i class="fa fa-calendar"></i>&nbsp;&nbsp;Year: </a><br>
+    <b>
+        <select id="incidentYear">
+            <option id="2014">2014</option>
+            <option id="2015">2015</option>
+            <option id="201">2016</option>
+        </select><br>
+    </b>
+    <br><br><br><br><br><br><br><br><br><br>
+    <div class="popup" onclick="help()">help
+        <span class="popuptext" id="pop">Click on the dots to view more details of an accident</span>
+    </div>
+    <b>visor-vu/2017/analytics dashboard</b><br>
 </div>
+
 
 <!-- where maps, graphs, charts live -->
 <div class="playground">
-    <div id="map"></div>
+    Overview
+    <hr>
+<!-- map column -->
+    <div class="column" style="width: 740px">
+        <div class="title">
+            Nashville Map
+        </div>
+        <div id="map"></div>
+        <div id="floating-panel">
+            <button class="button" style="background-color: floralwhite; color: black" id='markers' onclick='toggleMarkers(markersArr)'>
+            Hide Markers</button>
+            <button class="button" style="background-color: floralwhite; color: black" id='heat' onclick='setHeatMap()'>
+            Generate heatmap</button>
+            <button class="button" style="background-color: floralwhite; color: black" onclick="changeGradient()">
+            Change gradient</button>
+        </div>
+        <div id="loader" style="display: none"></div>
 
-    <div id="floating-panel">
-        <button id='markers' onclick='toggleMarkers(markersArr)'>Hide Markers</button>
-        <button id='heat' onclick='setHeatMap()'>Generate heatmap</button>
-        <button onclick="changeGradient()">Change gradient</button>
+        <div id="sliderGround">
+            <div id="slider"></div>
+            <div id="input">
+                <i class="fa fa-calendar" aria-hidden="true" style="padding: 0; margin-top:3px"></i>
+                From: <input type="date" min="2014-01-01" max="2016-12-31" value="2014-06-01" id="date1"/>
+                Hour: <input type="number" min="0" max="23" id="hour1" value="10"/>
+                &nbsp; &nbsp; &nbsp;
+                To: <input type="date" min="2014-01-01" max="2017-01-01" value="2014-06-20" id="date2"/>
+                Hour: <input type="number" min="0" max="23" id="hour2" value="10"/>
+                &nbsp; &nbsp; &nbsp;
+                <button class="button" id="submitDates" onclick="getData()">Submit dates</button>
+            </div>
+            </br>
+        </div>
     </div>
 
-    <div id="loader" style="display: none"></div>
+<!-- summary column-->    
+    <div class="columnSummary" style = "width: 33%">
+        <div class="title">Summary:</div>
+        <div class="loading">
+            <i class="fa fa-spinner fa-pulse"></i>waiting for user input
+        </div>
 
-    <div class="subplayground1">
-        <label style="font-family: Copperplate; font-size: larger; font-style: italic">
-            <i class="fa fa-hand-o-down" aria-hidden="true"></i>
-            <b>Summary:</b>
-        </label><br>
-        <hr>
-
-        <div class="example-val" id="event"></div>
-        <p id="total"></p>
-        <div id="chooseType" style="display: block"></div>
+        <div class="card">
+            <div class="example-val" id="event"></div>
+            <p id="total"></p>
+            <div id="chooseType" style="display: block"></div>
+        </div>
     </div>
 
-    <div class="sliderGround">
-        <div id="slider"></div>
-        &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;
-        <i class="fa fa-calendar" aria-hidden="true"></i>
-        From: <input type="date" min="2014-01-01" max="2016-12-31" value="2014-06-01" id="date1"/>
-        Hour: <input type="number" min="0" max="23" id="hour1" value = "10"/>
-        &nbsp;&nbsp; &nbsp;
-        <i class="fa fa-calendar" aria-hidden="true"></i>
-        To: <input type="date" min="2014-01-01" max="2017-01-01" value="2014-07-01" id="date2"/>
-        Hour: <input type="number" min="0" max="23" id="hour2" value="10"/>
-        &nbsp;&nbsp; &nbsp;
-        <button class="button" id="submitDates" onclick="getData()">Submit dates</button></br>
+<!-- bar chart column--> 
+    <div class="column" style="width: 42%">
+        <div class="title">Bar Chart - Level of Severity:</div>
+        <div class="loading">
+            <i class="fa fa-spinner fa-pulse"></i>waiting for user input
+        </div>
+        <div class="card">
+            <div class="bar"></div>
+        </div>
     </div>
 
-    <div class="subplayground2">
-        <div class="bar"></div>
+<!-- pie chart column--> 
+    <div class="column" style="width: 50%">
+        <div class="title">Pie Chart - Percentage of Types of Incidents:</div>
+        <div class="loading">
+            <i class="fa fa-spinner fa-pulse"></i>waiting for user input
+        </div>
+        <div class="card">
+            <div id="pieForType" style="width: 700px; height: 400px; position: absolute"></div>
+        </div>
     </div>
 
-    <div class="subplayground3">
-        <div id = "pieForType" style="width: 750px; height: 550px; position: absolute"></div>
-    </div>
+    Summary
+    <hr>
+
 </div>
-
-<!-- help button pop up message-->
-<div class="popup" onclick="help()">?help
-    <span class="popuptext" id="pop">Click on the dots to view more details of an accident</span>
-</div>
-
 
 <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.6/socket.io.min.js"></script>
 <script src="https://d3js.org/d3.v4.js"></script>
