@@ -156,11 +156,25 @@ var sumOfIncidents = [];
  * calls to formulate data correctly 
  * socket emit start and end date to retrieve data*/
 var types = [];  // types of markers already on map
+var visited = false
 function getData() {
     prepMarkers();
     types.length = 0;
     types = [];
     document.getElementById("loader").style.display = "block";
+    if (!visited) {
+        for (var i=0; i<3; i++) {
+            document.getElementsByClassName("loadingMsg")[i].innerHTML = "Generating canvas...";
+            document.getElementsByClassName("loading")[i].style.color = "#4eff35";
+        }
+        visited = true;
+    } else {
+        console.log("visited : "+visited);
+        for (var i=0; i<3; i++) {
+            document.getElementsByClassName("loading")[i].style.display = "block";
+        }
+    }
+    
     
     var chart_Option = document.getElementById('chartList').value,
         start_Date = document.getElementById('date1').value,
@@ -308,8 +322,8 @@ var strCardiac = "6/9/11/12/19/28/31/32",
     strMVA = "29",
     strFire = "51/52/53/54/55/56/57/58/59/60/61/62/63/64/65/66/67/68/69/70/71/72/73/74/75";
 
-var severity = "ABCDEO",
-    colors = ['#00a6ff', '#bbec26', '#ffe12f', '#ff9511', '#ff0302', '#66060A'];
+var severity = "OABCDE";
+var colors = ['#00a6ff', '#bbec26', '#ffe12f', '#ff9511', '#ff0302', '#66060A','#797A7A'];
 
 /* socket to get incident_data from server */
 var data_incident;
@@ -523,7 +537,7 @@ socket.on('markers-success', function() {
  */
 function printSummary() {
     document.getElementById('total').innerHTML = "Total incidents: "+ (markers.length);
-    document.getElementById('chooseType').innerHTML = "Choose type: ";
+    document.getElementById('chooseType').innerHTML = "Choose type by brushing or pressing '&#8984;' or ctrl";
 
     if (document.getElementById("selectType") !== null) {
         var t = document.getElementById("selectType");
@@ -534,6 +548,11 @@ function printSummary() {
     var selectList = document.createElement("select");
     selectList.id = "selectType";
     selectList.multiple = "multiple";
+    selectList.style.marginLeft = '40px';
+    selectList.style.backgroundColor="#252429";
+    selectList.style.color = "white";
+    selectList.style.height = "220px";
+    selectList.style.overflowY = "scroll";
     div.appendChild(selectList);
 
     var optionGroup1 = document.createElement("optGroup");
@@ -580,10 +599,15 @@ function printSummary() {
         var submit = document.createElement("button");
         submit.innerHTML = "Only see these types of incidents";
         submit.id = "submitButton";
-        submit.style.float = "right";
+        submit.style.borderRadius = "3px";
+        submit.style.backgroundColor = "floralwhite";
         submit.onclick = getType;
+        submit.style.marginTop = '10px';
+        submit.style.marginLeft = '40px';
         div.appendChild(submit);
     }
+    document.getElementsByClassName("loading")[0].style.display= "none";
+
 }
 
 /* Hide or Show markers according to user check box */
@@ -687,8 +711,7 @@ function setBar(data) {
         .domain([0, d3.max(data)])
         .range([0, 400]);
 
-    var colors = ['#00a6ff', '#bbec26', '#ffe12f', '#ff9511', '#ff0302', '#66060A','#797A7A'];
-    var severity = ["A","B","C","D","E","O","N.A"];
+    var severity = ["O","A","B","C","D","E","N.A"];
     d3.select(".bar")
         .selectAll("div")
         .data(data)
@@ -703,6 +726,7 @@ function setBar(data) {
             return "Severity"+ "["+severity[i]+"]"+(d*100/sum).toFixed(1)+"%";
         });
     console.log("-->Bar chart success");
+    document.getElementsByClassName("loading")[1].style.display= "none";
 }
 
 /* set pie chart with google charts */
@@ -714,7 +738,7 @@ function setPie(arr) {
         title: 'Percentage of incidents',
         is3D: true,
         backgroundColor: "transparent",
-        sliceVisibilityThreshold: .04,
+        sliceVisibilityThreshold: .015,
         legend: {
             position: 'right', 
             textStyle: {color: 'white', fontSize: 12}
@@ -726,6 +750,7 @@ function setPie(arr) {
     var chart = new google.visualization.PieChart(document.getElementById('pieForType'));
     chart.draw(data, options);
     console.log("-->pie chart success");
+    document.getElementsByClassName("loading")[2].style.display= "none";
 }
 
 /* set pie chart with d3
@@ -737,8 +762,6 @@ function setPiej3(data) {
     var width = canvas.width,
         height = canvas.height,
         radius = Math.min(width, height) / 2;
-
-    var colors = ['#00a6ff', '#bbec26', '#ffe12f', '#ff9511', '#ff0302', '#797A7A'];
 
     var arc = d3.arc()
         .outerRadius(radius - 10)
@@ -786,7 +809,7 @@ function barToX(x) {
     x.classList.toggle("change");
     var w = document.getElementById("mySideNav");
     if(w.style.width === "0px" || w.style.width ==="") {
-        w.style.width = "350px";
+        w.style.width = "300px";
     } else {
         w.style.width = "0px";
     }

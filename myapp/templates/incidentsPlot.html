@@ -7,14 +7,15 @@
     <link href="https://fonts.googleapis.com/css?family=PT+Sans" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css?family=Alegreya+Sans+SC:100|Shadows+Into+Light|Lato:100i|Zilla+Slab"
           rel="stylesheet">
-    <link href="./static/nouislider.css" rel="stylesheet">
+    <link href="./static/nouislider/nouislider.css" rel="stylesheet">
 
     <style>
         /* <html> <div> <body> */
-        html, body {
+        body {
             position: static;
             height: 3000px;
             background-color: black;
+            overflow-x: hidden;
         }
 
         #logo {
@@ -53,7 +54,7 @@
         .bar1, .bar2, .bar3 {
             width: 35px;
             height: 5px;
-            background-color: #9aff59;
+            background-color: #4eff35;
             margin: 6px 0;
             transition: 0.4s;
             z-index: 10;
@@ -81,7 +82,7 @@
             width: 0;
             position: fixed;
             z-index: 8;
-            top: 75px;
+            top: 58px;
             left: 0;
             overflow-x: hidden;
             overflow-y: auto;
@@ -159,24 +160,24 @@
             float: left;
             font-size: 15px;
             height: 500px;
-            border: 1px solid #424139;
+            border: 1px solid rgba(213, 214, 177, 0.44);
             box-shadow: 0 0 1em #261a00;
             padding: 0;
             margin-bottom: 25px;
             margin-left: 30px;
-            background-color: #252420;
+            background-color: rgba(58, 59, 47, 0.75);
         }
 
         .columnSummary {
             float: left;
             font-size: 15px;
             height: 500px;
-            border: 1px solid #424139;
+            border: 1px solid rgba(213, 214, 177, 0.44);
             box-shadow: 0 0 1em #261a00;
             padding: 0;
             margin-bottom: 25px;
             margin-left: 30px;
-            background-color: #252420;
+            background-color: rgba(58, 59, 47, 0.75);
         }
 
         /* element name */
@@ -208,10 +209,10 @@
             border: 8px solid #5a5a5a;
             border-radius: 50%;
             border-top: 8px solid #D9AC42;
-            width: 45px;
-            height: 45px;
-            top: 40%;
-            left: 48%;
+            width: 25px;
+            height: 25px;
+            top: 95px;
+            left: 18%;
             animation: spin 1.5s cubic-bezier(0.1, 0.5, 0.2, 0.1) infinite;
             z-index: 2;
         }
@@ -415,11 +416,25 @@
             text-align: match-parent;
         }
 
+        .loadingMsg {
+            text-align: match-parent;
+        }
+
+        ::-webkit-scrollbar {
+            -webkit-appearance: none;
+            width: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            border-radius: 4px;
+            background-color: rgba(230, 255, 216, 0.55);
+            -webkit-box-shadow: 0 0 1px rgb(0, 0, 0);
+        }
+
     </style>
 </head>
 
 <body>
-<script src="./static/nouislider.js"></script>
+<script src="./static/nouislider/nouislider.js"></script>
 <div id="logo">
     <div style="position: absolute; left: 5px">
         <img src="https://admissions.vanderbilt.edu/insidedores/manage/wp-content/uploads/vanderbilt-logo-2008.gif"
@@ -485,7 +500,7 @@
         <div class="title">
             Nashville Map
         </div>
-        <div id="map"></div>
+        <div id="map" style="color: black"></div>
         <div id="floating-panel">
             <button class="button" style="background-color: floralwhite; color: black" id='markers' onclick='toggleMarkers(markersArr)'>
             Hide Markers</button>
@@ -516,7 +531,8 @@
     <div class="columnSummary" style = "width: 33%">
         <div class="title">Summary:</div>
         <div class="loading">
-            <i class="fa fa-spinner fa-pulse"></i>waiting for user input
+            <i class="fa fa-spinner fa-pulse"></i>
+            <span class="loadingMsg">waiting for user input</span>
         </div>
 
         <div class="card">
@@ -527,10 +543,11 @@
     </div>
 
 <!-- bar chart column--> 
-    <div class="column" style="width: 42%">
+    <div class="column" style="width: 42%; height: 400px">
         <div class="title">Bar Chart - Level of Severity:</div>
         <div class="loading">
-            <i class="fa fa-spinner fa-pulse"></i>waiting for user input
+            <i class="fa fa-spinner fa-pulse"></i>
+            <span class="loadingMsg">waiting for user input</span>
         </div>
         <div class="card">
             <div class="bar"></div>
@@ -538,10 +555,11 @@
     </div>
 
 <!-- pie chart column--> 
-    <div class="column" style="width: 50%">
+    <div class="column" style="width: 50%; height: 400px">
         <div class="title">Pie Chart - Percentage of Types of Incidents:</div>
         <div class="loading">
-            <i class="fa fa-spinner fa-pulse"></i>waiting for user input
+            <i class="fa fa-spinner fa-pulse"></i>
+            <span class="loadingMsg">waiting for user input</span>
         </div>
         <div class="card">
             <div id="pieForType" style="width: 700px; height: 400px; position: absolute"></div>
@@ -550,7 +568,6 @@
 
     Summary
     <hr>
-
 </div>
 
 <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.6/socket.io.min.js"></script>
