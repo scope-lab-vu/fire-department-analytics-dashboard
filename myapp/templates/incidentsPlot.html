@@ -14,7 +14,7 @@
         body {
             position: static;
             height: 3000px;
-            background-color: black;
+            background-color: #343434;
             overflow-x: hidden;
         }
 
@@ -36,6 +36,7 @@
         .container {
             position: fixed;
             top: 80px;
+
             width: 55px;
             display: inline-block;
             cursor: pointer;
@@ -160,12 +161,12 @@
             float: left;
             font-size: 15px;
             height: 500px;
-            border: 1px solid rgba(213, 214, 177, 0.44);
+            border: 1px solid rgba(164, 214, 172, 0.44);
             box-shadow: 0 0 1em #261a00;
             padding: 0;
             margin-bottom: 25px;
             margin-left: 30px;
-            background-color: rgba(58, 59, 47, 0.75);
+            background-color: rgba(13, 18, 27, 0.21);
         }
 
         .columnSummary {
@@ -177,7 +178,7 @@
             padding: 0;
             margin-bottom: 25px;
             margin-left: 30px;
-            background-color: rgba(58, 59, 47, 0.75);
+            background-color: rgba(13, 18, 27, 0.21);
         }
 
         /* element name */
@@ -266,7 +267,7 @@
         .popup {
             position: fixed;
             cursor: pointer;
-            width: 3%;
+            width: 4%;
             bottom: 40px;
             left: 20px;
             border-style: solid;
@@ -363,14 +364,14 @@
 
         /* submit button */
         .button {
-            background-color: #D9AC42;
+            background-color: floralwhite;
             border: 0.2px solid #BEBEBE;
-            color: white;
-            padding: 5px 8px;
+            color: black;
+            padding: 2px 3px;
             text-align: center;
             text-decoration: none;
             display: inline-block;
-            font-size: 12px;
+            font-size: 10px;
             cursor: pointer;
             border-radius: 3px;
         }
@@ -444,7 +445,7 @@
 </div>
 
 <!-- Menu sign - wiz animation -->
-<div class="container" onclick="barToX(this)">
+<div class="container"  style = "left:18px" onclick="barToX(this)">
     <div class="bar1"></div>
     <div class="bar2"></div>
     <div class="bar3"></div>
@@ -484,7 +485,8 @@
         </select><br>
     </b>
     <br><br><br><br><br><br><br><br><br><br>
-    <div class="popup" onclick="help()">help
+    <div class="popup" onclick="help()">
+        <i class="fa fa-lightbulb-o" style="padding-left:0; font-size: 14px; width: 1.5%"></i>help
         <span class="popuptext" id="pop">Click on the dots to view more details of an accident</span>
     </div>
     <b>visor-vu/2017/analytics dashboard</b><br>
@@ -500,14 +502,20 @@
         <div class="title">
             Nashville Map
         </div>
+        <div id="initialHint" style = "position: absolute; z-index: 3; background-color: rgba(0,0,0,0.84); width: 740px; height: 60px">
+            <i class="fa fa-angle-double-down"></i>
+            <span>Please choose a date interval between 1 day and 1 month</span>
+        </div>
         <div id="map" style="color: black"></div>
         <div id="floating-panel">
-            <button class="button" style="background-color: floralwhite; color: black" id='markers' onclick='toggleMarkers(markersArr)'>
+            <button class="button" id='markers' onclick='toggleMarkers(markersArr)'>
             Hide Markers</button>
-            <button class="button" style="background-color: floralwhite; color: black" id='heat' onclick='setHeatMap()'>
+            <button class="button" id='heat' onclick='setHeatMap()'>
             Generate heatmap</button>
-            <button class="button" style="background-color: floralwhite; color: black" onclick="changeGradient()">
+            <button class="button" onclick="changeGradient()">
             Change gradient</button>
+            <button class="button" style="background-color: lightpink" id="vehide"onclick="hideVehicles()">
+            Hide Responding incidents</button>
         </div>
         <div id="loader" style="display: none"></div>
 
@@ -521,7 +529,8 @@
                 To: <input type="date" min="2014-01-01" max="2017-01-01" value="2014-06-20" id="date2"/>
                 Hour: <input type="number" min="0" max="23" id="hour2" value="10"/>
                 &nbsp; &nbsp; &nbsp;
-                <button class="button" id="submitDates" onclick="getData()">Submit dates</button>
+                <button class="button" style = "background-color: #D9AC42; padding: 5px 8px" id="submitDates" onclick="getData()">
+                Submit dates</button>
             </div>
             </br>
         </div>

@@ -28,6 +28,7 @@ def getDate (msg):
     start = datetime.datetime.strptime(msg['start'], "%Y-%m-%d %H %M")
     end = datetime.datetime.strptime(msg['end'], "%Y-%m-%d %H %M")
     getIncidentData(start, end)
+    getVehiclesData(start, end)
     getBurglaryData(start, end)
     socketio.emit("markers-success")
 
@@ -75,9 +76,6 @@ def getIncidentData(start, end):
     client = MongoClient("mongodb://zilinwang:Mongo0987654321@129.59.107.60:27017/fire_department")
     db = client["fire_department"]["simple__incident"]
     items = db.find()
-    dictOut = {}
-    dictArr = []
-    dictOut['incidents'] = dictArr
     types = []
 
     count = 0
@@ -139,8 +137,48 @@ def getIncidentData(start, end):
             
             socketio.emit("incident_data", dictIn)
 
-            dictArr.append(dictIn)
 
+# Retrieve fire vehicles location
+def getVehiclesData(start, end):
+    print "-> getVehiclesData()\n"
+
+    client = MongoClient("mongodb://zilinwang:Mongo0987654321@129.59.107.60:27017/fire_department")
+    db = client["fire_department"]["response_vehicle"]
+    items = db.find()
+    count=0
+    for item in items:
+        if (item['apparatusID']=="sample"):
+            break
+        visited = False
+        dictOut = {}
+        arr = []
+        locations = item['locations']
+        for location in locations:
+            if (start <= location['timestamp'] <= end):
+                count +=1
+                print count
+                print location['timestamp']
+
+                if not visited:
+                    dictOut['_id'] = str(item['_id'])
+                    if 'apparatusID' in item:
+                        dictOut['apparatusID'] = item['apparatusID']
+                    else: 
+                        dictOut['apparatusID'] = "na"
+                    visited = True
+                    if 'stationLocation' in item:
+                        dictOut['stationLocation'] = item['stationLocation']
+                    else: 
+                        dictOut['stationLocation'] = "na"
+
+                dictIn = {}
+                dictIn['_lat'] = location['latitude']
+                dictIn['_lng'] = location['longitude']
+                dictIn['time'] = str(location['timestamp'])
+                arr.append(dictIn)
+        if visited:
+            dictOut['locations'] = arr
+            socketio.emit("vehicle_data", dictOut)
 
 
 # retrieve data from csv file
