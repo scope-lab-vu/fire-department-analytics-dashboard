@@ -156,11 +156,12 @@ var sumOfIncidents = [];
  * calls to formulate data correctly 
  * socket emit start and end date to retrieve data*/
 var types = [];  // types of markers already on map
-var visited = false
+var visited = false;
 function getData() {
     prepMarkers();
     types.length = 0;
     types = [];
+    pushed81 = false;
     document.getElementById("loader").style.display = "block";
     if (!visited) {
         for (var i=0; i<3; i++) {
@@ -169,7 +170,6 @@ function getData() {
         }
         visited = true;
     } else {
-        console.log("visited : "+visited);
         for (var i=0; i<3; i++) {
             document.getElementsByClassName("loading")[i].style.display = "block";
         }
@@ -203,6 +203,7 @@ function getData() {
  * reset markers everytime user hits "submit"
  */
 function prepMarkers() {
+    document.getElementById('initialHint').style.display = 'none';
     document.getElementById('markers').innerHTML = 'Hide Markers';
     // remove markers from the map, but still keeps them in the array
     for (var i = 0; i < markers.length; i++) {
@@ -227,13 +228,13 @@ function prepMarkers() {
 function CenterControl(controlDiv, map) {
     // Set CSS for the control border.
     var controlUI = document.createElement('div');
-    controlUI.style.backgroundColor = 'floralwhite';
+    controlUI.style.backgroundColor = 'white';
     controlUI.style.border = '0.2px solid #BEBEBE';
-    controlUI.style.borderRadius = '5px';
+    controlUI.style.borderRadius = '1px';
     // controlUI.style.boxShadow = '0 6px 6px rgba(0,0,0,.3)';
     controlUI.style.cursor = 'pointer';
     controlUI.style.marginBottom = '12px';
-    controlUI.style.marginTop = "45px";
+    controlUI.style.marginTop = "35px";
     controlUI.title = 'Click to recenter the map';
     controlDiv.appendChild(controlUI);
 
@@ -241,8 +242,8 @@ function CenterControl(controlDiv, map) {
     var controlText = document.createElement('div');
     controlText.style.color = 'rgb(25,25,25)';
     controlText.style.fontFamily = 'Roboto,Arial,sans-serif';
-    controlText.style.fontSize = '12px';
-    controlText.style.lineHeight = '22px';
+    controlText.style.fontSize = '11px';
+    controlText.style.lineHeight = '18px';
     controlText.style.paddingLeft = '5px';
     controlText.style.paddingRight = '5px';
     controlText.innerHTML = 'Center Map';
@@ -281,7 +282,7 @@ function setBurglary() {
     var r1 = data_burglary;
     var image = {
         url: 'http://paybefore.com/wp-content/uploads/2016/09/burglar-icon-208x300.png',
-        scaledSize: new google.maps.Size(20, 30)
+        scaledSize: new google.maps.Size(16, 24)
     };
     for (var i = 0; i < r1.length; i++) {
         var contentString = "Occured: "+r1[i].AlarmDateTime +"</br>" +"Reported: " + 
@@ -395,8 +396,9 @@ function setIncident(r, index) {
         },
         imgOther = {
             url: 'http://www.clker.com/cliparts/F/S/M/2/p/w/map-marker-hi.png',
-            scaledSize: new google.maps.Size(15, 20)
+            scaledSize: new google.maps.Size(12, 18)
         };
+        
     
     if (strCardiac.includes(protocol)) {
         img = imgCardiac;
@@ -413,10 +415,59 @@ function setIncident(r, index) {
     var marker = new google.maps.Marker(createMarkerObj(latLng,map,img,content));
     setInfoWindow(marker);
     markers.push(marker);
-    markersArr[protocol].push(marker);
+    markersArr[""+protocol].push(marker);
     document.getElementById("loader").style.display = "block";
 }
 
+/* socket to get vehicles location from server*/
+var data_vehicle;
+var pushed81 = false;
+socket.on('vehicle_data', function(msg) {
+    data_vehicle = msg;
+    if (!pushed81) {
+        types.push("81");
+        markersArr["81"] = [];
+        markersArr.length++;
+        pushed81 = true;
+    }
+    console.log(data_vehicle);
+    setVehicle();
+});
+
+/* set markers for responding vehicles location*/
+function setVehicle() {
+
+    var r1 = data_vehicle;
+    var image = {
+        url: 'https://cdn2.iconfinder.com/data/icons/iconslandtransport/PNG/256x256/FireEscape.png',
+        scaledSize: new google.maps.Size(20, 20)
+    };
+    for (var i = 0; i < (r1.locations).length; i++) {
+        var content = "<b>_id: </b>"+r1._id +"</br>" +"<b>Apparatus ID: </b>" + 
+            r1.apparatusID + "</br>"+"<b>Time of location: </b>"+ (r1.locations)[i].time +
+            "</br>"+"<b>Station Location: </b>" + (r1.stationLocation)[0]
+        console.log(content);
+        
+        var latLng = new google.maps.LatLng((r1.locations)[i]._lat, (r1.locations)[i]._lng),
+            marker = new google.maps.Marker({
+                position: latLng,
+                map: map,
+                icon: image,
+                label: {
+                    color: "floralwhite",
+                    fontSize: "5px",
+                    text: r1.apparatusID
+                },
+                contentString: content
+            });
+
+        content = content.replace(/na/g, "Unknown");
+
+        setInfoWindow(marker);
+        markers.push(marker);
+        markersArr["81"].push(marker);        
+    }
+}
 
 /* set info windows and make markers bounce 3 times*/
 var infowindow;
@@ -502,6 +553,7 @@ var meaningList = {0: "",
         74: "Suspicious Package",
         75: "Train/Rail Fire",
         80: "Burglary",
+        81: "Response Vehicles",
         CTRAN: "Critcal Transfer",
         DUPONT: "Dupont Alarm"
     }
@@ -580,6 +632,7 @@ function printSummary() {
         var option = document.createElement("option");
         option.id = types[i];
         option.text = meaningList[types[i]];
+        option.selected = true;
 
         if (strCardiac.includes(types[i])) {
             optionGroup1.appendChild(option);
@@ -613,7 +666,6 @@ function printSummary() {
 /* Hide or Show markers according to user check box */
 function getType() {
     for (var i=0; i<types.length; i++) {
-        console.log(types[i]+ ": "+ document.getElementById(types[i]).checked);
         var arr = markersArr[types[i]];
         if (document.getElementById(types[i]).selected === true) {
             for (var j=0; j<arr.length; j++) {
@@ -634,21 +686,35 @@ function getType() {
 /* toggle markers by changing their visibility */
 function toggleMarkers(arrOfArr) {
     for (var j = 0; j < types.length; j++) {
-        if (document.getElementById(types[j]).checked) {
+        if (document.getElementById(types[j]).selected) {
             var arr = arrOfArr[types[j]];
             for (var i = 0; i < arr.length; i++) {
                 if (arr[i].getVisible()) {
                     arr[i].setVisible(false);
-                    document.getElementById('markers').innerHTML = 'Show Markers';
+                    document.getElementById('markers').innerHTML = 'Show Incidents';
                 } else {
                     arr[i].setVisible(true);
-                    document.getElementById('markers').innerHTML = 'Hide Markers';
+                    document.getElementById('markers').innerHTML = 'Hide Incidents';
                 }
             }
         }
     }
 }
 
+/* hide/show vehicles icons */ 
+function hideVehicles() {
+    var arr = markersArr["81"]
+    for (var i=0; i<arr.length; i++) {
+        if (arr[i].getVisible()) {
+            arr[i].setVisible(false);
+            document.getElementById('vehide').innerHTML = 'Show Vehicles';
+        } else {
+            arr[i].setVisible(true);
+            document.getElementById('vehide').innerHTML = 'Hide Vehicles';
+        }   
+    }
+
+}
 
 // generate heat map layer, after which change button
 var heatmap;
