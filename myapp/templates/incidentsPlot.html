@@ -421,6 +421,13 @@
             text-align: match-parent;
         }
 
+        .fullScreen {
+            position: absolute;
+            right: 0;
+            top: 0;
+            color: #4eff35;
+        }
+
         ::-webkit-scrollbar {
             -webkit-appearance: none;
             width: 4px;
@@ -498,9 +505,10 @@
     Overview
     <hr>
 <!-- map column -->
-    <div class="column" style="width: 740px">
+    <div class="column" id="mapView" style="width: 740px">
         <div class="title">
             Nashville Map
+            <i class="fa fa-arrows-alt" onclick = "enlargeMap()" style="font-size: 16px; float: right; padding: 1px; color: #4eff35"></i>
         </div>
         <div id="initialHint" style = "position: absolute; z-index: 3; background-color: rgba(0,0,0,0.84); width: 740px; height: 60px">
             <i class="fa fa-angle-double-down"></i>
@@ -508,9 +516,9 @@
         </div>
         <div id="map" style="color: black"></div>
         <div id="floating-panel">
-            <button class="button" id='markers' onclick='toggleMarkers(markersArr)'>
+            <button class="button" id='markers' onclick="toggleMarkers(markersArr)">
             Hide Markers</button>
-            <button class="button" id='heat' onclick='setHeatMap()'>
+            <button class="button" id='heat' onclick="setHeatMap()">
             Generate heatmap</button>
             <button class="button" onclick="changeGradient()">
             Change gradient</button>
