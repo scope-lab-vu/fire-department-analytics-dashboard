@@ -2,6 +2,7 @@ import ConfigParser
 import pickle
 from datetime import timedelta
 import numpy as np
+from operator import itemgetter
 
 Config = ConfigParser.ConfigParser()
 Config.read("params.conf")
@@ -22,27 +23,28 @@ def ConfigSectionMap(Config, section):
 def runHierarchicalSurvivalAnalysis():
     pass
 
-def predict(self):
+def predict(predEndTime,predStartTime):
+    grids, validGrids = setup()
     global predCount
     totalPredictions = []
     # get Number of time periods
     lenTimePeriod = 4 * 3600
-    numTimePeriods = int((self.predEndTime - self.predStartTime).total_seconds() / lenTimePeriod)
+    numTimePeriods = int((predEndTime - predStartTime).total_seconds() / lenTimePeriod)
     # Iterate over each time period
     for counterTimePeriod in range(numTimePeriods):
         timePeriodOver = False
-        tempStart = self.predStartTime + timedelta(seconds=3600 * 4 * counterTimePeriod)
+        tempStart = predStartTime + timedelta(seconds=3600 * 4 * counterTimePeriod)
         tempEnd = tempStart + timedelta(seconds=3600 * 4)
         # print("Predicting for Time Period with start time" + str(tempStart))
         # initilize last crime time for each grid
         tempDictLastCrime = {}
         activeGrids = {}
         # initialize last crime dict for the grids:
-        for counterY in range(len(self.grids)):
-            for counterX in range(len(self.grids)):
-                tempGridNum = counterY * len(self.grids) + counterX
+        for counterY in range(len(grids)):
+            for counterX in range(len(grids)):
+                tempGridNum = counterY * len(grids) + counterX
                 tempDictLastCrime[tempGridNum] = tempStart
-                if tempGridNum in hierObj.validGrids:
+                if tempGridNum in validGrids:
                     activeGrids[tempGridNum] = True
                 else:
                     activeGrids[tempGridNum] = False
@@ -53,16 +55,16 @@ def predict(self):
             # store as gridNum, crimeTime
             predictedCrimes = []
             # Iterate over each grid
-            for counterY in range(len(hierObj.grids)):
-                for counterX in range(len(hierObj.grids)):
-                    tempGridNum = counterY * len(hierObj.grids) + counterX
-                    if tempGridNum in hierObj.validGrids and activeGrids[tempGridNum]:
+            for counterY in range(len(grids)):
+                for counterX in range(len(grids)):
+                    tempGridNum = counterY * len(grids) + counterX
+                    if tempGridNum in validGrids and activeGrids[tempGridNum]:
                         # predict time to next crime for each grid
-                        nextCrimeGrid = self.sampleIncidents(tempGridNum, tempDictLastCrime[tempGridNum])
+                        nextCrimeGrid = __sampleIncidents(tempGridNum, tempDictLastCrime[tempGridNum])
                         if nextCrimeGrid < tempEnd:
                             predictedCrimes.append([tempGridNum, nextCrimeGrid])
                             # sampled crimes
-                    if tempGridNum in self.validGrids:
+                    if tempGridNum in validGrids:
                         bookmarkDictCurrRound[tempGridNum] = True
 
             # sort crimes
@@ -141,5 +143,99 @@ def predictIncidents():
     else:
         fileNameClusters = ConfigSectionMap(Config, "filePaths")["clusters"]
         clusters = pickle.load(open(fileNameClusters, 'rb'))
+
+
+def __sampleIncidents():
+    return []
+
+
+def __predict(predEndTime,predStartTime,grids,validGrids,influencePerGrid):
+    global predCount
+    totalPredictions = []
+    # get Number of time periods
+    lenTimePeriod = 4 * 3600
+    numTimePeriods = int((predEndTime - predStartTime).total_seconds() / lenTimePeriod)
+    # Iterate over each time period
+    for counterTimePeriod in range(numTimePeriods):
+        timePeriodOver = False
+        tempStart = predStartTime + timedelta(seconds=3600 * 4 * counterTimePeriod)
+        tempEnd = tempStart + timedelta(seconds=3600 * 4)
+        # print("Predicting for Time Period with start time" + str(tempStart))
+        # initilize last crime time for each grid
+        tempDictLastCrime = {}
+        activeGrids = {}
+        # initialize last crime dict for the grids:
+        for counterY in range(len(grids)):
+            for counterX in range(len(grids)):
+                tempGridNum = counterY * len(grids) + counterX
+                tempDictLastCrime[tempGridNum] = tempStart
+                if tempGridNum in validGrids:
+                    activeGrids[tempGridNum] = True
+                else:
+                    activeGrids[tempGridNum] = False
+
+        bookmarkDictCurrRound = {}
+        incidentCountPerGrid = {}
+        while not timePeriodOver:
+            # store as gridNum, crimeTime
+            predictedCrimes = []
+            # Iterate over each grid
+            for counterY in range(len(grids)):
+                for counterX in range(len(grids)):
+                    tempGridNum = counterY * len(grids) + counterX
+                    if tempGridNum in validGrids and activeGrids[tempGridNum]:
+                        # predict time to next crime for each grid
+                        nextCrimeGrid = __sampleIncidents(tempGridNum, tempDictLastCrime[tempGridNum])
+                        if nextCrimeGrid < tempEnd:
+                            predictedCrimes.append([tempGridNum, nextCrimeGrid])
+                            # sampled crimes
+                    if tempGridNum in validGrids:
+                        bookmarkDictCurrRound[tempGridNum] = True
+
+            # sort crimes
+            predictedCrimes = sorted(predictedCrimes, key=itemgetter(1))
+            if len(predictedCrimes) == 0:
+                break
+            # iteratively start looking at crimes.
+            for counter in range(len(predictedCrimes)):
+                # find grid c_j with least time to occurrence
+                currCrime = predictedCrimes[counter][1]
+                currGrid = predictedCrimes[counter][0]
+                # check to see if the all remaining crimes are out of time range
+                # this can be checked at the 0th crime in every round.
+                # at some later counter, crimes can be outside time but they can still get reset, so ignore them.
+                # if counter == 0:
+                #     if isTimePeriodOver(activeGrids):
+                #     #if currCrime >= tempEnd:
+                #         timePeriodOver = True
+                #         break
+                # check if grid is active and event is in the same time zone we are looking at
+                if activeGrids[currGrid] and currCrime < tempEnd and incidentCountPerGrid[currGrid] > 0:
+                    # update crime counter:
+                    predCount += 1
+                    # if verbose: print("Accident at : " + str(predictedCrimes[counter]))
+                    totalPredictions.append(predictedCrimes[counter])
+                    # for all k in I(j)
+                    for grid in influencePerGrid[currGrid]:
+                        # mark as false in active grids
+                        activeGrids[grid] = False
+                        bookmarkDictCurrRound[grid] = False
+                        # update lastCrime
+                        tempDictLastCrime[grid] = currCrime
+
+            for counterY in range(len(grids)):
+                for counterX in range(len(grids)):
+                    tempGridNum = counterY * len(grids) + counterX
+                    if tempGridNum in validGrids:
+                        if bookmarkDictCurrRound[tempGridNum] == False:
+                            activeGrids[tempGridNum] = True
+                        else:
+                            activeGrids[tempGridNum] = False
+
+    print("Total Number of crimes predicted is " + str(predCount))
+    return totalPredictions
+
+
+predict()
 
 
