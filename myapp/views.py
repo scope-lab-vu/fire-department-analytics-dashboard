@@ -137,18 +137,34 @@ def getIncidentData(start, end):
             
             socketio.emit("incident_data", dictIn)
 
-
+depot_cache = [];
 # Retrieve fire vehicles location
 def getVehiclesData(start, end):
+    depot = [];
+    vehiclesInDepot = [None]*40;
+    global depot_cache
     print "-> getVehiclesData()\n"
 
     client = MongoClient("mongodb://zilinwang:Mongo0987654321@129.59.107.60:27017/fire_department")
     db = client["fire_department"]["response_vehicle"]
     items = db.find()
-    count=0
+    count = 0
     for item in items:
         if (item['apparatusID']=="sample"):
             break
+        
+        if not depot_cache: 
+            stationArr = item['stationLocation']
+            if stationArr[0]:
+                if stationArr[0] not in depot:
+                    depot.append(stationArr[0])
+                indexOfthis = depot.index(stationArr[0])
+                print stationArr
+                print indexOfthis
+                if not vehiclesInDepot[indexOfthis]:
+                    vehiclesInDepot[indexOfthis] = [];
+                vehiclesInDepot[indexOfthis].append(item['apparatusID'])
+
         visited = False
         dictOut = {}
         arr = []
@@ -179,6 +195,8 @@ def getVehiclesData(start, end):
         if visited:
             dictOut['locations'] = arr
             socketio.emit("vehicle_data", dictOut)
+    depot_cache = depot
+    socketio.emit("depots_data", {'depotLocation': depot_cache, 'depotInterior': vehiclesInDepot})
 
 
 # retrieve data from csv file

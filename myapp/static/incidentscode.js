@@ -161,7 +161,6 @@ function getData() {
     prepMarkers();
     types.length = 0;
     types = [];
-    pushed81 = false;
     document.getElementById("loader").style.display = "block";
     if (!visited) {
         for (var i=0; i<3; i++) {
@@ -254,7 +253,7 @@ function CenterControl(controlDiv, map) {
         'click',
         function() {
             map.setCenter(centerNash);
-            map.setZoom(10);
+            map.setZoom(11);
         }
     );
 }
@@ -383,8 +382,8 @@ function setIncident(r, index) {
             scaledSize: new google.maps.Size(15, 15)
         },
         imgTrauma = {
-            url: 'http://www.otorrinoguadalajara.com.mx/wp-content/uploads/2016/02/3.png',
-            scaledSize: new google.maps.Size(20, 20)
+            url: 'http://mobileapp.redcross.org.uk/achievements/headinjury-icon.png',
+            scaledSize: new google.maps.Size(18, 18)
         },
         imgMVA = {
             url: 'https://cdn3.iconfinder.com/data/icons/flat-icons-2/600/traffic.png',
@@ -419,34 +418,55 @@ function setIncident(r, index) {
     document.getElementById("loader").style.display = "block";
 }
 
+/* socket to get depots location from server*/
+socket.on('depots_data', function(msg) {
+    arr_depots = msg.depotLocation;
+    arr_vehicles = msg.depotInterior;
+    console.log("depots----------------");
+    console.log(arr_depots);
+    console.log("vehicles in depots----------------");
+    console.log(arr_vehicles);
+
+    var image = {
+        url: 'https://hydra-media.cursecdn.com/simcity.gamepedia.com/1/13/Fire_station_garage.png?version=e2d13f3d48d4d276f64d0cb8c04adbee',
+        scaledSize: new google.maps.Size(22, 22)
+    };
+    for (var i=0; i<arr_depots.length; i++) {
+        var content = "<h4><b>Vehicles from this depot are: </b></h4>" + "</br>";
+        for (var j=0; j<(arr_vehicles[i]).length; j++) {
+            content += (arr_vehicles[i])[j];
+            content += ", ";
+        }
+        var latLng = new google.maps.LatLng((arr_depots[i])[0], (arr_depots[i])[1]),
+            marker = new google.maps.Marker(createMarkerObj(latLng,map,image,content));
+        setInfoWindow(marker);
+
+    }
+});
+
 /* socket to get vehicles location from server*/
 var data_vehicle;
-var pushed81 = false;
+var vehiclesArr = [];
 socket.on('vehicle_data', function(msg) {
     data_vehicle = msg;
-    if (!pushed81) {
-        types.push("81");
-        markersArr["81"] = [];
-        markersArr.length++;
-        pushed81 = true;
-    }
-    console.log(data_vehicle);
     setVehicle();
 });
 
 /* set markers for responding vehicles location*/
 function setVehicle() {
-
     var r1 = data_vehicle;
     var image = {
-        url: 'https://cdn2.iconfinder.com/data/icons/iconslandtransport/PNG/256x256/FireEscape.png',
-        scaledSize: new google.maps.Size(20, 20)
+            path: google.maps.SymbolPath.CIRCLE,
+            fillColor: 'grey',
+            fillOpacity: .5,
+            scale: 6,
+            strokeColor: 'brown',
+            strokeWeight: .5
     };
     for (var i = 0; i < (r1.locations).length; i++) {
         var content = "<b>_id: </b>"+r1._id +"</br>" +"<b>Apparatus ID: </b>" + 
             r1.apparatusID + "</br>"+"<b>Time of location: </b>"+ (r1.locations)[i].time +
             "</br>"+"<b>Station Location: </b>" + (r1.stationLocation)[0]
-        console.log(content);
         
         var latLng = new google.maps.LatLng((r1.locations)[i]._lat, (r1.locations)[i]._lng),
             marker = new google.maps.Marker({
@@ -454,7 +474,7 @@ function setVehicle() {
                 map: map,
                 icon: image,
                 label: {
-                    color: "floralwhite",
+                    color: "brown",
                     fontSize: "5px",
                     text: r1.apparatusID
                 },
@@ -465,7 +485,7 @@ function setVehicle() {
 
         setInfoWindow(marker);
         markers.push(marker);
-        markersArr["81"].push(marker);        
+        vehiclesArr.push(marker);        
     }
 }
 
@@ -703,7 +723,7 @@ function toggleMarkers(arrOfArr) {
 
 /* hide/show vehicles icons */ 
 function hideVehicles() {
-    var arr = markersArr["81"]
+    var arr = vehiclesArr;
     for (var i=0; i<arr.length; i++) {
         if (arr[i].getVisible()) {
             arr[i].setVisible(false);
@@ -879,4 +899,16 @@ function barToX(x) {
     } else {
         w.style.width = "0px";
     }
+}
+
+function enlargeMap() {
+    var mapView = document.getElementById("mapView");
+    if (mapView.style.width === "740px") {
+        mapView.style.width = "1200px";
+        mapView.style.height = "700px";
+    } else {
+        mapView.style.width = "740px";
+        mapView.style.height = "500px";
+    }
+
 }
