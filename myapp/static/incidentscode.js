@@ -230,10 +230,10 @@ function CenterControl(controlDiv, map) {
     controlUI.style.backgroundColor = 'white';
     controlUI.style.border = '0.2px solid #BEBEBE';
     controlUI.style.borderRadius = '1px';
-    // controlUI.style.boxShadow = '0 6px 6px rgba(0,0,0,.3)';
+    controlUI.style.boxShadow = '0 3px 3px rgba(0,0,0,.3)';
     controlUI.style.cursor = 'pointer';
     controlUI.style.marginBottom = '12px';
-    controlUI.style.marginTop = "35px";
+    controlUI.style.marginTop = "38px";
     controlUI.title = 'Click to recenter the map';
     controlDiv.appendChild(controlUI);
 
@@ -363,35 +363,29 @@ function setIncident(r, index) {
     } else {
         sumOfIncidents[severity.length]++;
     }
-    var latLng = new google.maps.LatLng(r._lat, r._lng);
-    heatDataAll.push(latLng);
-    var content = '<b>Incident Number: </b>' + r.incidentNumber +
-        '</br><b>Alarm Date: </b>' + r.alarmDate +
-        '</br><b>Location: </b>' + r.streetNumber + " " + r.streetPrefix + " "
-        + r.streetName + " " + r.streetSuffix + " " + r.streetType + ", "
-        + r.city + ", " + r.county + ", TN" +
-        '</br><b>EMD Card Number: </b>' + r.emdCardNumber +
-        '</br><b>Fire Zone: </b>' + r.fireZone +
-        '</br>Object Id: ' + r._id;
-    content = content.replace(/na/g, "");
 
     var protocol = (r.emdCardNumber).substring(0,index);
     var img;
+    var emoji;
     var imgCardiac = {
             url: 'https://www.monash.edu/__data/assets/image/0020/352091/cardio.png',
-            scaledSize: new google.maps.Size(15, 15)
+            scaledSize: new google.maps.Size(18, 18),
+            anchor: new google.maps.Point(7, 7)
         },
         imgTrauma = {
-            url: 'http://mobileapp.redcross.org.uk/achievements/headinjury-icon.png',
-            scaledSize: new google.maps.Size(18, 18)
+            url: 'https://cdn2.iconfinder.com/data/icons/medical-flat-icons-part-1/513/30-512.png',
+            scaledSize: new google.maps.Size(18, 18),
+            anchor: new google.maps.Point(9, 9)
         },
         imgMVA = {
             url: 'https://cdn3.iconfinder.com/data/icons/flat-icons-2/600/traffic.png',
-            scaledSize: new google.maps.Size(15, 15)
+            scaledSize: new google.maps.Size(20, 20),
+            anchor: new google.maps.Point(9, 9)
         },
         imgFire = {
-            url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Emoji_u1f525.svg/2000px-Emoji_u1f525.svg.png',
-            scaledSize: new google.maps.Size(20, 20)
+            // url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Emoji_u1f525.svg/2000px-Emoji_u1f525.svg.png',
+            url: 'http://vignette3.wikia.nocookie.net/camphalfbloodroleplay/images/a/a5/Fire.gif/revision/latest?cb=20130614161535',
+            scaledSize: new google.maps.Size(22, 22)
         },
         imgOther = {
             url: 'http://www.clker.com/cliparts/F/S/M/2/p/w/map-marker-hi.png',
@@ -401,15 +395,33 @@ function setIncident(r, index) {
     
     if (strCardiac.includes(protocol)) {
         img = imgCardiac;
+        emoji = "&#x1F494;";
     } else if (strTrauma.includes(protocol)) {
         img = imgTrauma;
+        emoji = "&#x1F691;";
     } else if (strFire.includes(protocol)) {
         img = imgFire;
+        emoji = "&#x1F525;";
     } else if (strMVA.includes(protocol)) {
         img = imgMVA;
+        emoji = "&#x1F6A6;";
     } else {
         img = imgOther;
+        emoji = "&#x1F50E;";
     }
+
+    var latLng = new google.maps.LatLng(r._lat, r._lng);
+    heatDataAll.push(latLng);
+    var content = "<h3>"+emoji+" "+meaningList[protocol]+"</h3>"+'</br>'+
+        '<b>Incident Number: </b>' + r.incidentNumber +
+        '</br><b>Alarm Date: </b>' + r.alarmDate +
+        '</br><b>Location: </b>' + r.streetNumber + " " + r.streetPrefix + " "
+            + r.streetName + " " + r.streetSuffix + " " + r.streetType + ", "
+            + r.city + ", " + r.county + ", TN" +
+        '</br><b>EMD Card Number: </b>' + r.emdCardNumber +
+        '</br><b>Fire Zone: </b>' + r.fireZone +
+        '</br>Object Id: ' + r._id;
+    content = content.replace(/na/g, "");
 
     var marker = new google.maps.Marker(createMarkerObj(latLng,map,img,content));
     setInfoWindow(marker);
@@ -427,18 +439,18 @@ socket.on('depots_data', function(msg) {
     console.log("vehicles in depots----------------");
     console.log(arr_vehicles);
 
-    var image = {
+    var imgDepot = {
         url: 'https://hydra-media.cursecdn.com/simcity.gamepedia.com/1/13/Fire_station_garage.png?version=e2d13f3d48d4d276f64d0cb8c04adbee',
-        scaledSize: new google.maps.Size(22, 22)
+        scaledSize: new google.maps.Size(26, 26)
     };
     for (var i=0; i<arr_depots.length; i++) {
-        var content = "<h4><b>Vehicles from this depot are: </b></h4>" + "</br>";
+        var content = "<h4><b>&#x1F692; Vehicles from this depot are: </b></h4>" + "</br>";
         for (var j=0; j<(arr_vehicles[i]).length; j++) {
             content += (arr_vehicles[i])[j];
             content += ", ";
         }
         var latLng = new google.maps.LatLng((arr_depots[i])[0], (arr_depots[i])[1]),
-            marker = new google.maps.Marker(createMarkerObj(latLng,map,image,content));
+            marker = new google.maps.Marker(createMarkerObj(latLng,map,imgDepot,content));
         setInfoWindow(marker);
 
     }
@@ -458,7 +470,7 @@ function setVehicle() {
     var image = {
             path: google.maps.SymbolPath.CIRCLE,
             fillColor: 'grey',
-            fillOpacity: .5,
+            fillOpacity: .4,
             scale: 6,
             strokeColor: 'brown',
             strokeWeight: .5
@@ -673,6 +685,7 @@ function printSummary() {
         submit.innerHTML = "Only see these types of incidents";
         submit.id = "submitButton";
         submit.style.borderRadius = "3px";
+        submit.style.border = "0.2px solid black";
         submit.style.backgroundColor = "floralwhite";
         submit.onclick = getType;
         submit.style.marginTop = '10px';
@@ -744,7 +757,7 @@ function setHeatMap() {
         dissipating: false,
         map: map,
         opacity:0.8,
-        radius:0.007
+        radius:0.008
     });
     document.getElementById('heat').innerHTML = 'Show/hide Heatmap';
     document.getElementById('heat').onclick = function () {
@@ -903,12 +916,31 @@ function barToX(x) {
 
 function enlargeMap() {
     var mapView = document.getElementById("mapView");
+    var mapDiv = document.getElementById("map");
+    var a = document.getElementById("summaryView");
+    var b = document.getElementById("barView");
+    var c = document.getElementById("pieView");
+    var d = document.getElementById("pieForType");
+
+
     if (mapView.style.width === "740px") {
         mapView.style.width = "1200px";
         mapView.style.height = "700px";
+        mapDiv.style.height = "610px";
+        a.style.width = "30%";
+        a.style.height = "400px";
+        b.style.width = "30%";
+        c.style.width = "30%";
+        d.style.transform = "translateX(-150px) translateY(-40px) scale(0.8)";
     } else {
         mapView.style.width = "740px";
         mapView.style.height = "500px";
+        mapDiv.style.height = "410px";
+        a.style.width = "33%";
+        b.style.width = "40%";
+        c.style.width = "50%";
+        d.style.transform = "translateX(25px) translateY(5px) scale(1)";
     }
-
+    google.maps.event.trigger(mapDiv, 'resize');
+    map.setCenter(centerNash);
 }
