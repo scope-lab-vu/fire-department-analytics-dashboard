@@ -3,9 +3,12 @@ import pickle
 from datetime import timedelta
 import numpy as np
 from operator import itemgetter
+from pyproj import Proj
 
 Config = ConfigParser.ConfigParser()
 Config.read("params.conf")
+p1 = Proj(
+    '+proj=lcc +lat_1=36.41666666666666 +lat_2=35.25 +lat_0=34.33333333333334 +lon_0=-86 +x_0=600000 +y_0=0 +ellps=GRS80 +datum=NAD83 +no_defs')
 
 def ConfigSectionMap(Config, section):
     dict1 = {}
@@ -98,10 +101,10 @@ def predict(predEndTime,predStartTime):
                         # update lastCrime
                         tempDictLastCrime[grid] = currCrime
 
-            for counterY in range(len(self.grids)):
-                for counterX in range(len(self.grids)):
-                    tempGridNum = counterY * len(self.grids) + counterX
-                    if tempGridNum in self.validGrids:
+            for counterY in range(len(grids)):
+                for counterX in range(len(grids)):
+                    tempGridNum = counterY * len(grids) + counterX
+                    if tempGridNum in validGrids:
                         if bookmarkDictCurrRound[tempGridNum] == False:
                             activeGrids[tempGridNum] = True
                         else:
@@ -235,7 +238,56 @@ def __predict(predEndTime,predStartTime,grids,validGrids,influencePerGrid):
     print("Total Number of crimes predicted is " + str(predCount))
     return totalPredictions
 
+def convertToStatePlane(lat,long):
 
-predict()
+    return p1(lat,long)
+
+
+def getGridForCoordinate():
+    pass
+
+def createSurvivalInputData(mongoItems,start,end,grids,xLow,yLow):
+    #format [x, y, t1, gridX, gridY, severity]
+    incidents = []
+    for item in mongoItems:
+        time = item['alarmDateTime']
+        if (item['incidentNumber'] == "sample"):
+            break
+        if (start <= time <= end):
+            lat = item['latitude']
+            long = item['longitude']
+            x,y = p1(lat,long)
+            t1 = item['alarmDateTime']
+            grid = getGridForCoordinate([x, y], xLow, yLow)
+            gridX = int(grid[0])
+            gridY = int(grid[1])
+            gridNum = gridY * len(grids) + gridX
+            incidents.append([x,y,t1,gridX,gridY])
+
+    interArrivalData = getInterArrivalData(incidents)
+
+
+
+def getRegressionFormula(distinctSeason, distinctTimeZone, dataType):
+    # create regression formula based on whether factors can be used or not, based on bool values received
+    seasonText = "+ factor(season)"
+    timeZoneText = "+ factor(timeZone)"
+    if not distinctSeason:
+        seasonText = ""
+    if not distinctTimeZone:
+        timeZoneText = ""
+    if dataType == "crime":
+        rFormula = "Surv(time,death) ~ liquorCounter + liquorCounterRetail +   weather1  + weather2" + seasonText + \
+                   timeZoneText + " + weekend + pastCrimeGrid2\
+                     +pastCrimeGrid7	 +pastCrimeGrid30	 +pastCrimeNeighbor2	+ pastCrimeNeighbor7	+pastCrimeNeighbor30\
+                        + policePriorGrid + policePriorNeighbor + policePriorL1\
+                         + policePriorL2 + pawnCounter + homelessCounter	+ popDens\
+                            + houseDens	+ meanIncomeScaled"
+
+    elif dataType == "fire":
+        rFormula = "Surv(interArrival,death) ~ rain + snow" + seasonText + timeZoneText + " + weekend + pastGrid2 +" \
+                                                                                          " pastGrid7 + pastGrid30 + pastNeighbor2 + pastNeighbor7 + pastNeighbor30"
+
+    return rFormula
 
 

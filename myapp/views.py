@@ -9,6 +9,8 @@ import json
 import requests
 import pytz
 import csv
+from incidentPrediction import predict
+from pyproj import Proj
 
 
 @app.route('/')
@@ -60,12 +62,16 @@ min time is;;;;;;;;;;;;;;;;;
 #     print maxT
 #     print "min time is;;;;;;;;;;;;;;;;;"
 #     print minT
-        
 
 
-# retrieve data from mongo db
-def getIncidentData(start, end):
-    
+def getPredictions(start,end):
+    predictions = []
+    data = retrieveFromDB(start,end)
+    predict()
+    return predictions
+
+
+def retrieveFromDB(start,end):
     print "-> getIncidentData()\n"
     '''
     with open('myapp/static/get.json') as data_file:
@@ -76,8 +82,13 @@ def getIncidentData(start, end):
     client = MongoClient("mongodb://zilinwang:Mongo0987654321@129.59.107.60:27017/fire_department")
     db = client["fire_department"]["simple__incident"]
     items = db.find()
-    types = []
 
+    return items
+
+# retrieve data from mongo db
+def getIncidentData(start, end):
+    items = retrieveFromDB(start,end)
+    types = []
     count = 0
     for item in items:
         time = item['alarmDateTime']
@@ -106,32 +117,32 @@ def getIncidentData(start, end):
             dictIn['emdCardNumber'] = item['emdCardNumber']
             if 'streetNumber' in item:
                 dictIn['streetNumber'] = item['streetNumber']
-            else: 
+            else:
                 dictIn['streetNumber'] = "na"
 
             if 'streetPrefix' in item:
                 dictIn['streetPrefix'] = item['streetPrefix']
-            else: 
+            else:
                 dictIn['streetPrefix'] = "na"
 
             if 'streetName' in item:
                 dictIn['streetName'] = item['streetName']
-            else: 
+            else:
                 dictIn['streetName'] = "na"
 
             if 'streetType' in item:
                 dictIn['streetType'] = item['streetType']
-            else: 
+            else:
                 dictIn['streetType'] = "na"
 
             if 'streetSuffix' in item:
                 dictIn['streetSuffix'] = item['streetSuffix']
-            else: 
+            else:
                 dictIn['streetSuffix'] = "na"
 
             if 'apartment' in item:
                 dictIn['apartment'] = item['apartment']
-            else: 
+            else:
                 dictIn['apartment'] = "na"
 
             
