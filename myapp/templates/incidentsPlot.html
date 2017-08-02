@@ -138,10 +138,6 @@
             font-family: 'Alegreya Sans SC', sans-serif;
             /*border: 0.3px solid white;*/
         }
-        .playground a {
-            color: white;
-            font-size: 25px;
-        }
 
         .card {
             padding: 15px;
@@ -190,8 +186,8 @@
         #floating-panel {
             position: absolute;
             top: 125px;
-            left:19%;
-            border: 1px;
+            width: inherit;
+            text-align: center;
             z-index: 2;
         }
 
@@ -199,21 +195,19 @@
             position: absolute;
             height: 50px;
             width: inherit;
-            /*border: solid 3px #a7d99b;*/
+            text-align: center;
             font-family: 'PT Sans', sans-serif;
             color: white;
         }
 
         /* loader */
         #loader {
-            position: fixed;
             border: 8px solid #5a5a5a;
             border-radius: 50%;
             border-top: 8px solid #D9AC42;
-            width: 25px;
-            height: 25px;
-            top: 95px;
-            left: 18%;
+            width: 45px;
+            height: 45px;
+            margin: auto;
             animation: spin 1.5s cubic-bezier(0.1, 0.5, 0.2, 0.1) infinite;
             z-index: 2;
         }
@@ -290,8 +284,8 @@
             border-radius: 6px;
             padding: 8px 0;
             position: absolute;
-            bottom: 175%;
-            left: 50%;
+            top: -110%;
+            left: 10%;
             margin-left: -20px;
         }
 
@@ -300,12 +294,13 @@
             content: "";
             position: absolute;
             top: 100%;
-            left: 5%;
+            left: 9%;
             margin-left: -5px;
             border-width: 5px;
             border-style: solid;
             border-color: #4eff35 transparent transparent transparent;
         }
+
 
         /* Toggle this class - hide and show the popup */
         .popup .show {
@@ -367,20 +362,21 @@
             background-color: floralwhite;
             border: 0.2px solid #BEBEBE;
             color: black;
-            padding: 2px 3px;
+            padding: 3px 3px;
             text-align: center;
             text-decoration: none;
             display: inline-block;
             font-size: 10px;
             cursor: pointer;
             border-radius: 3px;
+            box-shadow: 0 3px 4px rgba(0,0,0,.3);
         }
 
         /* social media */
         .fa {
             padding: 10px;
             font-size: 25px;
-            width: 40px;
+            width: 35px;
             text-align: center;
         }
 
@@ -410,7 +406,7 @@
         }
 
         #input {
-            float: left;
+            text-align: center;
         }
 
         .loading {
@@ -421,13 +417,6 @@
             text-align: match-parent;
         }
 
-        .fullScreen {
-            position: absolute;
-            right: 0;
-            top: 0;
-            color: #4eff35;
-        }
-
         ::-webkit-scrollbar {
             -webkit-appearance: none;
             width: 4px;
@@ -436,6 +425,15 @@
             border-radius: 4px;
             background-color: rgba(230, 255, 216, 0.55);
             -webkit-box-shadow: 0 0 1px rgb(0, 0, 0);
+        }
+
+        #input input {
+            border-radius: 3px;
+            border: 1px solid black;
+            height: 16px;
+            padding: 1px;
+            margin: 1px;
+            font-family: Geneva;
         }
 
     </style>
@@ -510,34 +508,36 @@
             Nashville Map
             <i class="fa fa-arrows-alt" onclick = "enlargeMap()" style="font-size: 16px; float: right; padding: 1px; color: #4eff35"></i>
         </div>
-        <div id="initialHint" style = "position: absolute; z-index: 3; background-color: rgba(0,0,0,0.84); width: 740px; height: 60px">
+        <div id="initialHint" style = "position: absolute; z-index: 3; background-color: rgba(0,0,0,0.84); width: inherit; height: 60px">
             <i class="fa fa-angle-double-down"></i>
-            <span>Please choose a date interval between 1 day and 1 month</span>
+            <span style="font-size: 17px;">Please choose a date interval between 1 day and 1 month</span>
         </div>
         <div id="map" style="color: black"></div>
         <div id="floating-panel">
-            <button class="button" id='markers' onclick="toggleMarkers(markersArr)">
+            <button class="button" style="background-color: lightgoldenrodyellow" id='markers' onclick="toggleMarkers(markersArr)">
             Hide Markers</button>
             <button class="button" id='heat' onclick="setHeatMap()">
             Generate heatmap</button>
             <button class="button" onclick="changeGradient()">
             Change gradient</button>
-            <button class="button" style="background-color: lightpink" id="vehide"onclick="hideVehicles()">
+            <button class="button" style="background-color: lightgray" id="vehide"onclick="hideVehicles()">
             Hide Responding incidents</button>
         </div>
-        <div id="loader" style="display: none"></div>
-
+        <div style="width: inherit; position:absolute; top: 10%; text-align: center; z-index: 2">
+            <div id="loader" style="display: none"></div>
+        </div>
         <div id="sliderGround">
             <div id="slider"></div>
-            <div id="input">
-                <i class="fa fa-calendar" aria-hidden="true" style="padding: 0; margin-top:3px"></i>
+            <div id="input" style="margin-top: 5px; font-family: 'Zilla Slab'">
+                &#x1F5D3;&nbsp;
                 From: <input type="date" min="2014-01-01" max="2016-12-31" value="2014-06-01" id="date1"/>
                 Hour: <input type="number" min="0" max="23" id="hour1" value="10"/>
                 &nbsp; &nbsp; &nbsp;
                 To: <input type="date" min="2014-01-01" max="2017-01-01" value="2014-06-20" id="date2"/>
                 Hour: <input type="number" min="0" max="23" id="hour2" value="10"/>
                 &nbsp; &nbsp; &nbsp;
-                <button class="button" style = "background-color: #D9AC42; padding: 5px 8px" id="submitDates" onclick="getData()">
+                <button class="button" style = "background-color: #D9AC42; padding: 3px 5px; color: white; 
+                    font-size: 14px; font-family:'Zilla Slab'" id="submitDates" onclick="getData()">
                 Submit dates</button>
             </div>
             </br>
@@ -545,7 +545,7 @@
     </div>
 
 <!-- summary column-->    
-    <div class="columnSummary" style = "width: 33%">
+    <div class="columnSummary" id="summaryView" style = "width: 33%">
         <div class="title">Summary:</div>
         <div class="loading">
             <i class="fa fa-spinner fa-pulse"></i>
@@ -560,7 +560,7 @@
     </div>
 
 <!-- bar chart column--> 
-    <div class="column" style="width: 42%; height: 400px">
+    <div class="column" id="barView" style="width: 42%; height: 400px">
         <div class="title">Bar Chart - Level of Severity:</div>
         <div class="loading">
             <i class="fa fa-spinner fa-pulse"></i>
@@ -572,14 +572,14 @@
     </div>
 
 <!-- pie chart column--> 
-    <div class="column" style="width: 50%; height: 400px">
-        <div class="title">Pie Chart - Percentage of Types of Incidents:</div>
+    <div class="column" id="pieView" style="width: 50%; height: 400px">
+        <div class="title">Pie Chart - %Types of Incidents:</div>
         <div class="loading">
             <i class="fa fa-spinner fa-pulse"></i>
             <span class="loadingMsg">waiting for user input</span>
         </div>
         <div class="card">
-            <div id="pieForType" style="width: 700px; height: 400px; position: absolute"></div>
+            <div id="pieForType" style="width: 610px; height: 360px; margin:0; padding: 0"></div>        
         </div>
     </div>
 
