@@ -47,10 +47,10 @@ function createSlider() {
         },
         connect: true,
         behaviour: 'drag',
-        // Min interval: half an hour
+        // Min interval: an hour
         margin: 60 * 60 * 1000,
-        // Max interval: two months
-        limit: 60 * 24 * 60 * 60 * 1000,
+        // // Max interval: 30 days
+        // limit: 30 * 24 * 60 * 60 * 1000,
         // Steps of one hour
         step: 60 * 60 * 1000,
         // Two more timestamps indicate the handle starting positions.
@@ -60,6 +60,15 @@ function createSlider() {
         //     density: 1,
         //     stepped: true
         // }
+    });
+    
+    var connect = dateSlider.querySelector('.noUi-connect');
+    dateSlider.noUiSlider.on('update', function(values) {
+        if ((values[1]-values[0])>30 * 24 * 60 * 60 * 1000) {
+            connect.style.background = "goldenrod";
+        } else {
+            connect.style.background = "lightsalmon";
+        }
     });
 
     // input tables change along with handle
@@ -175,8 +184,7 @@ function getData() {
     }
     
     
-    var chart_Option = document.getElementById('chartList').value,
-        start_Date = document.getElementById('date1').value,
+    var start_Date = document.getElementById('date1').value,
         start_Hour = document.getElementById('hour1').value,
         end_Date = document.getElementById('date2').value,
         end_Hour = document.getElementById('hour2').value;
@@ -203,7 +211,8 @@ function getData() {
  */
 function prepMarkers() {
     document.getElementById('initialHint').style.display = 'none';
-    document.getElementById('markers').innerHTML = 'Hide Markers';
+    document.getElementById('markers').innerHTML = 'Hide Incidents';
+    setButtonDisplay("hidden");
     // remove markers from the map, but still keeps them in the array
     for (var i = 0; i < markers.length; i++) {
         markers[i].setMap(null);
@@ -274,6 +283,13 @@ socket.on('burglary_data', function(msg) {
     document.getElementById("loader").style.display = "none";
     setBurglary();
 });
+
+function setButtonDisplay(str) {
+    document.getElementById("markers").style.visibility = str;
+    document.getElementById("heat").style.visibility = str;
+    document.getElementById("gradient").style.visibility = str;
+    document.getElementById("vehide").style.visibility = str;
+}
 
 // set burglary data
 function setBurglary() {
@@ -412,7 +428,7 @@ function setIncident(r, index) {
 
     var latLng = new google.maps.LatLng(r._lat, r._lng);
     heatDataAll.push(latLng);
-    var content = "<h3>"+emoji+" "+meaningList[protocol]+"</h3>"+'</br>'+
+    var content = "<h3>"+emoji+" "+meaningList[protocol]+"</h3>"+
         '<b>Incident Number: </b>' + r.incidentNumber +
         '</br><b>Alarm Date: </b>' + r.alarmDate +
         '</br><b>Location: </b>' + r.streetNumber + " " + r.streetPrefix + " "
@@ -432,6 +448,7 @@ function setIncident(r, index) {
 
 /* socket to get depots location from server*/
 socket.on('depots_data', function(msg) {
+    document.getElementById("loader").style.display = "block";
     arr_depots = msg.depotLocation;
     arr_vehicles = msg.depotInterior;
     console.log("depots----------------");
@@ -444,7 +461,7 @@ socket.on('depots_data', function(msg) {
         scaledSize: new google.maps.Size(26, 26)
     };
     for (var i=0; i<arr_depots.length; i++) {
-        var content = "<h4><b>&#x1F692; Vehicles from this depot are: </b></h4>" + "</br>";
+        var content = "<p><b>&#x1F6F1; Vehicles from this depot are: </b></p>";
         for (var j=0; j<(arr_vehicles[i]).length; j++) {
             content += (arr_vehicles[i])[j];
             content += ", ";
@@ -452,8 +469,8 @@ socket.on('depots_data', function(msg) {
         var latLng = new google.maps.LatLng((arr_depots[i])[0], (arr_depots[i])[1]),
             marker = new google.maps.Marker(createMarkerObj(latLng,map,imgDepot,content));
         setInfoWindow(marker);
-
     }
+    document.getElementById("loader").style.display = "none";
 });
 
 /* socket to get vehicles location from server*/
@@ -476,7 +493,7 @@ function setVehicle() {
             strokeWeight: .5
     };
     for (var i = 0; i < (r1.locations).length; i++) {
-        var content = "<b>_id: </b>"+r1._id +"</br>" +"<b>Apparatus ID: </b>" + 
+        var content = "&#x1F692;<b>id: </b>"+r1._id +"</br>" +"<b>Apparatus ID: </b>" + 
             r1.apparatusID + "</br>"+"<b>Time of location: </b>"+ (r1.locations)[i].time +
             "</br>"+"<b>Station Location: </b>" + (r1.stationLocation)[0]
         
@@ -496,7 +513,6 @@ function setVehicle() {
         content = content.replace(/na/g, "Unknown");
 
         setInfoWindow(marker);
-        markers.push(marker);
         vehiclesArr.push(marker);        
     }
 }
@@ -592,9 +608,10 @@ var meaningList = {0: "",
 
 /* socket after markers are drawn on map: set up pie charts*/
 socket.on('markers-success', function() {
-    console.log("-->All markers success")
-    console.log("types[]: ")
-    console.log(types)
+    setButtonDisplay("visible");
+    console.log("-->All markers success");
+    console.log("types[]: ");
+    console.log(types);
     console.log(markersArr); // should look like [Incidents: Array(x), Burglary: Array(y)]
     setBar(sumOfIncidents);
     var arr = [['Types', 'Number']];
@@ -615,12 +632,21 @@ socket.on('markers-success', function() {
     printSummary();
 });
 
+socket.on('heat-success', function() {
+    document.getElementById("heat").style.visibility = 'visible';
+    document.getElementById("gradient").style.visibility = 'visible';
+    console.log("-->All heat pushed success");
+    console.log("heatDataAll:   "+heatDataAll.length);
+    setHeatMap();
+    document.getElementById("loader").style.display = "none";
+});
+
 
 /* print a summary of total of incidents,
  * generate checkbox for each type of incidents
  */
 function printSummary() {
-    document.getElementById('total').innerHTML = "Total incidents: "+ (markers.length);
+    document.getElementById('total').innerHTML = "Total incidents: "+ (heatDataAll.length);
     document.getElementById('chooseType').innerHTML = "Choose type by brushing or pressing '&#8984;' or ctrl";
 
     if (document.getElementById("selectType") !== null) {
@@ -628,7 +654,7 @@ function printSummary() {
         t.parentNode.removeChild(t);
     }
 
-    var div = document.querySelector(".columnSummary");
+    var div = document.getElementById("summaryView");
     var selectList = document.createElement("select");
     selectList.id = "selectType";
     selectList.multiple = "multiple";
@@ -749,6 +775,11 @@ function hideVehicles() {
 
 }
 
+socket.on('lat_lng', function(msg) {
+    var latLng = new google.maps.LatLng(msg.lat, msg.lng);
+    heatDataAll.push(latLng);
+});
+
 // generate heat map layer, after which change button
 var heatmap;
 function setHeatMap() {
@@ -756,8 +787,8 @@ function setHeatMap() {
         data: heatDataAll,
         dissipating: false,
         map: map,
-        opacity:0.8,
-        radius:0.008
+        opacity:0.84,
+        radius:0.007
     });
     document.getElementById('heat').innerHTML = 'Show/hide Heatmap';
     document.getElementById('heat').onclick = function () {
@@ -921,7 +952,8 @@ function enlargeMap() {
     var b = document.getElementById("barView");
     var c = document.getElementById("pieView");
     var d = document.getElementById("pieForType");
-
+    var e = document.getElementsByClassName('bar');
+    e = e[0];
 
     if (mapView.style.width === "740px") {
         mapView.style.width = "1200px";
@@ -931,16 +963,49 @@ function enlargeMap() {
         a.style.height = "400px";
         b.style.width = "30%";
         c.style.width = "30%";
-        d.style.transform = "translateX(-150px) translateY(-40px) scale(0.8)";
+        d.style.transform = "translateX(-140px) translateY(-40px) scale(0.8)";
+        e.style.transform = "translateX(-40px) translateY(-20px) scale(0.8)";
     } else {
         mapView.style.width = "740px";
         mapView.style.height = "500px";
         mapDiv.style.height = "410px";
         a.style.width = "33%";
+        a.style.height = "500px";
         b.style.width = "40%";
         c.style.width = "50%";
         d.style.transform = "translateX(25px) translateY(5px) scale(1)";
+        e.style.transform = "translateX(25px) translateY(5px) scale(1)";
     }
     google.maps.event.trigger(mapDiv, 'resize');
     map.setCenter(centerNash);
+}
+
+function changeMode() {
+    prepMarkers();
+    if (document.getElementById("checkFuture").checked) {
+        var a = document.getElementsByClassName("column");
+        for (var i=0; i<4; i++) {
+            a[i].style.borderColor = "#82D6FF";
+        }
+        changeColor("#82D6FF");
+    } else {
+        var a = document.getElementsByClassName("column");
+        for (var i=0; i<4; i++) {
+            a[i].style.borderColor = "#4f4f4f";
+        }
+        changeColor("lime");
+    }
+}
+
+function changeColor(color) {
+        a = document.getElementsByClassName("bar1");
+        a[0].style.backgroundColor = color;
+        a = document.getElementsByClassName("bar2");
+        a[0].style.backgroundColor = color;
+        a = document.getElementsByClassName("bar3");
+        a[0].style.backgroundColor = color;
+        a = document.getElementById("enlargeMap");
+        a.style.color = color;
+        a = document.getElementsByClassName("popup");
+        a[0].style.color = color;
 }
