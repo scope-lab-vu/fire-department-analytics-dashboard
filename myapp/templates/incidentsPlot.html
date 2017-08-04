@@ -14,7 +14,7 @@
         body {
             position: static;
             height: 3000px;
-            background-color: #343434;
+            background-color: rgba(0,0,0,0.88);
             overflow-x: hidden;
         }
 
@@ -30,13 +30,12 @@
             font-family: 'Shadows Into Light', cursive;
             font-size: 40px;
             color: whitesmoke;
-            background-color: #292823;
+            background-color: rgba(0,0,0,0.9);
         }
 
         .container {
             position: fixed;
             top: 80px;
-
             width: 55px;
             display: inline-block;
             cursor: pointer;
@@ -144,7 +143,7 @@
         }
 
         .title {
-            background-color: #1e1e1e;
+            background-color: #292823;
             width: 100%;
             height: 20px;
             color: white;
@@ -157,24 +156,12 @@
             float: left;
             font-size: 15px;
             height: 500px;
-            border: 1px solid rgba(164, 214, 172, 0.44);
-            box-shadow: 0 0 1em #261a00;
+            border: 0.5px solid #4f4f4f;
+            box-shadow: 10px 10px 20px #292929;
             padding: 0;
             margin-bottom: 25px;
             margin-left: 30px;
-            background-color: rgba(13, 18, 27, 0.21);
-        }
-
-        .columnSummary {
-            float: left;
-            font-size: 15px;
-            height: 500px;
-            border: 1px solid rgba(213, 214, 177, 0.44);
-            box-shadow: 0 0 1em #261a00;
-            padding: 0;
-            margin-bottom: 25px;
-            margin-left: 30px;
-            background-color: rgba(13, 18, 27, 0.21);
+            background-color: rgba(13, 18, 27, 0.69);
         }
 
         /* element name */
@@ -320,11 +307,6 @@
             width: inherit;
         }
 
-        #submitDates {
-            position: relative;
-            top: 1px;
-        }
-
         .example-val {
             color: white;
             display: inline-block;
@@ -332,7 +314,7 @@
 
         /* over-writing the nouislider css */
         .noUi-connect {
-            background: #D9AC42;
+            background: lightsalmon;
         }
 
         /* the actual handle */
@@ -434,7 +416,47 @@
             padding: 1px;
             margin: 1px;
             font-family: Geneva;
+            border: 0.2px solid #BEBEBE;
         }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 24px;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 2px;
+            top: 2px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+    input:checked + .slider {
+        background-color: rgb(102, 248, 255);
+    }
+
+    input:checked + .slider:before {
+        transform: translateX(16px);
+    }
 
     </style>
 </head>
@@ -473,20 +495,19 @@
     <b>127.0.0/simple-incident</b><br>
 
     <a><i class="fa fa-bar-chart"></i>&nbsp;Chart Options: </a><br>
-    <b>
-        <select id="chartList">
-            <option value="markers">Markers On Map</option>
-            <option value="heat">Heat Map</option>
-            <option value="bar">Bar Chart(N.A.)</option>
-            <option value="pie">Pie Chart(N.A.)</option>
-        </select><br>
+    <b>    
+        <label class="switch">
+            <input type="checkbox" id="checkFuture" onclick="changeMode()">
+            <span class="slider round"></span>
+        </label>
+        Future Predictions<br>
     </b>
     <a><i class="fa fa-calendar"></i>&nbsp;&nbsp;Year: </a><br>
     <b>
         <select id="incidentYear">
             <option id="2014">2014</option>
             <option id="2015">2015</option>
-            <option id="201">2016</option>
+            <option id="2016">2016</option>
         </select><br>
     </b>
     <br><br><br><br><br><br><br><br><br><br>
@@ -506,19 +527,20 @@
     <div class="column" id="mapView" style="width: 740px">
         <div class="title">
             Nashville Map
-            <i class="fa fa-arrows-alt" onclick = "enlargeMap()" style="font-size: 16px; float: right; padding: 1px; color: #4eff35"></i>
+            <i class="fa fa-arrows-alt" id="enlargeMap" onclick = "enlargeMap()" 
+            style="font-size: 16px; float: right; padding: 1px; color: #4eff35"></i>
         </div>
         <div id="initialHint" style = "position: absolute; z-index: 3; background-color: rgba(0,0,0,0.84); width: inherit; height: 60px">
             <i class="fa fa-angle-double-down"></i>
-            <span style="font-size: 17px;">Please choose a date interval between 1 day and 1 month</span>
+            <span style="font-size: 17px; transition: 0.5s">Please choose a date interval between 1 day and 1 month</span>
         </div>
         <div id="map" style="color: black"></div>
         <div id="floating-panel">
             <button class="button" style="background-color: lightgoldenrodyellow" id='markers' onclick="toggleMarkers(markersArr)">
-            Hide Markers</button>
+            Show Incidents</button>
             <button class="button" id='heat' onclick="setHeatMap()">
             Generate heatmap</button>
-            <button class="button" onclick="changeGradient()">
+            <button class="button" id='gradient' onclick="changeGradient()">
             Change gradient</button>
             <button class="button" style="background-color: lightgray" id="vehide"onclick="hideVehicles()">
             Hide Responding incidents</button>
@@ -536,7 +558,7 @@
                 To: <input type="date" min="2014-01-01" max="2017-01-01" value="2014-06-20" id="date2"/>
                 Hour: <input type="number" min="0" max="23" id="hour2" value="10"/>
                 &nbsp; &nbsp; &nbsp;
-                <button class="button" style = "background-color: #D9AC42; padding: 3px 5px; color: white; 
+                <button class="button" style = "background-color: #D9AC42; padding: 3px 5px; color: black; 
                     font-size: 14px; font-family:'Zilla Slab'" id="submitDates" onclick="getData()">
                 Submit dates</button>
             </div>
@@ -545,11 +567,11 @@
     </div>
 
 <!-- summary column-->    
-    <div class="columnSummary" id="summaryView" style = "width: 33%">
+    <div class="column" id="summaryView" style = "width: 33%">
         <div class="title">Summary:</div>
         <div class="loading">
             <i class="fa fa-spinner fa-pulse"></i>
-            <span class="loadingMsg">waiting for user input</span>
+            <span class="loadingMsg">Waiting For User Input</span>
         </div>
 
         <div class="card">
@@ -564,7 +586,7 @@
         <div class="title">Bar Chart - Level of Severity:</div>
         <div class="loading">
             <i class="fa fa-spinner fa-pulse"></i>
-            <span class="loadingMsg">waiting for user input</span>
+            <span class="loadingMsg">Waiting For User Input</span>
         </div>
         <div class="card">
             <div class="bar"></div>
@@ -576,7 +598,7 @@
         <div class="title">Pie Chart - %Types of Incidents:</div>
         <div class="loading">
             <i class="fa fa-spinner fa-pulse"></i>
-            <span class="loadingMsg">waiting for user input</span>
+            <span class="loadingMsg">Waiting For User Input</span>
         </div>
         <div class="card">
             <div id="pieForType" style="width: 610px; height: 360px; margin:0; padding: 0"></div>        
