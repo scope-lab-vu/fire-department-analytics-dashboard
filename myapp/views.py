@@ -67,13 +67,14 @@ min time is;;;;;;;;;;;;;;;;;
 #     print maxT
 #     print "min time is;;;;;;;;;;;;;;;;;"
 #     print minT
-        
+
+# retrieve a simplified list of information for just heat map layer
 def getIncidentHeat(start, end):
     print "-> getIncident Heat()\n"
     client = MongoClient("mongodb://zilinwang:Mongo0987654321@129.59.107.60:27017/fire_department")
     db = client["fire_department"]["simple__incident"]
     items = db.find()
-    types = []
+    arr = []
 
     count = 0
     for item in items:
@@ -83,8 +84,12 @@ def getIncidentHeat(start, end):
         if (start <= time <= end):
             count+=1
             print count
-            socketio.emit("lat_lng", {'lat': item['latitude'], 'lng': item['longitude']})                
-
+            dictIn = {}
+            dictIn['lat'] = item['latitude']
+            dictIn['lng'] = item['longitude']
+            dictIn['emdCardNumber'] = item['emdCardNumber']
+            arr.append(dictIn)
+    socketio.emit("latlngarrofobj", arr)
 
 # retrieve data from mongo db
 def getIncidentData(start, end):

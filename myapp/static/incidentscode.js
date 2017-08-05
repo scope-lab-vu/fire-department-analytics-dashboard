@@ -217,10 +217,15 @@ function prepMarkers() {
     for (var i = 0; i < markers.length; i++) {
         markers[i].setMap(null);
     }
+
+    if (heatmap) {
+        heatmap.setMap(null);
+    }
     // delete all by removing reference to them,
     // so that when user hit "submit" again, previous markers are gone
     markers = [];
     markers.length = 0;
+    heatDataAll = [];
     heatDataAll.length = 0;
     markersArr = [];
     markersArr.length = 0;
@@ -228,7 +233,8 @@ function prepMarkers() {
     sumOfIncidents.length=0;
     sumOfIncidents = [0,0,0,0,0,0,0];  // sum of incidents happened at each level of severity
 
-    console.log("markersArr length:   "+ markersArr.length+ "\n   "+markersArr);    
+    console.log("markersArr length:   "+ markersArr.length+ "\n   "+markersArr);   
+    console.log("heatDataAll length:   "+ heatDataAll.length+ "\n   "+heatDataAll);   
 }
 
 
@@ -613,6 +619,7 @@ socket.on('markers-success', function() {
     console.log("types[]: ");
     console.log(types);
     console.log(markersArr); // should look like [Incidents: Array(x), Burglary: Array(y)]
+    
     setBar(sumOfIncidents);
     var arr = [['Types', 'Number']];
     for (var j=0; j<types.length; j++) {
@@ -622,23 +629,44 @@ socket.on('markers-success', function() {
         arr.push(a);
     }
     console.log(arr);
+    // set up pie chart
+    google.charts.load('current', {packages: ['corechart']});
+    google.charts.setOnLoadCallback(function() {
+        setPie(arr);
+    });
+    printSummary();
+});
 
+/* heat data of incidents successfully pushed to heatdataAll*/
+socket.on('heat-success', function() {
+    document.getElementById("heat").style.visibility = 'visible';
+    document.getElementById("gradient").style.visibility = 'visible';
+    console.log("-->All heat pushed success");
+    console.log("heatDataAll:   "+heatDataAll.length);
+    
+    setHeatMap();
+    setBar(sumOfIncidents);
+
+    var arr = [['Types', 'Number']];
+    for (var j=0; j<types.length; j++) {
+        var a = [];
+        a.push(meaningList[types[j]]);    
+        a.push(markersArr[types[j]]);
+        arr.push(a);
+    }
+    console.log(arr);
     // set up pie chart
     google.charts.load('current', {packages: ['corechart']});
     google.charts.setOnLoadCallback(function() {
         setPie(arr);
     });
 
-    printSummary();
-});
-
-socket.on('heat-success', function() {
-    document.getElementById("heat").style.visibility = 'visible';
-    document.getElementById("gradient").style.visibility = 'visible';
-    console.log("-->All heat pushed success");
-    console.log("heatDataAll:   "+heatDataAll.length);
-    setHeatMap();
     document.getElementById("loader").style.display = "none";
+    document.getElementById('total').innerHTML = "Total incidents: "+ (heatDataAll.length);
+    for (var i=0; i<3; i++) {
+        document.getElementsByClassName("loading")[i].style.display= "none";
+    }
+
 });
 
 
@@ -775,9 +803,36 @@ function hideVehicles() {
 
 }
 
-socket.on('lat_lng', function(msg) {
-    var latLng = new google.maps.LatLng(msg.lat, msg.lng);
-    heatDataAll.push(latLng);
+/* get heat data of incidents from socket*/
+socket.on('latlngarrofobj', function(msg) {
+    for (var i=0; i<msg.length; i++) {
+        var latLng = new google.maps.LatLng((msg[i]).lat, (msg[i]).lng);
+        heatDataAll.push(latLng);
+        var emdCardNumber = (msg[i]).emdCardNumber;
+        var protocol;
+        var u=0;
+        if (! ("0123456789".includes(emdCardNumber.charAt(0)))) {
+            protocol = emdCardNumber;
+            u = protocol.length;
+        } else {
+            while (u<emdCardNumber.length && severity.indexOf(emdCardNumber.charAt(u))<0) {
+                u++
+            }
+            protocol = emdCardNumber.substring(0,u);
+        }
+        if (! (protocol in markersArr)) {
+            markersArr[""+protocol] = 0;
+            types.push(protocol);
+        }
+        var r_severity = (emdCardNumber).charAt(u);
+        if (severity.indexOf(r_severity) >= 0) {
+            sumOfIncidents[severity.indexOf(r_severity)]++;
+        } else {
+            sumOfIncidents[severity.length]++;
+        }
+        markersArr[""+protocol]++;
+    }
+
 });
 
 // generate heat map layer, after which change button
@@ -785,10 +840,10 @@ var heatmap;
 function setHeatMap() {
     heatmap= new google.maps.visualization.HeatmapLayer({
         data: heatDataAll,
-        dissipating: false,
+        dissipating: true,
         map: map,
-        opacity:0.84,
-        radius:0.007
+        opacity: 0.84,
+        radius: 15
     });
     document.getElementById('heat').innerHTML = 'Show/hide Heatmap';
     document.getElementById('heat').onclick = function () {
@@ -987,6 +1042,7 @@ function changeMode() {
         for (var i=0; i<4; i++) {
             a[i].style.borderColor = "#82D6FF";
         }
+        document.body.style.backgroundColor = "rgba(0,0,0,0.90)";
         changeColor("#82D6FF");
     } else {
         var a = document.getElementsByClassName("column");
