@@ -7,13 +7,283 @@ var centerNash = {lat: 36.18, lng: -86.7816};
 var minDate = new Date("2014-02-20T00:00:00.00");
 var maxDate = new Date("2016-02-06T00:00:00.00");
 
+// night vision stylish map stylers
+var oldStyles = [
+        {
+            "stylers": [
+                {
+                    "lightness": -15
+                }
+            ]
+        },
+        {
+            "elementType": "geometry",
+            "stylers": [
+                {
+                    "color": "#242f3e"
+                }
+            ]
+        },
+        {
+            "elementType": "labels.text.fill",
+            "stylers": [
+                {
+                    "color": "#746855"
+                }
+            ]
+        },
+        {
+            "elementType": "labels.text.stroke",
+            "stylers": [
+                {
+                    "color": "#242f3e"
+                }
+            ]
+        },
+        {
+            "featureType": "administrative.locality",
+            "elementType": "labels.text.fill",
+            "stylers": [
+                {
+                    "color": "#d59563"
+                }
+            ]
+        },
+        {
+            "featureType": "administrative.neighborhood",
+            "elementType": "labels.text.fill",
+            "stylers": [
+                {
+                    "color": "#d3c177"
+                }
+            ]
+        },
+        {
+            "featureType": "poi",
+            "elementType": "labels.text.fill",
+            "stylers": [
+                {
+                    "color": "#d59563"
+                }
+            ]
+        },
+        {
+            "featureType": "poi.attraction",
+            "stylers": [
+                {
+                    "visibility": "off"
+                }
+            ]
+        },
+        {
+            "featureType": "poi.business",
+            "stylers": [
+                {
+                    "visibility": "off"
+                }
+            ]
+        },
+        {
+            "featureType": "poi.park",
+            "elementType": "geometry.fill",
+            "stylers": [
+                {
+                    "color": "#103a11"
+                }
+            ]
+        },
+        {
+            "featureType": "poi.park",
+            "elementType": "labels.text.fill",
+            "stylers": [
+                {
+                    "color": "#6b9a76"
+                }
+            ]
+        },
+        {
+            "featureType": "poi.school",
+            "elementType": "labels.text.fill",
+            "stylers": [
+                {
+                    "color": "#aa7ca0"
+                }
+            ]
+        },
+        {
+            "featureType": "poi.sports_complex",
+            "stylers": [
+                {
+                    "visibility": "off"
+                }
+            ]
+        },
+        {
+            "featureType": "road",
+            "elementType": "geometry",
+            "stylers": [
+                {
+                    "color": "#38414e"
+                }
+            ]
+        },
+        {
+            "featureType": "road",
+            "elementType": "geometry.stroke",
+            "stylers": [
+                {
+                    "color": "#212a37"
+                }
+            ]
+        },
+        {
+            "featureType": "road",
+            "elementType": "labels.text.fill",
+            "stylers": [
+                {
+                    "color": "#9ca5b3"
+                }
+            ]
+        },
+        {
+            "featureType": "road.arterial",
+            "elementType": "geometry.fill",
+            "stylers": [
+                {
+                    "color": "#cccccc"
+                }
+            ]
+        },
+        {
+            "featureType": "road.arterial",
+            "elementType": "labels.text.fill",
+            "stylers": [
+                {
+                    "color": "#ffffff"
+                }
+            ]
+        },
+        {
+            "featureType": "road.highway",
+            "elementType": "geometry.fill",
+            "stylers": [
+                {
+                    "color": '#746855'
+                },
+                // {
+                //     "weight": 1.5
+                // }
+            ]
+        },
+        {
+            "featureType": "road.highway",
+            "elementType": "labels.icon",
+            "stylers": [
+              {
+                "visibility": "off"
+              }
+            ]
+        },
+        {
+            "featureType": 'road.highway',
+            "elementType": 'geometry.stroke',
+            "stylers": [
+                {
+                    color: '#1f2835'
+                }
+            ]
+        },
+        {
+            "featureType": "road.highway",
+            "elementType": "labels.text.fill",
+            "stylers": [
+                {
+                    "color": "#FFF7C9"
+                }
+            ]
+        },
+        {
+            "featureType": "road.local",
+            "elementType": "geometry.fill",
+            "stylers": [
+                {
+                    "color": "#6e6e6e"
+                }
+            ]
+        },
+        {
+            "featureType": "transit",
+            "elementType": "geometry",
+            "stylers": [
+                {
+                    "color": "#2f3948"
+                }
+            ]
+        },
+        {
+            "featureType": "transit.line",
+            "stylers": [
+                {
+                    "visibility": "simplified"
+                }
+            ]
+        },
+        {
+            "featureType": "transit.station",
+            "stylers": [
+                {
+                    "visibility": "off"
+                }
+            ]
+        },
+        {
+            "featureType": "water",
+            "elementType": "geometry",
+            "stylers": [
+                {
+                    "color": "#17263c"
+                }
+            ]
+        },
+        {
+            "featureType": "water",
+            "elementType": "geometry.fill",
+            "stylers": [
+                {
+                    "color": "#275554"
+                }
+            ]
+        },
+        {
+            "featureType": "water",
+            "elementType": "labels.text.fill",
+            "stylers": [
+                {
+                    "color": "#8ea2c1"
+                }
+            ]
+        },
+        {
+            "featureType": "water",
+            "elementType": "labels.text.stroke",
+            "stylers": [
+                {
+                    "color": "#17263c"
+                }
+            ]
+        }
+    ];
+
 // Create an initial map - plain, center at centerNash
 function initMap() {
     map = new google.maps.Map(document.getElementById('map'), {
         zoom: 11,
         center: centerNash,
         mapTypeId: 'roadmap',
-        scrollwheel: false  // disable scroll wheel
+        scrollwheel: false,  // disable scroll wheel
+        mapTypeControl: false,
+        streetViewControl: false,
+        styles: oldStyles
     });
 
     // Create the DIV to hold the control and call the CenterControl()
@@ -38,6 +308,7 @@ function createSlider() {
     var start = start_Date.value + 'T' + (start_Hour.value).toString() + ":00:00.00",
         end = end_Date.value + "T" + (end_Hour.value).toString() + ":00:00.00";
 
+    // slider object with double handles
     var dateSlider = document.getElementById('slider');
     noUiSlider.create(dateSlider, {
         // Create two timestamps to define a range.
@@ -46,7 +317,7 @@ function createSlider() {
             max: maxDate.getTime()
         },
         connect: true,
-        behaviour: 'drag',
+        behaviour: 'tap-drag',
         // Min interval: an hour
         margin: 60 * 60 * 1000,
         // // Max interval: 30 days
@@ -55,19 +326,18 @@ function createSlider() {
         step: 60 * 60 * 1000,
         // Two more timestamps indicate the handle starting positions.
         start: [timestamp(start), timestamp(end)],
-        // pips: {
-        //     mode: 'range',
-        //     density: 1,
-        //     stepped: true
-        // }
     });
     
+    // change connect color between two handles according to date interval length
     var connect = dateSlider.querySelector('.noUi-connect');
+    var button = document.getElementById('submitDates');
     dateSlider.noUiSlider.on('update', function(values) {
         if ((values[1]-values[0])>30 * 24 * 60 * 60 * 1000) {
             connect.style.background = "goldenrod";
+            button.style.backgroundColor = "goldenrod"
         } else {
-            connect.style.background = "lightsalmon";
+            connect.style.background = "#D69560";
+            button.style.backgroundColor = "#D69560";
         }
     });
 
@@ -152,6 +422,12 @@ socket.on('success', function() {
 });
 
 
+/* ALL
+ * MAJOR
+ * GLOBAL
+ * VARIABLES
+ * ARE HERE!!
+ */
 var markers = [],  // an array of all markers objects
     markersArr = [], // an array of markers according to types of incidents
     heatDataAll = [],
@@ -229,6 +505,8 @@ function prepMarkers() {
     heatDataAll.length = 0;
     markersArr = [];
     markersArr.length = 0;
+    vehiclesArr = [];
+    vehiclesArr.length = 0;
 
     sumOfIncidents.length=0;
     sumOfIncidents = [0,0,0,0,0,0,0];  // sum of incidents happened at each level of severity
@@ -263,7 +541,7 @@ function CenterControl(controlDiv, map) {
     controlText.innerHTML = 'Center Map';
     controlUI.appendChild(controlText);
 
-    // Setup the click event listeners: simply set the map to Chicago.
+    // Setup the click event listeners: simply set the map to Nashville.
     controlUI.addEventListener(
         'click',
         function() {
@@ -278,7 +556,7 @@ socket.on('success', function() {
 });
 
 socket.on('burglary_none', function() {
-    document.getElementById("loader").style.display = "none";
+    console.log("burglary none")
 });
 /* socket to get burglary data from server*/
 var data_burglary;
@@ -286,7 +564,6 @@ socket.on('burglary_data', function(msg) {
 
     // console.log(msg);
     data_burglary = msg;
-    document.getElementById("loader").style.display = "none";
     setBurglary();
 });
 
@@ -371,7 +648,6 @@ socket.on('incident_data', function(msg) {
         // markersArr.length++;
         types.push(protocol);
     }
-    document.getElementById("loader").style.display = "none";
     setIncident(data_incident, u)
 
 });
@@ -400,7 +676,7 @@ function setIncident(r, index) {
             anchor: new google.maps.Point(9, 9)
         },
         imgMVA = {
-            url: 'https://cdn3.iconfinder.com/data/icons/flat-icons-2/600/traffic.png',
+            url: 'https://cdn3.iconfinder.com/data/icons/classic-icons-1/512/43.png',
             scaledSize: new google.maps.Size(20, 20),
             anchor: new google.maps.Point(9, 9)
         },
@@ -449,22 +725,16 @@ function setIncident(r, index) {
     setInfoWindow(marker);
     markers.push(marker);
     markersArr[""+protocol].push(marker);
-    document.getElementById("loader").style.display = "block";
 }
 
 /* socket to get depots location from server*/
 socket.on('depots_data', function(msg) {
-    document.getElementById("loader").style.display = "block";
     arr_depots = msg.depotLocation;
     arr_vehicles = msg.depotInterior;
-    console.log("depots----------------");
-    console.log(arr_depots);
-    console.log("vehicles in depots----------------");
-    console.log(arr_vehicles);
 
     var imgDepot = {
         url: 'https://hydra-media.cursecdn.com/simcity.gamepedia.com/1/13/Fire_station_garage.png?version=e2d13f3d48d4d276f64d0cb8c04adbee',
-        scaledSize: new google.maps.Size(26, 26)
+        scaledSize: new google.maps.Size(24, 24)
     };
     for (var i=0; i<arr_depots.length; i++) {
         var content = "<p><b>&#x1F6F1; Vehicles from this depot are: </b></p>";
@@ -476,7 +746,7 @@ socket.on('depots_data', function(msg) {
             marker = new google.maps.Marker(createMarkerObj(latLng,map,imgDepot,content));
         setInfoWindow(marker);
     }
-    document.getElementById("loader").style.display = "none";
+    console.log("depots_data length"+":  "+arr_depots.length);
 });
 
 /* socket to get vehicles location from server*/
@@ -492,7 +762,7 @@ function setVehicle() {
     var r1 = data_vehicle;
     var image = {
             path: google.maps.SymbolPath.CIRCLE,
-            fillColor: 'grey',
+            fillColor: 'floralwhite',
             fillOpacity: .4,
             scale: 6,
             strokeColor: 'brown',
@@ -517,7 +787,6 @@ function setVehicle() {
             });
 
         content = content.replace(/na/g, "Unknown");
-
         setInfoWindow(marker);
         vehiclesArr.push(marker);        
     }
@@ -618,7 +887,9 @@ socket.on('markers-success', function() {
     console.log("-->All markers success");
     console.log("types[]: ");
     console.log(types);
-    console.log(markersArr); // should look like [Incidents: Array(x), Burglary: Array(y)]
+    console.log("markersArr length:   "+ markersArr.length);   
+    console.log("heatDataAll length:   "+ heatDataAll.length);   
+    // console.log(markersArr); // should look like [Incidents: Array(x), Burglary: Array(y)]
     
     setBar(sumOfIncidents);
     var arr = [['Types', 'Number']];
@@ -676,6 +947,7 @@ socket.on('heat-success', function() {
 function printSummary() {
     document.getElementById('total').innerHTML = "Total incidents: "+ (heatDataAll.length);
     document.getElementById('chooseType').innerHTML = "Choose type by brushing or pressing '&#8984;' or ctrl";
+    document.getElementById("loader").style.display = "none";
 
     if (document.getElementById("selectType") !== null) {
         var t = document.getElementById("selectType");
@@ -840,10 +1112,10 @@ var heatmap;
 function setHeatMap() {
     heatmap= new google.maps.visualization.HeatmapLayer({
         data: heatDataAll,
-        dissipating: true,
+        dissipating: false,
         map: map,
-        opacity: 0.84,
-        radius: 15
+        opacity: 0.95,
+        radius: 0.01
     });
     document.getElementById('heat').innerHTML = 'Show/hide Heatmap';
     document.getElementById('heat').onclick = function () {
@@ -860,9 +1132,6 @@ function toggleHeatmap() {
 function changeGradient() {
     var gradient = [
         'rgba(0, 255, 255, 0)',
-        'rgba(0, 255, 255, 1)',
-        'rgba(0, 191, 255, 1)',
-        'rgba(0, 127, 255, 1)',
         'rgba(0, 63, 255, 1)',
         'rgba(0, 0, 255, 1)',
         'rgba(0, 0, 223, 1)',
@@ -1000,6 +1269,7 @@ function barToX(x) {
     }
 }
 
+// enlarge Map on enlarge button
 function enlargeMap() {
     var mapView = document.getElementById("mapView");
     var mapDiv = document.getElementById("map");
@@ -1035,33 +1305,172 @@ function enlargeMap() {
     map.setCenter(centerNash);
 }
 
+/* Change mode from Historical to Predictions
+ * 1) change interface color
+ * 2) change double slider to one
+ * 3) create a single input date box*/
 function changeMode() {
-    prepMarkers();
-    if (document.getElementById("checkFuture").checked) {
-        var a = document.getElementsByClassName("column");
+    prepMarkers(); // clear map first
+    var newStyles = [
+        {
+            stylers: [{hue: "#091a20"}, {saturation: -5}]
+        },
+        {
+            featureType: "road",
+            elementType: "geometry",
+            stylers: [{lightness: 100}, {visibility: "simplified"}]
+        },
+        {
+            featureType: "road",
+            elementType: "labels",
+            stylers: [{visibility: "off"}]
+        }
+    ];
+
+    var a = document.getElementsByClassName("column");
+    var b = document.getElementById("futureLine");
+    var c = document.getElementById("sliderDouble");
+    var d = document.getElementById("initialMsgOnMap");
+    d.innerHTML = "Please Pick A Date In the FUTURE to see Predictions";
+    d = document.getElementById("initialMsgOnMap1");
+    d.innerHTML = "";
+
+    if (document.getElementById("checkFuture").checked) { // future mode is checked
+        map.setOptions({styles: newStyles});
         for (var i=0; i<4; i++) {
             a[i].style.borderColor = "#82D6FF";
         }
         document.body.style.backgroundColor = "rgba(0,0,0,0.90)";
         changeColor("#82D6FF");
-    } else {
-        var a = document.getElementsByClassName("column");
-        for (var i=0; i<4; i++) {
-            a[i].style.borderColor = "#4f4f4f";
+        b.style.color = "black";
+        c.style.display = "none";
+        if (document.getElementById("sliderNew").innerHTML === "") {
+            createSingleSlider();
+        } else {
+            document.getElementById("sliderNew").style.display = "block";
+            document.getElementById("inputSingle").style.display = "block";
         }
+
+
+    } else { // historic mode is checked
+        map.setOptions({styles: oldStyles});
+        for (var j=0; j<4; j++) {
+            a[j].style.borderColor = "#4f4f4f";
+        }
+        document.body.style.backgroundColor = "rgba(0,0,0,0.85)";
         changeColor("lime");
+        b.style.color = "grey";
+        c.style.display = "block";
+        document.getElementById("sliderNew").style.display = "none";
+        document.getElementById("inputSingle").style.display = "none";
     }
 }
 
+/* Change interface color*/
 function changeColor(color) {
-        a = document.getElementsByClassName("bar1");
-        a[0].style.backgroundColor = color;
-        a = document.getElementsByClassName("bar2");
-        a[0].style.backgroundColor = color;
-        a = document.getElementsByClassName("bar3");
-        a[0].style.backgroundColor = color;
-        a = document.getElementById("enlargeMap");
-        a.style.color = color;
-        a = document.getElementsByClassName("popup");
-        a[0].style.color = color;
+    a = document.getElementsByClassName("bar1");
+    a[0].style.backgroundColor = color;
+    a = document.getElementsByClassName("bar2");
+    a[0].style.backgroundColor = color;
+    a = document.getElementsByClassName("bar3");
+    a[0].style.backgroundColor = color;
+    a = document.getElementById("enlargeMap");
+    a.style.color = color;
+    a = document.getElementsByClassName("popup");
+    a[0].style.color = color;
+}
+
+/* Create a single slider and a single date input box*/
+function createSingleSlider() {
+    var singleSlider = document.getElementById('sliderNew');
+    var today = new Date();
+    var dateLimit = new Date("2030-01-01T00:00:00.00");
+    var dateStart = new Date("2020-01-01T00:00:00.00");
+    noUiSlider.create(singleSlider, {
+        start: [dateStart.getTime()],
+        range: {
+            min: today.getTime(),
+            max: dateLimit.getTime()
+        },
+        // Steps of one day
+        step: 24 * 60 * 60 * 1000
+    });
+
+    var div = document.getElementById("inputSingle");
+    div.innerHTML = "&#x1F52D;&nbsp; Fast Forward to &nbsp;";
+    var inputbox = document.createElement("input");
+    inputbox.id = 'singleDate';
+    inputbox.type = 'date';
+    inputbox.value = getTodayDate();
+    inputbox.min = getTodayDate();
+    inputbox.max = '2030-01-01';
+    div.appendChild(inputbox);
+
+    var button = document.createElement("button");
+    button.className = "button";
+    button.style.backgroundColor = "#A1D5E7";
+    button.style.marginLeft = "25px";
+    button.style.fontFamily = "Zilla Slab";
+    button.style.fontSize = "14px";
+    button.innerHTML = "Predict Crime";
+    div.appendChild(button);
+
+    button.addEventListener ("click", function() {
+        var heatMapData = [
+            {location: new google.maps.LatLng(37.782, -122.447), weight: 0.5},
+            new google.maps.LatLng(37.782, -122.445),
+            {location: new google.maps.LatLng(37.782, -122.443), weight: 2},
+            {location: new google.maps.LatLng(37.782, -122.441), weight: 3},
+            {location: new google.maps.LatLng(37.782, -122.439), weight: 2},
+            new google.maps.LatLng(37.782, -122.437),
+            {location: new google.maps.LatLng(37.782, -122.435), weight: 0.5},
+
+            {location: new google.maps.LatLng(37.785, -122.447), weight: 3},
+            {location: new google.maps.LatLng(37.785, -122.445), weight: 2},
+            new google.maps.LatLng(37.785, -122.443),
+            {location: new google.maps.LatLng(37.785, -122.441), weight: 0.5},
+            new google.maps.LatLng(37.785, -122.439),
+            {location: new google.maps.LatLng(37.785, -122.437), weight: 2},
+            {location: new google.maps.LatLng(37.785, -122.435), weight: 3}
+        ];
+        var heatmap = new google.maps.visualization.HeatmapLayer({
+          data: heatMapData
+        });
+        map.setCenter(new google.maps.LatLng(37.774546, -122.433523));
+        heatmap.setMap(map);
+    });
+
+    // input box changes according to slider
+    singleSlider.noUiSlider.on('update', function(values, handle) {
+        var date = new Date(+values[handle]);
+        inputbox.value = date.getFullYear()+"-"+ addZero((date.getMonth()+1).toString())+(date.getMonth()+1) +
+            "-"+addZero((date.getDate()).toString())+date.getDate();
+    });
+
+    var dateValues = document.getElementById('event');
+    singleSlider.noUiSlider.on('update', function(values, handle) {
+        date = new Date(+values[handle]);
+        var timeDiff = Math.abs(date.getTime() - today.getTime());
+        var deltaDays = Math.ceil(timeDiff / (1000 * 60 * 60 * 24)); 
+        dateValues.innerHTML = date.getFullYear()+"-"+ addZero((date.getMonth()+1).toString())+(date.getMonth()+1) +
+            "-"+addZero((date.getDate()).toString())+date.getDate()+ ",&nbsp;&nbsp;" +deltaDays.toString() + " days away from today";
+    });
+
+}
+
+// return string in the form of yyyy-mm-dd of today's date
+function getTodayDate() {
+    var today = new Date();
+    var dd = today.getDate();
+    var mm = today.getMonth()+1; //January is 0!
+
+    var yyyy = today.getFullYear();
+    if(dd<10){
+        dd='0'+dd;
+    }
+    if(mm<10){
+        mm='0'+mm;
+    }
+    today = yyyy + '-' + mm + '-' + dd;
+    return today;
 }

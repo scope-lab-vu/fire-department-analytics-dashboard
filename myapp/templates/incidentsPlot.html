@@ -13,7 +13,7 @@
         /* <html> <div> <body> */
         body {
             position: static;
-            height: 3000px;
+            height: 2000px;
             background-color: rgba(0,0,0,0.85);
             overflow-x: hidden;
         }
@@ -89,30 +89,28 @@
             transition: 0.5s;
             padding-top: 130px;
             font-family: 'Alegreya Sans SC', sans-serif;
-            color: white;
-            background-color: rgba(24, 24, 24, 0.9);
+            color: black;
+            background-color: rgba(226, 222, 215, 0.98);
             background-repeat: no-repeat;
             line-height: 20px;
-            /*border-left:  solid 4px #D9AC42;*/
         }
 
         .sidenav a {
             padding: 8px 8px 8px 10px;
             font-size: 25px;
-            color: #bbbbbb;
             transition: 0.3s;
         }
 
         .sidenav b {
             display: block;
-            padding: 8px 8px 8px 32px;
-            font-size: 18px;
-            color: #bbbbbb;
+            padding: 8px 8px 8px 12px;
+            font-family: 'Arial';
+            font-size: 14px;
             transition: 0.3s;
         }
 
         .sidenav a:hover, .offcanvas a:focus {
-            color: #f1f1f1;
+            box-shadow: 0 0 1em grey;
         }
 
         @media screen and (max-height: 1000px) {
@@ -143,7 +141,7 @@
         }
 
         .title {
-            background-color: #292823;
+            background-color: rgba(13, 18, 27, 0.85);
             width: 100%;
             height: 20px;
             color: white;
@@ -314,16 +312,22 @@
 
         /* over-writing the nouislider css */
         .noUi-connect {
-            background: lightsalmon;
+            background: #D69560;
         }
 
         /* the actual handle */
-        .noUi-horizontal .noUi-handle {
-            width: 8px;
+        #slider.noUi-horizontal .noUi-handle {
+            width: 12px;
             height: 28px;
-            left: -3px;
+            left: -7px;
             top: -6px;
             background: rgba(255, 255, 255, 0.86);
+        }
+        #sliderNew.noUi-horizontal .noUi-handle {
+            width: 18px;
+            left: -2px;
+            border: 1px outset #174c86;
+            border-radius: 8px;
         }
 
         /* two strips on handle*/
@@ -335,7 +339,7 @@
             height: 14px;
             width: 1px;
             background: #855f18;
-            left: 2px;
+            left: 4px;
             top: 6px;
         }
 
@@ -387,7 +391,7 @@
             color: white;
         }
 
-        #input {
+        .input {
             text-align: center;
         }
 
@@ -409,7 +413,7 @@
             -webkit-box-shadow: 0 0 1px rgb(0, 0, 0);
         }
 
-        #input input {
+        .input input {
             border-radius: 3px;
             border: 1px solid black;
             height: 16px;
@@ -426,6 +430,7 @@
             height: 24px;
         }
 
+        /* slider for toggle in side nav*/
         .slider {
             position: absolute;
             cursor: pointer;
@@ -433,7 +438,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background-color: #ccc;
+            background-color: white;
             transition: .4s;
             border-radius: 34px;
         }
@@ -443,20 +448,33 @@
             content: "";
             height: 20px;
             width: 20px;
-            left: 2px;
-            top: 2px;
+            left: 1px;
+            top: 1px;
             background-color: white;
+            border: 1px solid grey;
             transition: .4s;
             border-radius: 50%;
         }
 
-    input:checked + .slider {
-        background-color: rgb(102, 248, 255);
-    }
+        #bottomHint {
+            position: relative;
+            bottom: 0;
+            left:0;
+            right:0;
+            height: 430px;
+            background-color: transparent;
+            font-family: 'Arial';
+            font-size: 11px;
+            opacity: 0.7
+        }
 
-    input:checked + .slider:before {
-        transform: translateX(16px);
-    }
+        input:checked + .slider {
+            background-color: rgb(102, 248, 255);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(16px);
+        }
 
     </style>
 </head>
@@ -489,27 +507,29 @@
 <div class="sidenav" id="mySideNav">
     <a>Fire Department</a><br>
     <b>simple incident</b>
-    <hr>
-
-    <a><i class="fa fa-file-text"></i>&nbsp;&nbsp;Mongo DB Address:</a><br>
-    <b>127.0.0/simple-incident</b><br>
-
-    <a><i class="fa fa-bar-chart"></i>&nbsp;Chart Options: </a><br>
-    <b>    
-        <label class="switch">
-            <input type="checkbox" id="checkFuture" onclick="changeMode()">
-            <span class="slider round"></span>
-        </label>
-        Future Predictions<br>
-    </b>
-    <a><i class="fa fa-calendar"></i>&nbsp;&nbsp;Year: </a><br>
-    <b>
-        <select id="incidentYear">
-            <option id="2014">2014</option>
-            <option id="2015">2015</option>
-            <option id="2016">2016</option>
-        </select><br>
-    </b>
+    <hr style="color: darkgrey; opacity: 1">
+    <br>
+    <ul class="fa-ul" style="margin-left: 55px">
+        <li><i class="fa-li fa fa-file-text"></i>Mongo DB Address:
+            <b>127.0.0/simple-incident</b></li>
+        <li><i class="fa-li fa fa-bar-chart"></i>Chart Options:
+            <b>
+                <label class="switch">
+                    <input type="checkbox" id="checkFuture" onclick="changeMode()">
+                    <span class="slider round"></span>
+                </label>
+                <span style="color: grey" id="futureLine">Future Predictions</span><br></b>
+        </li>
+        <li><i class="fa-li fa fa-calendar"></i>Year:
+            <b>
+                <select id="incidentYear">
+                    <option id="2014">2014</option>
+                    <option id="2015">2015</option>
+                    <option id="2016">2016</option>
+                </select><br>
+            </b>
+        </li>
+    </ul>
     <br><br><br><br><br><br><br><br><br><br>
     <div class="popup" onclick="help()">
         <i class="fa fa-lightbulb-o" style="padding-left:0; font-size: 14px; width: 1.5%"></i>help
@@ -532,7 +552,9 @@
         </div>
         <div id="initialHint" style = "position: absolute; z-index: 3; background-color: rgba(0,0,0,0.84); width: inherit; height: 60px">
             <i class="fa fa-angle-double-down"></i>
-            <span style="font-size: 17px; transition: 0.5s">Please choose a date interval between 1 day and 1 month</span>
+            <span style="font-size: 17px" id="initialMsgOnMap">Please choose a date interval</span>
+            <span style="font-size: 12px; font-family: 'Helvetica Neue'" id="initialMsgOnMap1">
+                &nbsp;&nbsp;&#x1F538;&nbsp;dates more than 30 days apart will appear golden
         </div>
         <div id="map" style="color: black"></div>
         <div id="floating-panel">
@@ -549,20 +571,24 @@
             <div id="loader" style="display: none"></div>
         </div>
         <div id="sliderGround">
-            <div id="slider"></div>
-            <div id="input" style="margin-top: 5px; font-family: 'Zilla Slab'">
-                &#x1F5D3;&nbsp;
-                From: <input type="date" min="2014-01-01" max="2016-12-31" value="2014-06-01" id="date1"/>
-                Hour: <input type="number" min="0" max="23" id="hour1" value="10"/>
-                &nbsp; &nbsp; &nbsp;
-                To: <input type="date" min="2014-01-01" max="2017-01-01" value="2014-06-20" id="date2"/>
-                Hour: <input type="number" min="0" max="23" id="hour2" value="10"/>
-                &nbsp; &nbsp; &nbsp;
-                <button class="button" style = "background-color: #D9AC42; padding: 3px 5px; color: black; 
-                    font-size: 14px; font-family:'Zilla Slab'" id="submitDates" onclick="getData()">
-                Submit dates</button>
+            <div id="sliderNew" style="width: inherit"></div>
+            <div class="input" id="inputSingle" style="margin-top: 5px; font-family: 'Zilla Slab'"></div>
+            <div id = "sliderDouble">
+                <div id="slider"></div>
+                <div class="input" style="margin-top: 5px; font-family: 'Zilla Slab'">
+                    &#x1F5D3;&nbsp;
+                    From: <input type="date" min="2014-01-01" max="2016-12-31" value="2014-06-01" id="date1"/>
+                    Hour: <input type="number" min="0" max="23" id="hour1" value="10"/>
+                    &nbsp; &nbsp; &nbsp;
+                    To: <input type="date" min="2014-01-01" max="2017-01-01" value="2014-06-20" id="date2"/>
+                    Hour: <input type="number" min="0" max="23" id="hour2" value="10"/>
+                    &nbsp; &nbsp; &nbsp;
+                    <button class="button" id="submitDates" onclick="getData()" style = "background-color: goldenrod;
+                    padding: 3px 5px; color: black; font-size: 14px; font-family:'Zilla Slab'" >
+                        Submit dates</button>
+                </div>
+                </br>
             </div>
-            </br>
         </div>
     </div>
 
@@ -574,7 +600,7 @@
             <span class="loadingMsg">Waiting For User Input</span>
         </div>
 
-        <div class="card">
+        <div class="card" style="font-family: 'Georgia'">
             <div class="example-val" id="event"></div>
             <p id="total"></p>
             <div id="chooseType" style="display: block"></div>
@@ -618,5 +644,13 @@
         "https://maps.googleapis.com/maps/api/js?key=AIzaSyBA8wJvIcEqHSAH_fACbQKr6JV2vX-nT-Q
         &libraries=visualization&callback=initMap">
 </script>
+
+<div id="bottomHint">
+    <img src="http://static1.squarespace.com/static/545ca278e4b06e0eec9ccf16/t/545fdf08e4b04efe627f55cd/1422271849779/?format=1500w"/>
+    <div style="color:floralwhite;text-align: center">
+        <i class="fa fa-at" style="font-size: 14px; padding: 0; margin: 0"></i> School of Engineering | Vanderbilt University | Nashville, TN
+        <i class="fa fa-github" style="font-size: 14px; padding: 0; margin: 0"></i> visor-vu/dashboard
+    </div>
+</div>
 </body>
 </html>

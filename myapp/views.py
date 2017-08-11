@@ -227,6 +227,7 @@ def getVehiclesData(start, end):
     socketio.emit("depots_data", {'depotLocation': depot_cache, 'depotInterior': vehiclesInDepot})
 
 
+
 # retrieve data from csv file
 def getBurglaryData(start, end):
     print(" --> get Burglary")
