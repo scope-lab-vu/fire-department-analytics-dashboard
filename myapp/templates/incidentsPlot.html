@@ -123,6 +123,28 @@
             }
         }
 
+        .sidemenu {
+            position: absolute;
+            color: black;
+            background-color: #e2e2e2;
+            height: 400px;
+            width: 0;
+            z-index: 1;
+            overflow-x: hidden;
+            overflow-y: auto;
+            transition: 0.5s;
+            font-family: 'Alegreya Sans SC', sans-serif;
+            background-repeat: no-repeat;
+            box-shadow: 0 5px 5px rgba(0,0,0,.6);
+        }
+
+        .sidemenu a {
+            display: block;
+            padding: 8px 8px 1px 8px;
+            font-size: 18px;
+            transition: 0.3s;
+        }
+
         .playground {
             position: relative;
             width: 90%;
@@ -403,16 +425,6 @@
             text-align: match-parent;
         }
 
-        ::-webkit-scrollbar {
-            -webkit-appearance: none;
-            width: 4px;
-        }
-        ::-webkit-scrollbar-thumb {
-            border-radius: 4px;
-            background-color: rgba(230, 255, 216, 0.55);
-            -webkit-box-shadow: 0 0 1px rgb(0, 0, 0);
-        }
-
         .input input {
             border-radius: 3px;
             border: 1px solid black;
@@ -544,18 +556,35 @@
     Overview
     <hr>
 <!-- map column -->
-    <div class="column" id="mapView" style="width: 740px">
+    <div class="column" id="mapView" style="width: 1220px">
         <div class="title">
             Nashville Map
             <i class="fa fa-arrows-alt" id="enlargeMap" onclick = "enlargeMap()" 
             style="font-size: 16px; float: right; padding: 1px; color: #4eff35"></i>
         </div>
+
         <div id="initialHint" style = "position: absolute; z-index: 3; background-color: rgba(0,0,0,0.84); width: inherit; height: 60px">
             <i class="fa fa-angle-double-down"></i>
             <span style="font-size: 17px" id="initialMsgOnMap">Please choose a date interval</span>
             <span style="font-size: 12px; font-family: 'Helvetica Neue'" id="initialMsgOnMap1">
-                &nbsp;&nbsp;&#x1F538;&nbsp;dates more than 30 days apart will appear golden
+                &nbsp;&nbsp;&#x1F538;&nbsp;dates more than 30 days apart will appear golden</span>
         </div>
+
+        <i class="fa fa-caret-square-o-down" id="showmenu" onclick = "showMenu()"
+           style="position: absolute; color: black; cursor: pointer; font-size: 24px; float: left; border: 1px solid black; z-index: 2"></i>
+        <div class = "sidemenu" id="mySideMenu">
+            <div class="loading" style="margin: 20px">
+                <i class="fa fa-spinner fa-pulse"></i>
+                <span class="loadingMsg">Waiting For User Input</span>
+            </div>
+            <a style="color: black; margin-top: 25px">Summary:</a>
+            <div class="card">
+                <div class="example-val" id="event" style="color: black"></div>
+                <p id="total"></p>
+                <div id="chooseType" style="display: block"></div>
+            </div>
+        </div>
+
         <div id="map" style="color: black"></div>
         <div id="floating-panel">
             <button class="button" style="background-color: lightgoldenrodyellow" id='markers' onclick="toggleMarkers(markersArr)">
@@ -567,9 +596,11 @@
             <button class="button" style="background-color: lightgray" id="vehide"onclick="hideVehicles()">
             Hide Responding incidents</button>
         </div>
+
         <div style="width: inherit; position:absolute; top: 10%; text-align: center; z-index: 2">
             <div id="loader" style="display: none"></div>
         </div>
+
         <div id="sliderGround">
             <div id="sliderNew" style="width: inherit"></div>
             <div class="input" id="inputSingle" style="margin-top: 5px; font-family: 'Zilla Slab'"></div>
@@ -589,21 +620,6 @@
                 </div>
                 </br>
             </div>
-        </div>
-    </div>
-
-<!-- summary column-->    
-    <div class="column" id="summaryView" style = "width: 33%">
-        <div class="title">Summary:</div>
-        <div class="loading">
-            <i class="fa fa-spinner fa-pulse"></i>
-            <span class="loadingMsg">Waiting For User Input</span>
-        </div>
-
-        <div class="card" style="font-family: 'Georgia'">
-            <div class="example-val" id="event"></div>
-            <p id="total"></p>
-            <div id="chooseType" style="display: block"></div>
         </div>
     </div>
 
@@ -628,6 +644,20 @@
         </div>
         <div class="card">
             <div id="pieForType" style="width: 610px; height: 360px; margin:0; padding: 0"></div>        
+        </div>
+    </div>
+
+    <div class="column" id="summaryView" style = "width: 33%">
+        <div class="title">Summary:</div>
+        <div class="loading">
+            <i class="fa fa-spinner fa-pulse"></i>
+            <span class="loadingMsg">Waiting For User Input</span>
+        </div>
+
+        <div class="card" style="font-family: 'Georgia'">
+            <div class="example-val" id="event"></div>
+            <p id="total"></p>
+            <div id="chooseType" style="display: block"></div>
         </div>
     </div>
 
