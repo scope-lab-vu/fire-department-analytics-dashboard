@@ -179,6 +179,10 @@ function initMap() {
         scrollwheel: false,  // disable scroll wheel
         mapTypeControl: false,
         streetViewControl: false,
+        fullscreenControl: true,
+        fullscreenControlOptions: {
+          position: google.maps.ControlPosition.LEFT_BOTTOM
+        },
         styles: oldStyles
     });
 
@@ -232,8 +236,8 @@ function createSlider() {
             connect.style.background = "goldenrod";
             button.style.backgroundColor = "goldenrod"
         } else {
-            connect.style.background = "#D69560";
-            button.style.backgroundColor = "#D69560";
+            connect.style.background = "aquamarine";
+            button.style.backgroundColor = "aquamarine";
         }
     });
 
@@ -346,7 +350,7 @@ function getData() {
     if (!visited) {
         for (var i=0; i<3; i++) {
             document.getElementsByClassName("loadingMsg")[i].innerHTML = "Generating canvas...";
-            document.getElementsByClassName("loading")[i].style.color = "#4eff35";
+            document.getElementsByClassName("loading")[i].style.color = "darkgrey";
         }
         visited = true;
     } else {
@@ -1182,8 +1186,7 @@ function enlargeMap() {
     var mapView = document.getElementById("mapView");
     var mapDiv = document.getElementById("map");
     var a = document.getElementById("mySideMenu");
-    e = e[0];
-
+    
     if (mapView.style.height === "700px") {
         mapView.style.height = "500px";
         mapDiv.style.height = "410px";
@@ -1197,7 +1200,7 @@ function enlargeMap() {
     map.setCenter(centerNash);
 }
 
-/* Change mode from Historical to Predictions
+/* Change mode from Historical to Future Predictions
  * 1) change interface color
  * 2) change double slider to one
  * 3) create a single input date box*/
@@ -1223,10 +1226,14 @@ function changeMode() {
     var b = document.getElementById("futureLine");
     var c = document.getElementById("sliderDouble");
     var d = document.getElementById("initialMsgOnMap");
+    var w = document.getElementById("mySideMenu");
     d.innerHTML = "Please Pick A Date In the FUTURE to see Predictions";
     d = document.getElementById("initialMsgOnMap1");
     d.innerHTML = "";
 
+    if(w.style.width !== "0px") {
+        w.style.width = "0px";
+    }
     if (document.getElementById("checkFuture").checked) { // future mode is checked
         map.setOptions({styles: newStyles});
         for (var i=0; i<4; i++) {
