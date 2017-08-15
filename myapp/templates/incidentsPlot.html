@@ -99,6 +99,8 @@
             padding: 8px 8px 8px 10px;
             font-size: 25px;
             transition: 0.3s;
+            cursor: pointer;
+            color: black
         }
 
         .sidenav b {
@@ -109,8 +111,11 @@
             transition: 0.3s;
         }
 
-        .sidenav a:hover, .offcanvas a:focus {
+        .sidenav a:hover {
             box-shadow: 0 0 1em grey;
+        }
+        .sidenav a:active, a:visited, a:focus {
+            text-decoration: none;
         }
 
         @media screen and (max-height: 1000px) {
@@ -195,7 +200,6 @@
             top: 125px;
             width: inherit;
             text-align: center;
-            z-index: 2;
         }
 
         #sliderGround {
@@ -480,12 +484,57 @@
             opacity: 0.7
         }
 
+        .buttonSideMenu:hover {
+            box-shadow: 0 0 1em grey;
+        }
+
         input:checked + .slider {
             background-color: rgb(102, 248, 255);
         }
 
         input:checked + .slider:before {
             transform: translateX(16px);
+        }
+
+        .icon-bar {
+            position: absolute;
+            right: 53px;
+            top:115px;
+            height: 67px;
+            background-color: whitesmoke;
+            width: 47px;
+            padding: 5px;
+            margin: 7px;
+            font-size: 27px;
+            border-radius: 4px;
+            box-shadow: 0 0 10px darkgrey;
+            z-index: 2;
+        }
+
+
+        input:checked + .box {
+            background-color: floralwhite;
+            width: 40px;
+            text-align: right;
+            border: 2px inset gold;
+            opacity: 1;
+        }
+
+        .checkbox {
+            position: absolute;
+            cursor: pointer;
+        }
+        
+        .box {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 30px;
+            height: 30px;
+            background-color: floralwhite;
+            text-align: left;
+            border: 1px solid lightgrey;
+            opacity: 0.5;
         }
 
     </style>
@@ -517,7 +566,7 @@
 
 <!-- Ask for user input -->
 <div class="sidenav" id="mySideNav">
-    <a>Fire Department</a><br>
+    <a href="http://www.nashville.gov/Fire-Department.aspx" target="_blank">Fire Department</a><br>
     <b>simple incident</b>
     <hr style="color: darkgrey; opacity: 1">
     <br>
@@ -528,9 +577,10 @@
             <b>
                 <label class="switch">
                     <input type="checkbox" id="checkFuture" onclick="changeMode()">
-                    <span class="slider round"></span>
+                    <span class="slider"></span>
                 </label>
-                <span style="color: grey" id="futureLine">Future Predictions</span><br></b>
+                <span style="color: grey" id="futureLine">Future Predictions</span><br>
+            </b>
         </li>
         <li><i class="fa-li fa fa-calendar"></i>Year:
             <b>
@@ -570,14 +620,27 @@
                 &nbsp;&nbsp;&#x1F538;&nbsp;dates more than 30 days apart will appear golden</span>
         </div>
 
-        <i class="fa fa-caret-square-o-down" id="showmenu" onclick = "showMenu()"
-           style="position: absolute; color: black; cursor: pointer; font-size: 24px; float: left; border: 1px solid black; z-index: 2"></i>
+        <div class="icon-bar">
+            <label class = switch>
+                <input type="checkbox" style="opacity: 0">
+                <div class = "box" >👮</div>
+            </label>
+            <label class = switch>
+                <input type="checkbox" style="opacity: 0">
+                <div class = "box">👨‍🚒</div>
+            </label>
+        </div>
+
+        <div class = "buttonSideMenu" id="showmenu" onclick = "showMenu()" style="cursor: pointer; position: absolute; z-index: 2; 
+            color: #666666; margin: 10px">
+            <i class="fa fa-caret-square-o-down" style="font-size: 24px; float: left;  margin: 0"></i>
+        </div>
         <div class = "sidemenu" id="mySideMenu">
-            <div class="loading" style="margin: 20px">
+            <div class="loading" style="margin: 40px; color: black">
                 <i class="fa fa-spinner fa-pulse"></i>
                 <span class="loadingMsg">Waiting For User Input</span>
             </div>
-            <a style="color: black; margin-top: 25px">Summary:</a>
+            <a style="color: black; margin-top: 45px">Summary:</a>
             <div class="card">
                 <div class="example-val" id="event" style="color: black"></div>
                 <p id="total"></p>
