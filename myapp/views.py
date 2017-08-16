@@ -28,7 +28,7 @@ def getDate (msg):
     end = datetime.datetime.strptime(msg['end'], "%Y-%m-%d %H %M")
     delta = end - start
     delta = delta.days
-    if (delta > 30):
+    if (delta > 14):
         getIncidentHeat(start, end)
         print "======================"
         socketio.emit("heat-success")
@@ -38,6 +38,10 @@ def getDate (msg):
         getBurglaryData(start, end)
         socketio.emit("markers-success")
     
+@socketio.on('predictNOW')
+def getPredict():
+    print "-----> get predict"
+    getPredictions()
 '''
 max time is;;;;;;;;;;;;;;;;;
 2016-02-05 13:12:00
@@ -257,6 +261,51 @@ def getBurglaryData(start, end):
     else:
         print "-----> arr is empty"
         socketio.emit("burglary_none")
+
+import numpy as np
+from random import randint
+import os
+import pickle
+from pyproj import Proj
+
+p1 = Proj(
+    '+proj=lcc +lat_1=36.41666666666666 +lat_2=35.25 +lat_0=34.33333333333334 +lon_0=-86 +x_0=600000 +y_0=0 +ellps=GRS80 +datum=NAD83 +no_defs')
+
+
+def getPredictions(type="fire"):
+    #type can either be fire or crime
+    if type == "fire":
+        filepath = os.getcwd() + "/myapp/"
+        if os.path.isfile(filepath + 'meanTraffic.txt'):
+            exists = True
+            print"Found mean file"
+            with open(filepath+'meanTraffic.txt','r+') as f:
+                mean = float(f.readlines()[0])
+        else:
+            print"Did not find mean file"
+            mean = 200
+
+        if os.path.isfile(filepath + 'predictionsFireDashboard.pickle'):
+            print"Found fire prediction file"
+            with open(filepath+'predictionsFireDashboard.pickle','r+') as f:
+                predictionsOutput = pickle.load(f)
+
+            #sample poisson
+            numSample = np.random.poisson(mean, 1)
+
+            #return sampled values
+            output = []
+            for sampleCounter in range(0,numSample):
+                indSample = randint(0,len(predictionsOutput))
+                coordinates = list(p1(predictionsOutput[indSample][0],predictionsOutput[indSample][1],inverse=True))
+                coordinates.append(predictionsOutput[indSample][2])
+                output.append(coordinates)
+            socketio.emit("predictions_data", output)
+
+        else:
+            print"Did not find prediction file"
+            socketio.emit("predictions_none", [])
+
 
 
 
