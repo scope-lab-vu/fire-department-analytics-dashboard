@@ -10,7 +10,6 @@ import requests
 import pytz
 import csv
 
-
 @app.route('/')
 @app.route('/index')
 def index():

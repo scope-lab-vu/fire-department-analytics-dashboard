@@ -9,270 +9,166 @@ var maxDate = new Date("2016-02-06T00:00:00.00");
 
 // night vision stylish map stylers
 var oldStyles = [
-        {
-            "stylers": [
-                {
-                    "lightness": -15
-                }
-            ]
-        },
-        {
-            "elementType": "geometry",
-            "stylers": [
-                {
-                    "color": "#242f3e"
-                }
-            ]
-        },
-        {
-            "elementType": "labels.text.fill",
-            "stylers": [
-                {
-                    "color": "#746855"
-                }
-            ]
-        },
-        {
-            "elementType": "labels.text.stroke",
-            "stylers": [
-                {
-                    "color": "#242f3e"
-                }
-            ]
-        },
-        {
-            "featureType": "administrative.locality",
-            "elementType": "labels.text.fill",
-            "stylers": [
-                {
-                    "color": "#d59563"
-                }
-            ]
-        },
-        {
-            "featureType": "administrative.neighborhood",
-            "elementType": "labels.text.fill",
-            "stylers": [
-                {
-                    "color": "#d3c177"
-                }
-            ]
-        },
-        {
-            "featureType": "poi",
-            "elementType": "labels.text.fill",
-            "stylers": [
-                {
-                    "color": "#d59563"
-                }
-            ]
-        },
-        {
-            "featureType": "poi.attraction",
-            "stylers": [
-                {
-                    "visibility": "off"
-                }
-            ]
-        },
-        {
-            "featureType": "poi.business",
-            "stylers": [
-                {
-                    "visibility": "off"
-                }
-            ]
-        },
-        {
-            "featureType": "poi.park",
-            "elementType": "geometry.fill",
-            "stylers": [
-                {
-                    "color": "#103a11"
-                }
-            ]
-        },
-        {
-            "featureType": "poi.park",
-            "elementType": "labels.text.fill",
-            "stylers": [
-                {
-                    "color": "#6b9a76"
-                }
-            ]
-        },
-        {
-            "featureType": "poi.school",
-            "elementType": "labels.text.fill",
-            "stylers": [
-                {
-                    "color": "#aa7ca0"
-                }
-            ]
-        },
-        {
-            "featureType": "poi.sports_complex",
-            "stylers": [
-                {
-                    "visibility": "off"
-                }
-            ]
-        },
-        {
-            "featureType": "road",
-            "elementType": "geometry",
-            "stylers": [
-                {
-                    "color": "#38414e"
-                }
-            ]
-        },
-        {
-            "featureType": "road",
-            "elementType": "geometry.stroke",
-            "stylers": [
-                {
-                    "color": "#212a37"
-                }
-            ]
-        },
-        {
-            "featureType": "road",
-            "elementType": "labels.text.fill",
-            "stylers": [
-                {
-                    "color": "#9ca5b3"
-                }
-            ]
-        },
-        {
-            "featureType": "road.arterial",
-            "elementType": "geometry.fill",
-            "stylers": [
-                {
-                    "color": "#cccccc"
-                }
-            ]
-        },
-        {
-            "featureType": "road.arterial",
-            "elementType": "labels.text.fill",
-            "stylers": [
-                {
-                    "color": "#ffffff"
-                }
-            ]
-        },
-        {
-            "featureType": "road.highway",
-            "elementType": "geometry.fill",
-            "stylers": [
-                {
-                    "color": '#746855'
-                },
-                // {
-                //     "weight": 1.5
-                // }
-            ]
-        },
-        {
-            "featureType": "road.highway",
-            "elementType": "labels.icon",
-            "stylers": [
-              {
-                "visibility": "off"
-              }
-            ]
-        },
-        {
-            "featureType": 'road.highway',
-            "elementType": 'geometry.stroke',
-            "stylers": [
-                {
-                    color: '#1f2835'
-                }
-            ]
-        },
-        {
-            "featureType": "road.highway",
-            "elementType": "labels.text.fill",
-            "stylers": [
-                {
-                    "color": "#FFF7C9"
-                }
-            ]
-        },
-        {
-            "featureType": "road.local",
-            "elementType": "geometry.fill",
-            "stylers": [
-                {
-                    "color": "#6e6e6e"
-                }
-            ]
-        },
-        {
-            "featureType": "transit",
-            "elementType": "geometry",
-            "stylers": [
-                {
-                    "color": "#2f3948"
-                }
-            ]
-        },
-        {
-            "featureType": "transit.line",
-            "stylers": [
-                {
-                    "visibility": "simplified"
-                }
-            ]
-        },
-        {
-            "featureType": "transit.station",
-            "stylers": [
-                {
-                    "visibility": "off"
-                }
-            ]
-        },
-        {
-            "featureType": "water",
-            "elementType": "geometry",
-            "stylers": [
-                {
-                    "color": "#17263c"
-                }
-            ]
-        },
-        {
-            "featureType": "water",
-            "elementType": "geometry.fill",
-            "stylers": [
-                {
-                    "color": "#275554"
-                }
-            ]
-        },
-        {
-            "featureType": "water",
-            "elementType": "labels.text.fill",
-            "stylers": [
-                {
-                    "color": "#8ea2c1"
-                }
-            ]
-        },
-        {
-            "featureType": "water",
-            "elementType": "labels.text.stroke",
-            "stylers": [
-                {
-                    "color": "#17263c"
-                }
-            ]
-        }
-    ];
+  {
+    "featureType": "administrative.locality",
+    "elementType": "labels.text.fill",
+    "stylers": [
+      {
+        "color": "#12510c"
+      }
+    ]
+  },
+  {
+    "featureType": "administrative.neighborhood",
+    "elementType": "labels.text.fill",
+    "stylers": [
+      {
+        "color": "#1a7311"
+      }
+    ]
+  },
+  {
+    "featureType": "landscape.man_made",
+    "elementType": "geometry.stroke",
+    "stylers": [
+      {
+        "visibility": "simplified"
+      }
+    ]
+  },
+  {
+    "featureType": "poi",
+    "elementType": "labels.icon",
+    "stylers": [
+      {
+        "visibility": "off"
+      }
+    ]
+  },
+  {
+    "featureType": "poi",
+    "elementType": "labels.text.fill",
+    "stylers": [
+      {
+        "color": "#5692b1"
+      }
+    ]
+  },
+  {
+    "featureType": "poi.attraction",
+    "stylers": [
+      {
+        "visibility": "off"
+      }
+    ]
+  },
+  {
+    "featureType": "poi.business",
+    "stylers": [
+      {
+        "visibility": "off"
+      }
+    ]
+  },
+  {
+    "featureType": "poi.sports_complex",
+    "stylers": [
+      {
+        "visibility": "off"
+      }
+    ]
+  },
+  {
+    "featureType": "road.arterial",
+    "elementType": "geometry.fill",
+    "stylers": [
+      {
+        "color": "#f6f8f8"
+      }
+    ]
+  },
+  {
+    "featureType": "road.arterial",
+    "elementType": "labels.text.fill",
+    "stylers": [
+      {
+        "color": "#808453"
+      }
+    ]
+  },
+  {
+    "featureType": "road.highway",
+    "elementType": "geometry.fill",
+    "stylers": [
+      {
+        "color": "#8ef7dd"
+      }
+    ]
+  },
+  {
+    "featureType": "road.highway",
+    "elementType": "geometry.stroke",
+    "stylers": [
+      {
+        "color": "#cccccc"
+      }
+    ]
+  },
+  {
+    "featureType": "road.highway",
+    "elementType": "labels.icon",
+    "stylers": [
+      {
+        "visibility": "off"
+      }
+    ]
+  },
+  {
+    "featureType": "road.highway",
+    "elementType": "labels.text.fill",
+    "stylers": [
+      {
+        "color": "#1b5150"
+      }
+    ]
+  },
+  {
+    "featureType": "road.highway.controlled_access",
+    "elementType": "geometry.fill",
+    "stylers": [
+      {
+        "color": "#74e5f7"
+      }
+    ]
+  },
+  {
+    "featureType": "road.highway.controlled_access",
+    "elementType": "geometry.stroke",
+    "stylers": [
+      {
+        "color": "#cccccc"
+      }
+    ]
+  },
+  {
+    "featureType": "road.local",
+    "elementType": "geometry.fill",
+    "stylers": [
+      {
+        "color": "#f0f2f2"
+      }
+    ]
+  },
+  {
+    "featureType": "road.local",
+    "elementType": "labels.text.fill",
+    "stylers": [
+      {
+        "color": "#a28d5b"
+      }
+    ]
+  }
+]
 
 // Create an initial map - plain, center at centerNash
 function initMap() {
@@ -283,6 +179,10 @@ function initMap() {
         scrollwheel: false,  // disable scroll wheel
         mapTypeControl: false,
         streetViewControl: false,
+        fullscreenControl: true,
+        fullscreenControlOptions: {
+          position: google.maps.ControlPosition.LEFT_BOTTOM
+        },
         styles: oldStyles
     });
 
@@ -336,8 +236,8 @@ function createSlider() {
             connect.style.background = "goldenrod";
             button.style.backgroundColor = "goldenrod"
         } else {
-            connect.style.background = "#D69560";
-            button.style.backgroundColor = "#D69560";
+            connect.style.background = "aquamarine";
+            button.style.backgroundColor = "aquamarine";
         }
     });
 
@@ -450,7 +350,7 @@ function getData() {
     if (!visited) {
         for (var i=0; i<3; i++) {
             document.getElementsByClassName("loadingMsg")[i].innerHTML = "Generating canvas...";
-            document.getElementsByClassName("loading")[i].style.color = "#4eff35";
+            document.getElementsByClassName("loading")[i].style.color = "darkgrey";
         }
         visited = true;
     } else {
@@ -676,7 +576,7 @@ function setIncident(r, index) {
             anchor: new google.maps.Point(9, 9)
         },
         imgMVA = {
-            url: 'https://cdn3.iconfinder.com/data/icons/classic-icons-1/512/43.png',
+            url: 'https://cdn3.iconfinder.com/data/icons/flat-icons-2/600/traffic.png',
             scaledSize: new google.maps.Size(20, 20),
             anchor: new google.maps.Point(9, 9)
         },
@@ -954,13 +854,12 @@ function printSummary() {
         t.parentNode.removeChild(t);
     }
 
-    var div = document.getElementById("summaryView");
+    var div = document.getElementById("mySideMenu");
     var selectList = document.createElement("select");
     selectList.id = "selectType";
     selectList.multiple = "multiple";
     selectList.style.marginLeft = '40px';
-    selectList.style.backgroundColor="#252429";
-    selectList.style.color = "white";
+    selectList.style.borderRadius = '4px';
     selectList.style.height = "220px";
     selectList.style.overflowY = "scroll";
     div.appendChild(selectList);
@@ -1114,7 +1013,6 @@ function setHeatMap() {
         data: heatDataAll,
         dissipating: false,
         map: map,
-        opacity: 0.95,
         radius: 0.01
     });
     document.getElementById('heat').innerHTML = 'Show/hide Heatmap';
@@ -1131,18 +1029,21 @@ function toggleHeatmap() {
 // toggle gradient
 function changeGradient() {
     var gradient = [
-        'rgba(0, 255, 255, 0)',
-        'rgba(0, 63, 255, 1)',
-        'rgba(0, 0, 255, 1)',
-        'rgba(0, 0, 223, 1)',
-        'rgba(0, 0, 191, 1)',
-        'rgba(0, 0, 159, 1)',
-        'rgba(0, 0, 127, 1)',
-        'rgba(63, 0, 91, 1)',
-        'rgba(127, 0, 63, 1)',
-        'rgba(191, 0, 31, 1)',
-        'rgba(255, 0, 0, 1)'
-    ];
+          'rgba(0, 255, 255, 0)',
+          'rgba(0, 255, 255, 1)',
+          'rgba(0, 191, 255, 1)',
+          'rgba(0, 127, 255, 1)',
+          'rgba(0, 63, 255, 1)',
+          'rgba(0, 0, 255, 1)',
+          'rgba(0, 0, 223, 1)',
+          'rgba(0, 0, 191, 1)',
+          'rgba(0, 0, 159, 1)',
+          'rgba(0, 0, 127, 1)',
+          'rgba(63, 0, 91, 1)',
+          'rgba(127, 0, 63, 1)',
+          'rgba(191, 0, 31, 1)',
+          'rgba(255, 0, 0, 1)'
+        ];
     heatmap.set('gradient', heatmap.get('gradient') ? null : gradient);
 }
 
@@ -1269,43 +1170,37 @@ function barToX(x) {
     }
 }
 
+/* side menu inside map 
+ * on hit, show menu */
+function showMenu() {
+    var w = document.getElementById("mySideMenu");
+    if(w.style.width === "300px") {
+        w.style.width = "0px";
+    } else {
+        w.style.width = "300px";
+    }
+}
+
 // enlarge Map on enlarge button
 function enlargeMap() {
     var mapView = document.getElementById("mapView");
     var mapDiv = document.getElementById("map");
-    var a = document.getElementById("summaryView");
-    var b = document.getElementById("barView");
-    var c = document.getElementById("pieView");
-    var d = document.getElementById("pieForType");
-    var e = document.getElementsByClassName('bar');
-    e = e[0];
-
-    if (mapView.style.width === "740px") {
-        mapView.style.width = "1200px";
-        mapView.style.height = "700px";
-        mapDiv.style.height = "610px";
-        a.style.width = "30%";
-        a.style.height = "400px";
-        b.style.width = "30%";
-        c.style.width = "30%";
-        d.style.transform = "translateX(-140px) translateY(-40px) scale(0.8)";
-        e.style.transform = "translateX(-40px) translateY(-20px) scale(0.8)";
-    } else {
-        mapView.style.width = "740px";
+    var a = document.getElementById("mySideMenu");
+    
+    if (mapView.style.height === "700px") {
         mapView.style.height = "500px";
         mapDiv.style.height = "410px";
-        a.style.width = "33%";
-        a.style.height = "500px";
-        b.style.width = "40%";
-        c.style.width = "50%";
-        d.style.transform = "translateX(25px) translateY(5px) scale(1)";
-        e.style.transform = "translateX(25px) translateY(5px) scale(1)";
+        a.style.height = "410px";
+    } else {
+        mapView.style.height = "700px";
+        mapDiv.style.height = "610px";
+        a.style.height = "610px";
     }
     google.maps.event.trigger(mapDiv, 'resize');
     map.setCenter(centerNash);
 }
 
-/* Change mode from Historical to Predictions
+/* Change mode from Historical to Future Predictions
  * 1) change interface color
  * 2) change double slider to one
  * 3) create a single input date box*/
@@ -1331,10 +1226,14 @@ function changeMode() {
     var b = document.getElementById("futureLine");
     var c = document.getElementById("sliderDouble");
     var d = document.getElementById("initialMsgOnMap");
+    var w = document.getElementById("mySideMenu");
     d.innerHTML = "Please Pick A Date In the FUTURE to see Predictions";
     d = document.getElementById("initialMsgOnMap1");
     d.innerHTML = "";
 
+    if(w.style.width !== "0px") {
+        w.style.width = "0px";
+    }
     if (document.getElementById("checkFuture").checked) { // future mode is checked
         map.setOptions({styles: newStyles});
         for (var i=0; i<4; i++) {
