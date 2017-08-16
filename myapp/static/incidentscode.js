@@ -7,169 +7,6 @@ var centerNash = {lat: 36.18, lng: -86.7816};
 var minDate = new Date("2014-02-20T00:00:00.00");
 var maxDate = new Date("2016-02-06T00:00:00.00");
 
-// night vision stylish map stylers
-var oldStyles = [
-  {
-    "featureType": "administrative.locality",
-    "elementType": "labels.text.fill",
-    "stylers": [
-      {
-        "color": "#12510c"
-      }
-    ]
-  },
-  {
-    "featureType": "administrative.neighborhood",
-    "elementType": "labels.text.fill",
-    "stylers": [
-      {
-        "color": "#1a7311"
-      }
-    ]
-  },
-  {
-    "featureType": "landscape.man_made",
-    "elementType": "geometry.stroke",
-    "stylers": [
-      {
-        "visibility": "simplified"
-      }
-    ]
-  },
-  {
-    "featureType": "poi",
-    "elementType": "labels.icon",
-    "stylers": [
-      {
-        "visibility": "off"
-      }
-    ]
-  },
-  {
-    "featureType": "poi",
-    "elementType": "labels.text.fill",
-    "stylers": [
-      {
-        "color": "#5692b1"
-      }
-    ]
-  },
-  {
-    "featureType": "poi.attraction",
-    "stylers": [
-      {
-        "visibility": "off"
-      }
-    ]
-  },
-  {
-    "featureType": "poi.business",
-    "stylers": [
-      {
-        "visibility": "off"
-      }
-    ]
-  },
-  {
-    "featureType": "poi.sports_complex",
-    "stylers": [
-      {
-        "visibility": "off"
-      }
-    ]
-  },
-  {
-    "featureType": "road.arterial",
-    "elementType": "geometry.fill",
-    "stylers": [
-      {
-        "color": "#f6f8f8"
-      }
-    ]
-  },
-  {
-    "featureType": "road.arterial",
-    "elementType": "labels.text.fill",
-    "stylers": [
-      {
-        "color": "#808453"
-      }
-    ]
-  },
-  {
-    "featureType": "road.highway",
-    "elementType": "geometry.fill",
-    "stylers": [
-      {
-        "color": "#8ef7dd"
-      }
-    ]
-  },
-  {
-    "featureType": "road.highway",
-    "elementType": "geometry.stroke",
-    "stylers": [
-      {
-        "color": "#cccccc"
-      }
-    ]
-  },
-  {
-    "featureType": "road.highway",
-    "elementType": "labels.icon",
-    "stylers": [
-      {
-        "visibility": "off"
-      }
-    ]
-  },
-  {
-    "featureType": "road.highway",
-    "elementType": "labels.text.fill",
-    "stylers": [
-      {
-        "color": "#1b5150"
-      }
-    ]
-  },
-  {
-    "featureType": "road.highway.controlled_access",
-    "elementType": "geometry.fill",
-    "stylers": [
-      {
-        "color": "#74e5f7"
-      }
-    ]
-  },
-  {
-    "featureType": "road.highway.controlled_access",
-    "elementType": "geometry.stroke",
-    "stylers": [
-      {
-        "color": "#cccccc"
-      }
-    ]
-  },
-  {
-    "featureType": "road.local",
-    "elementType": "geometry.fill",
-    "stylers": [
-      {
-        "color": "#f0f2f2"
-      }
-    ]
-  },
-  {
-    "featureType": "road.local",
-    "elementType": "labels.text.fill",
-    "stylers": [
-      {
-        "color": "#a28d5b"
-      }
-    ]
-  }
-]
-
 // Create an initial map - plain, center at centerNash
 function initMap() {
     map = new google.maps.Map(document.getElementById('map'), {
@@ -232,7 +69,7 @@ function createSlider() {
     var connect = dateSlider.querySelector('.noUi-connect');
     var button = document.getElementById('submitDates');
     dateSlider.noUiSlider.on('update', function(values) {
-        if ((values[1]-values[0])>30 * 24 * 60 * 60 * 1000) {
+        if ((values[1]-values[0])>14 * 24 * 60 * 60 * 1000) {   // 14 days
             connect.style.background = "goldenrod";
             button.style.backgroundColor = "goldenrod"
         } else {
@@ -245,14 +82,14 @@ function createSlider() {
     var inputs = [start_Date, end_Date, start_Hour, end_Hour];
     dateSlider.noUiSlider.on('update', function(values, handle) {
         var date = new Date(+values[handle]);
-        inputs[handle].value = date.getFullYear()+"-"+ addZero((date.getMonth()+1).toString())+(date.getMonth()+1) +
-            "-"+addZero((date.getDate()).toString())+date.getDate();
+        inputs[handle].value = formulateDate(date);
         inputs[handle+2].value = date.getHours();
     });
 
     var dateValues = document.getElementById('event');
     dateSlider.noUiSlider.on('update', function(values) {
-        dateValues.innerHTML = formatDate(new Date(+values[0]))+ " ~ " + formatDate(new Date(+values[1]));
+        dateValues.innerHTML = formatDate(new Date(+values[0]))+ " ~ " 
+                                + formatDate(new Date(+values[1]));
     });
 
     // handle changes along input tables
@@ -275,6 +112,13 @@ function createSlider() {
     });
 }
 
+// formulate date into YYYY-MM-DD format
+function formulateDate(date) {
+    return date.getFullYear()+"-"+ 
+        addZero((date.getMonth()+1).toString())+ (date.getMonth()+1) +"-"+
+        addZero((date.getDate()).toString())+date.getDate();
+}
+
 // if day or month is only one digit, add zero in front
 function addZero(m) {
     if (m.length===1) {
@@ -289,11 +133,6 @@ function timestamp(str){
     return new Date(str).getTime();
 }
 
-var weekdays = [
-        "Sunday", "Monday", "Tuesday",
-        "Wednesday", "Thursday", "Friday",
-        "Saturday"
-    ];
 
 // Append a suffix to dates.
 // Example: 23 => 23rd, 1 => 1st.
@@ -307,7 +146,7 @@ function nth (d) {
     }
 }
 
-// Create a string representation of the date.
+// format date into "Weekday, YYYY/MM/DDth  00:00"
 function formatDate (date) {
     return weekdays[date.getDay()] + ", " +date.getFullYear() + "/"
     + (date.getMonth()+1)+"/"+date.getDate() + nth(date.getDate())+"  "+date.getHours()+":00";
@@ -336,8 +175,7 @@ var markers = [],  // an array of all markers objects
 var sumOfIncidents = [];
 
 
-/* On submit button: get data from left menu bar, if date is not filled,
- * alert message until user fills in data;
+/* On submit button: get data from left menu bar, 
  * calls to formulate data correctly 
  * socket emit start and end date to retrieve data*/
 var types = [];  // types of markers already on map
@@ -358,7 +196,6 @@ function getData() {
             document.getElementsByClassName("loading")[i].style.display = "block";
         }
     }
-    
     
     var start_Date = document.getElementById('date1').value,
         start_Hour = document.getElementById('hour1').value,
@@ -383,19 +220,27 @@ function getData() {
 }
 
 /*
- * reset markers everytime user hits "submit"
+ * reset markers, heatmap, everytime user hits "submit" or "toggle modes"
  */
 function prepMarkers() {
     document.getElementById('initialHint').style.display = 'none';
     document.getElementById('markers').innerHTML = 'Hide Incidents';
     setButtonDisplay("hidden");
-    // remove markers from the map, but still keeps them in the array
+    // remove incidents from the map, but still keeps them in the array
     for (var i = 0; i < markers.length; i++) {
         markers[i].setMap(null);
+    }
+    // remove vehicles from the map, but still keeps them in the array
+    for (var k = 0; k < vehiclesArr.length; k++) {
+        vehiclesArr[k].setMap(null);
     }
 
     if (heatmap) {
         heatmap.setMap(null);
+    }
+
+    if (heatmapPredict) {
+        heatmapPredict.setMap(null);
     }
     // delete all by removing reference to them,
     // so that when user hit "submit" again, previous markers are gone
@@ -411,6 +256,7 @@ function prepMarkers() {
     sumOfIncidents.length=0;
     sumOfIncidents = [0,0,0,0,0,0,0];  // sum of incidents happened at each level of severity
 
+    console.log("vehiclesArr length:   "+ vehiclesArr.length+ "\n   "+vehiclesArr); 
     console.log("markersArr length:   "+ markersArr.length+ "\n   "+markersArr);   
     console.log("heatDataAll length:   "+ heatDataAll.length+ "\n   "+heatDataAll);   
 }
@@ -422,7 +268,7 @@ function CenterControl(controlDiv, map) {
     var controlUI = document.createElement('div');
     controlUI.style.backgroundColor = 'white';
     controlUI.style.border = '0.2px solid #BEBEBE';
-    controlUI.style.borderRadius = '1px';
+    controlUI.style.borderRadius = '3px';
     controlUI.style.boxShadow = '0 3px 3px rgba(0,0,0,.3)';
     controlUI.style.cursor = 'pointer';
     controlUI.style.marginBottom = '12px';
@@ -514,16 +360,6 @@ function createMarkerObj(position, map, icon, content) {
     return obj;
 }
 
-
-
-var strCardiac = "6/9/11/12/19/28/31/32",
-    strTrauma = "1/2/3/4/5/7/8/10/13/14/15/16/17/18/20/21/22/23/24/25/26/27/30",
-    strMVA = "29",
-    strFire = "51/52/53/54/55/56/57/58/59/60/61/62/63/64/65/66/67/68/69/70/71/72/73/74/75";
-
-var severity = "OABCDE";
-var colors = ['#00a6ff', '#bbec26', '#ffe12f', '#ff9511', '#ff0302', '#66060A','#797A7A'];
-
 /* socket to get incident_data from server */
 var data_incident;
 socket.on('incident_data', function(msg) {
@@ -555,6 +391,7 @@ socket.on('incident_data', function(msg) {
 /* set traffic incidents markers, markers are circles color-coded to indicate
  * level of severity */
 function setIncident(r, index) {
+    var emojiPicked = false;
     var r_severity = (r.emdCardNumber).charAt(index);
     if (severity.indexOf(r_severity) >= 0) {
         sumOfIncidents[severity.indexOf(r_severity)]++;
@@ -563,49 +400,24 @@ function setIncident(r, index) {
     }
 
     var protocol = (r.emdCardNumber).substring(0,index);
-    var img;
-    var emoji;
-    var imgCardiac = {
-            url: 'https://www.monash.edu/__data/assets/image/0020/352091/cardio.png',
-            scaledSize: new google.maps.Size(18, 18),
-            anchor: new google.maps.Point(7, 7)
-        },
-        imgTrauma = {
-            url: 'https://cdn2.iconfinder.com/data/icons/medical-flat-icons-part-1/513/30-512.png',
-            scaledSize: new google.maps.Size(18, 18),
+
+    var img = {
+            scaledSize: new google.maps.Size(19, 19),
             anchor: new google.maps.Point(9, 9)
-        },
-        imgMVA = {
-            url: 'https://cdn3.iconfinder.com/data/icons/flat-icons-2/600/traffic.png',
-            scaledSize: new google.maps.Size(20, 20),
-            anchor: new google.maps.Point(9, 9)
-        },
-        imgFire = {
-            // url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Emoji_u1f525.svg/2000px-Emoji_u1f525.svg.png',
-            url: 'http://vignette3.wikia.nocookie.net/camphalfbloodroleplay/images/a/a5/Fire.gif/revision/latest?cb=20130614161535',
-            scaledSize: new google.maps.Size(22, 22)
-        },
-        imgOther = {
-            url: 'http://www.clker.com/cliparts/F/S/M/2/p/w/map-marker-hi.png',
-            scaledSize: new google.maps.Size(12, 18)
         };
-        
-    
-    if (strCardiac.includes(protocol)) {
-        img = imgCardiac;
-        emoji = "&#x1F494;";
-    } else if (strTrauma.includes(protocol)) {
-        img = imgTrauma;
-        emoji = "&#x1F691;";
-    } else if (strFire.includes(protocol)) {
-        img = imgFire;
-        emoji = "&#x1F525;";
-    } else if (strMVA.includes(protocol)) {
-        img = imgMVA;
-        emoji = "&#x1F6A6;";
-    } else {
-        img = imgOther;
-        emoji = "&#x1F50E;";
+    var emojis = ["&#x1F494;", "&#x1F691;", "&#x1F6A6;", "&#x1F525;", "&#x1F50E;"]
+    var emoji;   
+
+    for (var i = 0; i < strFireDpmt.length; i++) {
+        if (strFireDpmt[i].includes(protocol)) {
+            img.url = imgURLFireDpmt[i];
+            emoji = emojis[i];
+            emojiPicked = true;
+        }
+    } 
+    if (!emojiPicked) {
+        img.url = imgURLFireDpmt[4];
+        emoji = emojis[4];
     }
 
     var latLng = new google.maps.LatLng(r._lat, r._lng);
@@ -634,7 +446,7 @@ socket.on('depots_data', function(msg) {
 
     var imgDepot = {
         url: 'https://hydra-media.cursecdn.com/simcity.gamepedia.com/1/13/Fire_station_garage.png?version=e2d13f3d48d4d276f64d0cb8c04adbee',
-        scaledSize: new google.maps.Size(24, 24)
+        scaledSize: new google.maps.Size(23, 23)
     };
     for (var i=0; i<arr_depots.length; i++) {
         var content = "<p><b>&#x1F6F1; Vehicles from this depot are: </b></p>";
@@ -717,70 +529,6 @@ function setInfoWindow(marker) {
     });
 }
 
-var meaningList = {0: "",
-        1: "Abdominal Pain/Problems", 
-        2: "Allergies",
-        3: "Animal Bites/Attacks",
-        4: "Assualt/Sexual Assault",
-        5: "Back Pain",
-        6: "Breathing Problems",
-        7: "Burns",
-        8: "Carbon Monoxide/CBRN",
-        9: "Cardiac Arrest/Death",
-        10: "Chest Pain",
-        11: "Choking",
-        12: "Convulsion/Seizure",
-        13: "Diabetic",
-        14: "Drowning(near)",
-        15: "Electrocution/Lightning",
-        16: "Eye Problems",
-        17: "Fall",
-        18: "Headache",
-        19: "Heart Problems",
-        20: "Heat And Cold Exposure",
-        21: "Hemorrhage/Laceration",
-        22: "Inaccessible Incident",
-        23: "Overdose",
-        24: "Pregnancy/Childbirth/Miscarriage",
-        25: "Psychiatric/Suicidal",
-        26: "Sick Person",
-        27: "Stab/Gunshot/Penetrating Trauma",
-        28: "Stroke",
-        29: "Traffic/Transportation",
-        30: "Traumatic Injuries",
-        31: "Unconscious/Fainting(near)",
-        32: "Unknown Problem(man down)",
-        51: "Aircraft Emergency",
-        52: "Alarm",
-        53: "Citizen Assist/Service Call",
-        54: "Confined Space/Structure Collapse",
-        55: "Electrical Hazard",
-        56: "Elevator/Escalator Rescue",
-        57: "Explosion",
-        58: "Extrication/Entrapped",
-        59: "Fuel Spill",
-        60: "Gas Leak/Gas Odor(natural)",
-        61: "Hazmat",
-        62: "High Angle Rescue",
-        63: "Lightning Strike(investigation)",
-        64: "Marine Fire",
-        65: "Mutual Aid",
-        66: "Odor(Strange/Unknow)",
-        67: "Outside Fire",
-        68: "Somke Investigation(outside)",
-        69: "Structure Fire",
-        70: "Train/Rail Inident",
-        71: "Vehicle Fire",
-        72: "Water Rescue",
-        73: "Watercraft in Distress",
-        74: "Suspicious Package",
-        75: "Train/Rail Fire",
-        80: "Burglary",
-        81: "Response Vehicles",
-        CTRAN: "Critcal Transfer",
-        DUPONT: "Dupont Alarm"
-    }
-
 /* socket after markers are drawn on map: set up pie charts*/
 socket.on('markers-success', function() {
     setButtonDisplay("visible");
@@ -849,6 +597,14 @@ function printSummary() {
     document.getElementById('chooseType').innerHTML = "Choose type by brushing or pressing '&#8984;' or ctrl";
     document.getElementById("loader").style.display = "none";
 
+    var w = document.getElementById("mySideMenu");
+    if(w.style.width !== "300px") {
+        w.style.width = "300px";
+    }
+
+    var fireCheckBox = document.getElementById("fire");
+    fireCheckBox.checked = true;
+
     if (document.getElementById("selectType") !== null) {
         var t = document.getElementById("selectType");
         t.parentNode.removeChild(t);
@@ -864,44 +620,33 @@ function printSummary() {
     selectList.style.overflowY = "scroll";
     div.appendChild(selectList);
 
-    var optionGroup1 = document.createElement("optGroup");
-    optionGroup1.label = "Cardiac";
-    selectList.appendChild(optionGroup1);
+    // create 5 main groups under the select list
+    var groups = ["Cardiac", "Trauma", "Fire", "MVA","Other"];
+    var optionGroups = [];
+    for (var i = 0; i < groups.length; i++) {
+        var optionGroup = document.createElement("optGroup");
+        optionGroup.label = groups[i];
+        selectList.appendChild(optionGroup);
+        optionGroups.push(optionGroup);
+    }
 
-    var optionGroup2 = document.createElement("optGroup");
-    optionGroup2.label = "Trauma";
-    selectList.appendChild(optionGroup2);
-
-    var optionGroup3 = document.createElement("optGroup");
-    optionGroup3.label = "Fire";
-    selectList.appendChild(optionGroup3);
-
-    var optionGroup4 = document.createElement("optGroup");
-    optionGroup4.label = "MVA";
-    selectList.appendChild(optionGroup4);
-
-    var optionGroup5 = document.createElement("optGroup");
-    optionGroup5.label = "Other";
-    selectList.appendChild(optionGroup5);
-
-
+    // put all types into their respective main option group
     for (var i=0; i<types.length; i++) {
+        var appended = false;
         var option = document.createElement("option");
         option.id = types[i];
         option.text = meaningList[types[i]];
         option.selected = true;
 
-        if (strCardiac.includes(types[i])) {
-            optionGroup1.appendChild(option);
-        } else if (strTrauma.includes(types[i])) {
-            optionGroup2.appendChild(option);
-        } else if (strFire.includes(types[i])) {
-            optionGroup3.appendChild(option);
-        } else if (strMVA.includes(types[i])) {
-            optionGroup4.appendChild(option);
-        } else {
-            optionGroup5.appendChild(option);
-        }        
+        for (var j=0; j<strFireDpmt.length; j++) {
+            if (strFireDpmt[j].includes(types[i])) {
+                optionGroups[j].appendChild(option);
+                appended = true;
+            }
+        }
+        if (!appended) {
+            optionGroups[4].appendChild(option);
+        }
     }
 
     // generate submit button
@@ -1028,22 +773,6 @@ function toggleHeatmap() {
 
 // toggle gradient
 function changeGradient() {
-    var gradient = [
-          'rgba(0, 255, 255, 0)',
-          'rgba(0, 255, 255, 1)',
-          'rgba(0, 191, 255, 1)',
-          'rgba(0, 127, 255, 1)',
-          'rgba(0, 63, 255, 1)',
-          'rgba(0, 0, 255, 1)',
-          'rgba(0, 0, 223, 1)',
-          'rgba(0, 0, 191, 1)',
-          'rgba(0, 0, 159, 1)',
-          'rgba(0, 0, 127, 1)',
-          'rgba(63, 0, 91, 1)',
-          'rgba(127, 0, 63, 1)',
-          'rgba(191, 0, 31, 1)',
-          'rgba(255, 0, 0, 1)'
-        ];
     heatmap.set('gradient', heatmap.get('gradient') ? null : gradient);
 }
 
@@ -1108,54 +837,6 @@ function setPie(arr) {
     document.getElementsByClassName("loading")[2].style.display= "none";
 }
 
-/* set pie chart with d3
- * PROBLEM IS: I can't clear current canvas */
-function setPiej3(data) {
-    var canvas = document.querySelector("canvas"),
-        context = canvas.getContext("2d");
-
-    var width = canvas.width,
-        height = canvas.height,
-        radius = Math.min(width, height) / 2;
-
-    var arc = d3.arc()
-        .outerRadius(radius - 10)
-        .innerRadius(0)
-        .context(context);
-
-    var pie = d3.pie();
-
-    var arcs = pie(data);
-
-    var sum = 0;
-    for (var i=0; i<data.length; i++) {
-        sum = sum+data[i];
-    }
-
-    context.translate(width / 2, height / 2);
-    context.globalAlpha = 1;
-    arcs.forEach(function(d, i) {
-        context.beginPath();
-        arc(d);
-        context.fillStyle = colors[i];
-        context.fill();
-    });
-
-    // draw arcs
-    context.beginPath();
-    arcs.forEach(arc);
-    context.strokeStyle = "#c2d6d9";
-    context.stroke();
-
-    // draw text
-    context.textAlign = "center";
-    // context.textBaseline = "middle";
-    context.fillStyle = "#000";
-    arcs.forEach(function(d,i) {
-        var c = arc.centroid(d);
-        context.fillText((data[i]*100/sum).toFixed(1)+"%", c[0], c[1]);
-    });
-}
 
 /* side nav bar 
  * "bar" to "x" function
@@ -1206,27 +887,12 @@ function enlargeMap() {
  * 3) create a single input date box*/
 function changeMode() {
     prepMarkers(); // clear map first
-    var newStyles = [
-        {
-            stylers: [{hue: "#091a20"}, {saturation: -5}]
-        },
-        {
-            featureType: "road",
-            elementType: "geometry",
-            stylers: [{lightness: 100}, {visibility: "simplified"}]
-        },
-        {
-            featureType: "road",
-            elementType: "labels",
-            stylers: [{visibility: "off"}]
-        }
-    ];
-
     var a = document.getElementsByClassName("column");
     var b = document.getElementById("futureLine");
     var c = document.getElementById("sliderDouble");
     var d = document.getElementById("initialMsgOnMap");
     var w = document.getElementById("mySideMenu");
+
     d.innerHTML = "Please Pick A Date In the FUTURE to see Predictions";
     d = document.getElementById("initialMsgOnMap1");
     d.innerHTML = "";
@@ -1239,7 +905,7 @@ function changeMode() {
         for (var i=0; i<4; i++) {
             a[i].style.borderColor = "#82D6FF";
         }
-        document.body.style.backgroundColor = "rgba(0,0,0,0.90)";
+        document.body.style.backgroundColor = "rgba(0,0,0,0.88)";
         changeColor("#82D6FF");
         b.style.color = "black";
         c.style.display = "none";
@@ -1248,6 +914,16 @@ function changeMode() {
         } else {
             document.getElementById("sliderNew").style.display = "block";
             document.getElementById("inputSingle").style.display = "block";
+        }
+
+        for (var i=0; i<3; i++) {
+            if (i === 0) {
+                document.getElementsByClassName("loadingMsg")[i].innerHTML = "";
+            } else {
+                document.getElementsByClassName("loadingMsg")[i].innerHTML = 
+                    "Please toggle back to Historical Mode to see charts";
+                document.getElementsByClassName("loading")[i].style.color = "darkgrey";
+            }
         }
 
 
@@ -1263,6 +939,8 @@ function changeMode() {
         document.getElementById("sliderNew").style.display = "none";
         document.getElementById("inputSingle").style.display = "none";
     }
+
+
 }
 
 /* Change interface color*/
@@ -1279,7 +957,10 @@ function changeColor(color) {
     a[0].style.color = color;
 }
 
-/* Create a single slider and a single date input box*/
+
+/* Create a single slider, a submit button a single date input box
+ * this slider changes along with the input box;
+ * the input box value changes along with the slider also */
 function createSingleSlider() {
     var singleSlider = document.getElementById('sliderNew');
     var today = new Date();
@@ -1305,45 +986,12 @@ function createSingleSlider() {
     inputbox.max = '2030-01-01';
     div.appendChild(inputbox);
 
-    var button = document.createElement("button");
-    button.className = "button";
-    button.style.backgroundColor = "#A1D5E7";
-    button.style.marginLeft = "25px";
-    button.style.fontFamily = "Zilla Slab";
-    button.style.fontSize = "14px";
-    button.innerHTML = "Predict Crime";
-    div.appendChild(button);
-
-    button.addEventListener ("click", function() {
-        var heatMapData = [
-            {location: new google.maps.LatLng(37.782, -122.447), weight: 0.5},
-            new google.maps.LatLng(37.782, -122.445),
-            {location: new google.maps.LatLng(37.782, -122.443), weight: 2},
-            {location: new google.maps.LatLng(37.782, -122.441), weight: 3},
-            {location: new google.maps.LatLng(37.782, -122.439), weight: 2},
-            new google.maps.LatLng(37.782, -122.437),
-            {location: new google.maps.LatLng(37.782, -122.435), weight: 0.5},
-
-            {location: new google.maps.LatLng(37.785, -122.447), weight: 3},
-            {location: new google.maps.LatLng(37.785, -122.445), weight: 2},
-            new google.maps.LatLng(37.785, -122.443),
-            {location: new google.maps.LatLng(37.785, -122.441), weight: 0.5},
-            new google.maps.LatLng(37.785, -122.439),
-            {location: new google.maps.LatLng(37.785, -122.437), weight: 2},
-            {location: new google.maps.LatLng(37.785, -122.435), weight: 3}
-        ];
-        var heatmap = new google.maps.visualization.HeatmapLayer({
-          data: heatMapData
-        });
-        map.setCenter(new google.maps.LatLng(37.774546, -122.433523));
-        heatmap.setMap(map);
-    });
+    createSubmitBtn(div);
 
     // input box changes according to slider
     singleSlider.noUiSlider.on('update', function(values, handle) {
         var date = new Date(+values[handle]);
-        inputbox.value = date.getFullYear()+"-"+ addZero((date.getMonth()+1).toString())+(date.getMonth()+1) +
-            "-"+addZero((date.getDate()).toString())+date.getDate();
+        inputbox.value = formulateDate(date);
     });
 
     var dateValues = document.getElementById('event');
@@ -1351,8 +999,8 @@ function createSingleSlider() {
         date = new Date(+values[handle]);
         var timeDiff = Math.abs(date.getTime() - today.getTime());
         var deltaDays = Math.ceil(timeDiff / (1000 * 60 * 60 * 24)); 
-        dateValues.innerHTML = date.getFullYear()+"-"+ addZero((date.getMonth()+1).toString())+(date.getMonth()+1) +
-            "-"+addZero((date.getDate()).toString())+date.getDate()+ ",&nbsp;&nbsp;" +deltaDays.toString() + " days away from today";
+        dateValues.innerHTML = formulateDate(date)+ 
+            ",&nbsp;&nbsp;" +deltaDays.toString() + " days away from today";
     });
 
 }
@@ -1372,4 +1020,65 @@ function getTodayDate() {
     }
     today = yyyy + '-' + mm + '-' + dd;
     return today;
+}
+
+// create a Submit btn that appends to parameter div
+function createSubmitBtn(div) {
+    var button = document.createElement("button");
+    button.className = "button";
+    button.style.backgroundColor = "#A1D5E7";
+    button.style.marginLeft = "25px";
+    button.style.fontFamily = "Zilla Slab";
+    button.style.fontSize = "14px";
+    button.innerHTML = "Predict Crime";
+    div.appendChild(button);
+
+    button.addEventListener ("click", function() {
+        document.getElementsByClassName("loading")[0].style.display = "none";
+        socket.emit('predictNOW');
+    });
+}
+
+// get predictions_data from python file
+socket.on('predictions_data', function(msg) {
+    console.log("predictions_data")
+    console.log(msg);
+    data_predictions = msg;
+    setPredictions(data_predictions);
+
+});
+
+// predictions is empty []
+socket.on('predictions_none', function(msg) {
+    console.log("predictions_none")
+    console.log(msg);
+});
+
+// set all predictions dots onto heat map
+var heatmapPredict;
+function setPredictions(arr) {
+    var heatMapData = [];
+    for (var i = 0; i < arr.length; i++) {
+        var obj = {};
+        obj.location = new google.maps.LatLng((arr[i])[1], (arr[i])[0]);
+        obj.weight = (arr[i])[2]*5000;
+        heatMapData.push(obj);
+    }
+
+    heatmapPredictNew = new google.maps.visualization.HeatmapLayer({
+        data: heatMapData,
+        radius: 25
+    });
+    map.setCenter(centerNash);
+    heatmapPredictNew.setMap(map);
+
+    if (heatmapPredict) {
+        heatmapPredict.setMap(null);
+    }
+    heatmapPredict = heatmapPredictNew;
+
+    var w = document.getElementById("mySideMenu");
+    if(w.style.width !== "300px") {
+        w.style.width = "300px";
+    }
 }
