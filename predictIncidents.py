@@ -2,6 +2,10 @@ import numpy as np
 from random import randint
 import os
 import pickle
+from pyproj import Proj
+
+p1 = Proj(
+    '+proj=lcc +lat_1=36.41666666666666 +lat_2=35.25 +lat_0=34.33333333333334 +lon_0=-86 +x_0=600000 +y_0=0 +ellps=GRS80 +datum=NAD83 +no_defs')
 
 
 def getPredictions(type="fire"):
@@ -25,11 +29,13 @@ def getPredictions(type="fire"):
             output = []
             for sampleCounter in range(0,numSample):
                 indSample = randint(0,len(predictionsOutput))
-                output.append(predictionsOutput[indSample])
+                coordinates = list(p1(predictionsOutput[indSample][0],predictionsOutput[indSample][1],inverse=True))
+                coordinates.append(predictionsOutput[indSample][2])
+                output.append(coordinates)
 
             return output,"Successfully Generated Predictions"
 
         else:
             return []
 
-getPredictions("fire")
+
