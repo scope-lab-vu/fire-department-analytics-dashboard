@@ -15,8 +15,23 @@ import csv
 def index():
 	return render_template("incidentsPlot.html")
 
+@app.route('/transitPlot')
+def transitPlot():
+    return render_template('transitPlot.html')
+
 @socketio.on('connect')
 def socketio_connet():
+
+    # start: t-hub dashboard
+    print "socketio_connect"
+    time_change_simulation()
+    data_segments = []
+    with open('myapp/cached_shared_segments.json') as data_file:
+        data_segments = json.load(data_file)
+    print "data_segments", len(data_segments)
+    socketio.emit('draw_all_route_segments', {'data': data_segments})
+    # end: t-hub dashboard
+
     print "-> socketio_connect()\n"
     socketio.emit("success")
 
@@ -28,7 +43,7 @@ def getDate (msg):
     end = datetime.datetime.strptime(msg['end'], "%Y-%m-%d %H %M")
     delta = end - start
     delta = delta.days
-    if (delta > 30):
+    if (delta > 14):
         getIncidentHeat(start, end)
         print "======================"
         socketio.emit("heat-success")
@@ -38,6 +53,10 @@ def getDate (msg):
         getBurglaryData(start, end)
         socketio.emit("markers-success")
     
+@socketio.on('predictNOW')
+def getPredict():
+    print "-----> get predict"
+    getPredictions()
 '''
 max time is;;;;;;;;;;;;;;;;;
 2016-02-05 13:12:00
@@ -258,5 +277,167 @@ def getBurglaryData(start, end):
         print "-----> arr is empty"
         socketio.emit("burglary_none")
 
+import numpy as np
+from random import randint
+import os
+import pickle
+from pyproj import Proj
+
+p1 = Proj(
+    '+proj=lcc +lat_1=36.41666666666666 +lat_2=35.25 +lat_0=34.33333333333334 +lon_0=-86 +x_0=600000 +y_0=0 +ellps=GRS80 +datum=NAD83 +no_defs')
 
 
+def getPredictions(type="fire"):
+    #type can either be fire or crime
+    if type == "fire":
+        filepath = os.getcwd() + "/myapp/"
+        if os.path.isfile(filepath + 'meanTraffic.txt'):
+            exists = True
+            print"Found mean file"
+            with open(filepath+'meanTraffic.txt','r+') as f:
+                mean = float(f.readlines()[0])
+        else:
+            print"Did not find mean file"
+            mean = 200
+
+        if os.path.isfile(filepath + 'predictionsFireDashboard.pickle'):
+            print"Found fire prediction file"
+            with open(filepath+'predictionsFireDashboard.pickle','r+') as f:
+                predictionsOutput = pickle.load(f)
+
+            #sample poisson
+            numSample = np.random.poisson(mean, 1)
+
+            #return sampled values
+            output = []
+            for sampleCounter in range(0,numSample):
+                indSample = randint(0,len(predictionsOutput))
+                coordinates = list(p1(predictionsOutput[indSample][0],predictionsOutput[indSample][1],inverse=True))
+                coordinates.append(predictionsOutput[indSample][2])
+                output.append(coordinates)
+            socketio.emit("predictions_data", output)
+
+        else:
+            print"Did not find prediction file"
+            socketio.emit("predictions_none", [])
+
+
+
+
+# 
+# t-hub dashboard
+# 
+from myapp import app
+from flask import Flask, render_template, session, request
+from flask_socketio import SocketIO
+from flask_socketio import send, emit
+from myapp import socketio
+from myapp import dashboard
+import time
+import datetime
+import json
+import requests
+import pytz
+
+# @app.route('/')
+# @app.route('/index')
+# def index():
+#     return render_template("home.html")
+
+def time_change_simulation():
+    url = 'http://127.0.0.1:8000/timestamp'
+    r = requests.get( url )
+    data = r.json()
+    if data:        
+        current_timestamp = data['timestamp']
+        print "-current_timestamp", current_timestamp
+        date_time = datetime.datetime.fromtimestamp(current_timestamp, pytz.timezone('America/Chicago'))
+        socketio.emit('simulated_time', {'timestamp': date_time.strftime("%Y-%m-%d %H:%M")})
+
+# @socketio.on('connect')
+# def socketio_connect():
+    # print "socketio_connect"
+    # time_change_simulation()
+    # data_segments = []
+    # with open('myapp/cached_shared_segments.json') as data_file:
+    #     data_segments = json.load(data_file)
+    # print "data_segments", len(data_segments)
+    # socketio.emit('draw_all_route_segments', {'data': data_segments})
+
+@socketio.on('get_map_routes')
+def socketio_get_map_routes(message):
+    route_segment = dashboard.route_segment()
+    selected = message.get('selected')
+    if selected==0:
+        data_segments = []
+        with open('myapp/cached_shared_segments.json') as data_file:
+            data_segments = json.load(data_file)
+        print "data_segments", len(data_segments)
+        socketio.emit('draw_all_route_segments', {'data': data_segments})
+    else:
+        data_segments = []
+        with open('myapp/routes_coors.json') as data_file:
+            data_segments = json.load(data_file)
+        performance = []
+        if selected==1:
+            with open('myapp/original_performance_may.json') as data_file:
+                performance = json.load(data_file)
+        elif selected==2:
+            with open('myapp/optimized_performance.json') as data_file:
+                performance = json.load(data_file)
+        elif selected==3:
+            with open('myapp/original_performance_june.json') as data_file:
+                performance = json.load(data_file)
+        elif selected==4:
+            with open('myapp/optimized_performance_june.json') as data_file:
+                performance = json.load(data_file)
+        socketio.emit('response_map_routes', {'data': data_segments, 'performance': performance})
+
+
+@socketio.on('get_vehicle_location_for_trip')
+def socketio_get_vehicle_location_for_trip(message):
+    print "socketio_get_vehicle_location_for_trip"
+    trip_id = message.get('trip_id')
+    url = 'http://127.0.0.1:8000/vehicle/'+str(trip_id)
+    r = requests.get( url )
+    data = r.json()
+    # route_segment = dashboard.route_segment()
+    # data = route_segment.get_vehicle_location_for_trip(trip_id)
+    print 'vehicle location', data
+    if data[0] != -1:
+        socketio.emit('vehicle_location_for_trip', {'coordinate': data})
+    print data
+
+@socketio.on('get_predictions_for_trip')
+def socketio_get_predictions_for_trip(message):
+    print "socketio_get_predictions_for_trip"
+    trip_id = message.get('trip_id')
+    route_segment = dashboard.route_segment()
+    data = route_segment.get_predictions_for_trip(trip_id)
+    segments = route_segment.get_segments_for_tripid(trip_id)
+    print "trip_id", trip_id
+    print data['coordinates']
+    socketio.emit('predictions_for_trip', {'prediction': data['prediction'], 'coordinates': data['coordinates'], 'segments': segments})
+
+@socketio.on('get_all_routeid')
+def socketio_get_all_routeid():
+    route_segment = dashboard.route_segment()
+    data = route_segment.get_all_routeid()
+    socketio.emit('all_routeid', {'data': data})
+
+@socketio.on('get_directions_for_routeid')
+def socketio_get_directions_for_routeid(message):
+    route_segment = dashboard.route_segment()
+    route_id = message.get('route_id')
+    data = route_segment.get_all_headsigns(route_id)
+    print data
+    socketio.emit('directions_for_routeid', {'data': data})
+
+@socketio.on('get_trips_for_routeid_direction')
+def socketio_get_trips_for_routeid_direction(message):
+    print 'get_trips_for_routeid_direction'
+    route_segment = dashboard.route_segment()
+    route_id = message.get('route_id')
+    trip_headsign = message.get('trip_headsign')
+    data = route_segment.get_trips(route_id, trip_headsign)
+    socketio.emit('trips_for_routeid_direction', {'tripids': data[0], 'departuretimes': data[1]})
