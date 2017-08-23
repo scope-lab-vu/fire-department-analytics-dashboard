@@ -9,6 +9,7 @@ import json
 import requests
 import pytz
 import csv
+import xlrd
 
 @app.route('/')
 @app.route('/index')
@@ -320,6 +321,28 @@ def getPredictions(type="fire"):
         else:
             print"Did not find prediction file"
             socketio.emit("predictions_none", [])
+    elif type == "crime":
+        if os.path.isfile("crimePredicted.xls"):
+            predictedWorkbook = xlrd.open_workbook("crimePredicted.xls")
+            predictionWorksheet = predictedWorkbook.sheet_by_index(0)
+            # get total rows:
+            rows = predictionWorksheet.nrows
+            try:
+                columns = len(predictionWorksheet.row(0))
+            except ValueError:
+                return []
+            numToSample = 300
+            numSampled = 0
+            output = []
+            while numSampled < numToSample:
+                index = randint(1, rows)
+                row = []
+                for counterCol in range(columns):
+                    row.append(predictionWorksheet.cell_value(index, counterCol))
+                output.append(row)
+            return output
+        else:
+            return []
 
 
 
