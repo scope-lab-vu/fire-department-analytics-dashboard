@@ -322,6 +322,12 @@ socket.on('crime_data', function(msg) {
     setCrime();
 });
 
+socket.on('crime_heat', function(msg) {
+    console.log("--> crime HEAT length is: " + msg.length);
+    data_crime = msg;
+    setCrimeHeat(data_crime);
+});
+
 function setButtonDisplay(str) {
     document.getElementById("markers").style.visibility = str;
     document.getElementById("heat").style.visibility = str;
@@ -916,6 +922,9 @@ function enlargeMap() {
         mapDiv.style.height = "610px";
         a.style.height = "610px";
     }
+    if (document.getElementById("checkFuture").checked) {
+        a.style.height = "130px";
+    }
     google.maps.event.trigger(mapDiv, 'resize');
     map.setCenter(centerNash);
 }
@@ -931,6 +940,7 @@ function changeMode() {
     var c = document.getElementById("sliderDouble");
     var d = document.getElementById("initialMsgOnMap");
     var w = document.getElementById("mySideMenu");
+    var o = document.getElementsByClassName("icon-bar");
 
     d.innerHTML = "Please Pick A Date In the FUTURE to see Predictions";
     d = document.getElementById("initialMsgOnMap1");
@@ -964,7 +974,8 @@ function changeMode() {
                 document.getElementsByClassName("loading")[i].style.color = "darkgrey";
             }
         }
-
+        w.style.height = "130px";
+        o[0].style.display = "none";
 
     } else { // historic mode is checked
         map.setOptions({styles: oldStyles});
@@ -978,6 +989,8 @@ function changeMode() {
         c.style.display = "block";
         document.getElementById("sliderNew").style.display = "none";
         document.getElementById("inputSingle").style.display = "none";
+        o[0].style.display = "block";
+
     }
 
 
@@ -1139,7 +1152,7 @@ function createSubmitBtn(div) {
     button.style.marginLeft = "25px";
     button.style.fontFamily = "Zilla Slab";
     button.style.fontSize = "14px";
-    button.innerHTML = "Predict Crime";
+    button.innerHTML = "Predict!";
     div.appendChild(button);
 
     button.addEventListener ("click", function() {
@@ -1156,17 +1169,21 @@ function createSubmitBtn(div) {
 
 // get predictions_data from python file
 socket.on('predictions_data', function(msg) {
-    console.log("predictions_data")
-    console.log(msg);
-    data_predictions = msg;
-    setPredictions(data_predictions);
-
+    console.log("--> predictions_data length is: " + msg.length)
+    setPredictions(msg);
 });
 
 // predictions is empty []
 socket.on('predictions_none', function(msg) {
     console.log("predictions_none")
     console.log(msg);
+});
+
+// get predictions_data from python file
+socket.on('predictions_data_crime', function(msg) {
+    console.log("--> predictions_data CRIME length is: " + msg.length)
+    setPrediction(msg);
+
 });
 
 // set all predictions dots onto heat map
@@ -1176,13 +1193,14 @@ function setPredictions(arr) {
     for (var i = 0; i < arr.length; i++) {
         var obj = {};
         obj.location = new google.maps.LatLng((arr[i])[1], (arr[i])[0]);
-        obj.weight = (arr[i])[2]*5000;
+        obj.weight = (arr[i])[2]*12000;
         heatMapData.push(obj);
     }
 
-    heatmapPredictNew = new google.maps.visualization.HeatmapLayer({
+    var heatmapPredictNew = new google.maps.visualization.HeatmapLayer({
         data: heatMapData,
-        radius: 25
+        dissipating: false,
+        radius: 0.02
     });
     map.setCenter(centerNash);
     heatmapPredictNew.setMap(map);
@@ -1195,6 +1213,29 @@ function setPredictions(arr) {
     var w = document.getElementById("mySideMenu");
     if(w.style.width !== "300px") {
         w.style.width = "300px";
-        w.style.height = "130px";
+    }
+}
+
+function setPrediction(arr) {
+    var heatMapData = [];
+    for (var i=0; i<arr.length; i++) {
+        heatMapData.push(new google.maps.LatLng(arr[i][3], arr[i][4]));
+    }
+
+    var heatmapPredictNew = new google.maps.visualization.HeatmapLayer({
+        data: heatMapData,
+        radius: 20
+    });
+    map.setCenter(centerNash);
+    heatmapPredictNew.setMap(map);
+
+    if (heatmapPredict) {
+        heatmapPredict.setMap(null);
+    }
+    heatmapPredict = heatmapPredictNew;
+
+    var w = document.getElementById("mySideMenu");
+    if(w.style.width !== "300px") {
+        w.style.width = "300px";
     }
 }

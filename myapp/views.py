@@ -9,6 +9,7 @@ import json
 import requests
 import pytz
 import csv
+import xlrd
 
 @app.route('/')
 @app.route('/index')
@@ -45,13 +46,13 @@ def getDate (msg):
     delta = delta.days
     if (delta > 14):
         getIncidentHeat(start, end)
-        getCrimeHeat(start, end)
+        # getCrimeData(start, end, "heat")
         print "======================"
         socketio.emit("heat-success")
     else:
         getIncidentData(start, end)
         getVehiclesData(start, end)
-        getCrimeData(start, end)
+        getCrimeData(start, end, "markers")
         socketio.emit("markers-success")
     
 @socketio.on('predictNOW')
@@ -113,6 +114,7 @@ def getIncidentHeat(start, end):
             dictIn['emdCardNumber'] = item['emdCardNumber']
             arr.append(dictIn)
     socketio.emit("latlngarrofobj", arr)
+
 
 # retrieve data from mongo db
 def getIncidentData(start, end):
@@ -252,8 +254,8 @@ def getVehiclesData(start, end):
 
 
 # retrieve data from csv file
-def getCrimeData(start, end):
-    print(" --> get Crime csv")
+def getCrimeData(start, end, str):
+    print(" --> get Crime Markers csv")
     arr = []
     i=0
     with open('/Users/wangshibao/SummerProjects/analytics-dashboard/myapp/CrimeHistory.csv','rU') as f:
@@ -270,13 +272,16 @@ def getCrimeData(start, end):
                 for j in range(len(header)):
                     obj[header[j]] = row[j]
                 arr.append(obj)
-
-    if (arr != []):
-        print "-----> arr is NOT empty"
-        socketio.emit("crime_data", arr)
-    else:
-        print "-----> arr is empty"
-        socketio.emit("crime_none")
+    if (str == "heat"):
+        socketio.emit("crime_heat", arr)
+    else: 
+        if (arr != []):
+            print "-----> arr is NOT empty"
+            socketio.emit("crime_data", arr)
+        else:
+            print "-----> arr is empty"
+            socketio.emit("crime_none")
+    
 
 # 
 # Incidents Predictions
@@ -329,7 +334,7 @@ def getPredictions(type):
             predictedWorkbook = xlrd.open_workbook(filepath + "crimePredicted.xls")
             predictionWorksheet = predictedWorkbook.sheet_by_index(0)
             # get total rows:
-            rows = predictionWorksheet.nrows
+            rows = predictionWorksheet.nrows - 1
             try:
                 columns = len(predictionWorksheet.row(0))
             except ValueError:
@@ -341,9 +346,14 @@ def getPredictions(type):
                 index = randint(1, rows)
                 row = []
                 for counterCol in range(columns):
-                    row.append(predictionWorksheet.cell_value(index, counterCol))
+                    try:
+                        row.append(predictionWorksheet.cell_value(index, counterCol))
+                    except IndexError:
+                        print "Issue with row {} and column {}".format(index,counterCol)
                 output.append(row)
-            socketio.emit("predictions_data", output)
+                numSampled+=1
+            print len(output)
+            socketio.emit("predictions_data_crime", output)
         else:
             print"Did not find prediction file"
             socketio.emit("predictions_none", [])
