@@ -33,20 +33,20 @@ function initMap() {
     // Create the DIV to hold the control and call the TopRightControl()
     // constructor passing in this DIV.
     var topControlDiv = document.createElement('div');
-    var topControl = new TopRightControl(topControlDiv, map, "38px", "Add a depot");
-    topControlDiv.index = 1;
+    var topControl = new TopRightControl(topControlDiv, map, "Add a depot");
+    topControlDiv.index = 2;
     topControlDiv.id = "addDepot"
     topControlDiv.style.display = "none";
-    map.controls[google.maps.ControlPosition.TOP_RIGHT].push(topControlDiv);
+    map.controls[google.maps.ControlPosition.RIGHT_TOP].push(topControlDiv);
 
     // Create the DIV to hold the control and call the TopRightControl()
     // constructor passing in this DIV.
     var topControlDiv2 = document.createElement('div');
-    var topControl2 = new TopRightControl(topControlDiv2, map, "70px", "Clear my depots");
+    var topControl2 = new TopRightControl(topControlDiv2, map, "Clear my depots");
     topControlDiv2.index = 1;
     topControlDiv2.id = "clearDepot"
     topControlDiv2.style.display = "none";
-    map.controls[google.maps.ControlPosition.TOP_RIGHT].push(topControlDiv2);
+    map.controls[google.maps.ControlPosition.RIGHT_TOP].push(topControlDiv2);
 
     var today = new Date();
     document.getElementById('timeNow').innerHTML=today.toLocaleDateString() + "  " + today.toLocaleTimeString();
@@ -333,18 +333,16 @@ function CenterControl(controlDiv, map) {
     );
 }
 
-function TopRightControl(controlDiv, map, top, msg) {
+function TopRightControl(controlDiv, map, msg) {
     // Set CSS for the control border.
     var controlUI = document.createElement('div');
-    controlUI.style.backgroundColor = 'white';
-    controlUI.style.border = '0.2px solid #BEBEBE';
-    controlUI.style.borderRadius = '3px';
+    controlUI.style.backgroundColor = 'lightcyan';
+    controlUI.style.border = '1px solid #BEBEBE';
+    controlUI.style.borderRadius = '1px';
     controlUI.style.boxShadow = '0 3px 3px rgba(0,0,0,.3)';
     controlUI.style.cursor = 'pointer';
-    controlUI.style.marginBottom = '12px';
-    controlUI.style.marginTop = top;
+    controlUI.style.marginTop = "30px";
     controlUI.style.marginRight = "28px";
-    // controlUI.title = 'Click to add a depot';
     controlDiv.appendChild(controlUI);
 
     // Set CSS for the control interior.
@@ -359,10 +357,11 @@ function TopRightControl(controlDiv, map, top, msg) {
     controlUI.appendChild(controlText);
 
     // Setup the click event listeners: simply set the map to Nashville.
-    if (top === "38px") {
+    if (msg === "Add a depot") {
         controlUI.addEventListener(
             'click', addDepot
         );
+        controlUI.style.marginRight = "120px";
     } else {
         controlUI.addEventListener(
             'click', clearDepot
@@ -533,6 +532,7 @@ function setIncident(r, index) {
             img.url = imgURLFireDpmt[i];
             emoji = emojis[i];
             emojiPicked = true;
+            break;
         }
     } 
     if (!emojiPicked) {
