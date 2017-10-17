@@ -16,8 +16,6 @@
 <div id="logo">
     <img src="https://admissions.vanderbilt.edu/insidedores/manage/wp-content/uploads/vanderbilt-logo-2008.gif"
              width="45" height="45" style="position:absolute; left: 5px; " />
-    <div style="position: absolute; font-family: 'Arial'; font-size: 15px; left:65px;top:15px;border-radius:4px;border: 1px solid #dca600;color:#dca600;padding: 4px;"><a href="{{ url_for('index') }}" style="text-decoration: none;color:#dca600;">Incident</a></div>
-    <div style="position: absolute; font-family: 'Arial'; font-size: 15px; left:140px;top:15px;border-radius:4px;border: 1px solid #fff;color:#fff;padding:4px;"><a href="{{ url_for('transitPlot') }}" style="text-decoration: none;color:#fff;">Transit</a></div>
     vData
     
 </div>
@@ -130,7 +128,7 @@
             <button class="button" id='gradient' onclick="changeGradient()">
             Change gradient</button>
             <button class="button" style="background-color: lightgray" id="vehide"onclick="hideVehicles()">
-            Hide Responding incidents</button>
+            Hide Responding Vehicles</button>
         </div>
 
         <div style="width: inherit; position:absolute; top: 20%; text-align: center; z-index: 2">
@@ -140,6 +138,13 @@
         <div id="sliderGround">
             <div id="sliderNew" style="width: inherit"></div>
             <div class="input" id="inputSingle" style="margin-top: 5px; font-family: 'Zilla Slab'"></div>
+            <div id = "clockRetrain" style="position: absolute; margin-top: -28px; font-family: 'Zilla Slab'; display: none;
+                width: 120px; font-size: 10px">
+                Model Updated at: 
+                <div id = "timeNow"></div>
+                <button class="button" style="background-color: lightblue" id="manualRetrainBtn" onclick="setInnerHTML('timeNow', 'time')">
+                Click to refresh model</button>
+            </div>
             <div id = "sliderDouble">
                 <div id="slider"></div>
                 <div class="input" style="margin-top: 5px; font-family: 'Zilla Slab'">
