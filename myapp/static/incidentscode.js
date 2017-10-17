@@ -27,11 +27,37 @@ function initMap() {
     // constructor passing in this DIV.
     var centerControlDiv = document.createElement('div');
     var centerControl = new CenterControl(centerControlDiv, map);
-
     centerControlDiv.index = 1;
     map.controls[google.maps.ControlPosition.TOP_CENTER].push(centerControlDiv);
 
+    // Create the DIV to hold the control and call the TopRightControl()
+    // constructor passing in this DIV.
+    var topControlDiv = document.createElement('div');
+    var topControl = new TopRightControl(topControlDiv, map, "38px", "Add a depot");
+    topControlDiv.index = 1;
+    topControlDiv.id = "addDepot"
+    topControlDiv.style.display = "none";
+    map.controls[google.maps.ControlPosition.TOP_RIGHT].push(topControlDiv);
+
+    // Create the DIV to hold the control and call the TopRightControl()
+    // constructor passing in this DIV.
+    var topControlDiv2 = document.createElement('div');
+    var topControl2 = new TopRightControl(topControlDiv2, map, "70px", "Clear my depots");
+    topControlDiv2.index = 1;
+    topControlDiv2.id = "clearDepot"
+    topControlDiv2.style.display = "none";
+    map.controls[google.maps.ControlPosition.TOP_RIGHT].push(topControlDiv2);
+
+    var today = new Date();
+    document.getElementById('timeNow').innerHTML=today.toLocaleDateString() + "  " + today.toLocaleTimeString();
     createSlider();
+}
+
+function setInnerHTML(id, msg) {
+    if (msg === 'time') {
+        var today = new Date();
+        document.getElementById(id).innerHTML=today.toLocaleDateString() + "  " + today.toLocaleTimeString();
+    }
 }
 
 /* generate a data slider that follows the date input box;
@@ -272,7 +298,7 @@ function prepMarkers() {
 }
 
 
-/* create floating panel for map, on click can center map */
+/* create floating button for map, on click can center map */
 function CenterControl(controlDiv, map) {
     // Set CSS for the control border.
     var controlUI = document.createElement('div');
@@ -305,6 +331,80 @@ function CenterControl(controlDiv, map) {
             map.setZoom(11);
         }
     );
+}
+
+function TopRightControl(controlDiv, map, top, msg) {
+    // Set CSS for the control border.
+    var controlUI = document.createElement('div');
+    controlUI.style.backgroundColor = 'white';
+    controlUI.style.border = '0.2px solid #BEBEBE';
+    controlUI.style.borderRadius = '3px';
+    controlUI.style.boxShadow = '0 3px 3px rgba(0,0,0,.3)';
+    controlUI.style.cursor = 'pointer';
+    controlUI.style.marginBottom = '12px';
+    controlUI.style.marginTop = top;
+    controlUI.style.marginRight = "28px";
+    // controlUI.title = 'Click to add a depot';
+    controlDiv.appendChild(controlUI);
+
+    // Set CSS for the control interior.
+    var controlText = document.createElement('div');
+    controlText.style.color = 'rgb(25,25,25)';
+    controlText.style.fontFamily = 'Roboto,Arial,sans-serif';
+    controlText.style.fontSize = '11px';
+    controlText.style.lineHeight = '18px';
+    controlText.style.paddingLeft = '5px';
+    controlText.style.paddingRight = '5px';
+    controlText.innerHTML = msg;
+    controlUI.appendChild(controlText);
+
+    // Setup the click event listeners: simply set the map to Nashville.
+    if (top === "38px") {
+        controlUI.addEventListener(
+            'click', addDepot
+        );
+    } else {
+        controlUI.addEventListener(
+            'click', clearDepot
+        );
+    }
+
+
+}
+
+var customDepots = [];
+function addDepot() {
+    var imgDepot = {
+        url: 'https://maxcdn.icons8.com/office/PNG/512/City/fire_station-512.png',
+        scaledSize: new google.maps.Size(23, 23),
+        anchor: new google.maps.Point(9, 9)
+    };
+    var marker = new google.maps.Marker({
+      position: map.getCenter(),
+      icon: imgDepot,
+      draggable: true,
+      map: map
+    });
+    // Add an event listener on the draggable marker.
+    infoWindow = new google.maps.InfoWindow();
+    marker.addListener('position_changed', 
+        function(){
+            var latLng = marker.getPosition();
+            var contentString = '<b>Custom depot moved.</b><br>' +
+            'New lat long is: ' + latLng.lat() + ', ' + latLng.lng();
+            // Set the info window's content and position.
+            infoWindow.setContent(contentString);
+            infoWindow.setPosition(latLng);
+            infoWindow.open(map);
+        }
+    );
+    customDepots.push(marker);
+}
+function clearDepot() {
+    for (var i=0; i<customDepots.length; i++) {
+        customDepots[i].setMap(null);
+    }
+    customDepots = [];
 }
 
 socket.on('success', function() {
@@ -584,7 +684,12 @@ socket.on('heat-success', function() {
     console.log("-->All heat pushed success");
     console.log("heatDataAll:   "+heatDataAll.length);
     
-    setHeatMap();
+    heatmap= new google.maps.visualization.HeatmapLayer({
+        data: heatDataAll,
+        dissipating: false,
+        map: map,
+        radius: 0.01
+    });
     setBar(sumOfIncidents);
 
     var arr = [['Types', 'Number']];
@@ -941,6 +1046,9 @@ function changeMode() {
     var d = document.getElementById("initialMsgOnMap");
     var w = document.getElementById("mySideMenu");
     var o = document.getElementsByClassName("icon-bar");
+    var ad = document.getElementById("addDepot");
+    var cd = document.getElementById("clearDepot");
+    var cr = document.getElementById("clockRetrain");
 
     d.innerHTML = "Please Pick A Date In the FUTURE to see Predictions";
     d = document.getElementById("initialMsgOnMap1");
@@ -976,10 +1084,16 @@ function changeMode() {
         }
         w.style.height = "130px";
         o[0].style.display = "none";
+        ad.style.display = "block";
+        cd.style.display = "block";
+        cr.style.display = "block";
 
     } else { // historic mode is checked
         map.setOptions({styles: oldStyles});
         w.style.height = "410px";
+        ad.style.display = "none";
+        cd.style.display = "none";
+        cr.style.display = "none";
         for (var j=0; j<3; j++) {
             a[j].style.borderColor = "#4f4f4f";
         }
