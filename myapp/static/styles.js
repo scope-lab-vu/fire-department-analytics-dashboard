@@ -199,3 +199,31 @@ var gradient = [
 		'rgba(191, 0, 31, 1)',
 		'rgba(255, 0, 0, 1)'
 	];
+
+/* for coloring different grid - depots in charge of different grids*/
+var gridColors = [
+    '#FF0000',
+    '#800000',
+    '#008080',
+    '#ffa500',
+    '#00ffff',
+    '#40e0d0',
+    '#0099cc',
+    '#c6e2ff',
+    '#ffc3a0',
+    '#ff7f50',
+    '#daa520',
+    '#b4eeb4',
+    '#808080',
+    '#c39797',
+    '#fa8072',
+    '#d3ffce',
+    '#ffd700',
+    '#5627c8',
+    '#ff4444',
+    '#81d8d0',
+    '#6dc066',
+    '#ba3966',
+    '#000000'
+];
+

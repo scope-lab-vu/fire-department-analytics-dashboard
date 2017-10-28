@@ -4,22 +4,37 @@
 
 **> Historic mode**
 
-	1. slider interval <= 14, different markers indicating different types of incidents will be displayed;
-		- selectbox, pie charts, bar charts of types are generated
-		- heat map toggle button
-	1. slider interval > 14, markers will not display, only heat map will
+- slider interval <= 14:
+  - different markers indicating different types of incidents
+  - select box, pie charts, bar charts of types
+  - heat map toggle button
+- slider interval > 14, markers will not display, only heat map will
 
 **> Future mode**
 
-	1. heat map predicting incidents
+- choose a department and a date to see predictions
+- Click "retrain model" update model
+
+**> Exploratory/Optimization mode**
+
+- Display optimal placement of responders and depots
+- Can customize depot locations
 
 
-The myapp folder utilizes flask-socket to get data from the server and transfer data to and from the html ide
+### Requirements
+```
+pymongo==3.5.0
+flask-socketio==2.9.2
+requests==2.18.4
+pytz==2017.2
+numpy==1.13.1
+pyproj==1.9.5.1
 
-pymongo is used to read data from Mongo Express 
-
-"incidentsPlot.html" is the dashboard interface
-
-"incidentscode.js" is the Javascript for the dashboard interface
-
-"burglarySnapshot" is a snapshot of the sample crime data (only has 2014-March data)
+gtfs-realtime-bindings==0.0.4
+protobuf_to_dict==0.1.0
+mongoengine==0.10.6
+pykalman==0.9.5
+numpydoc==0.5
+scipy==0.16.1
+scikit-learn==0.16.1
+```
