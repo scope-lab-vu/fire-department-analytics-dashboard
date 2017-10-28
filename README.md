@@ -1,6 +1,6 @@
 # Dashboard-vData
 
-##Functionality: 
+## Functionality
 
 **> Historic mode**
 
