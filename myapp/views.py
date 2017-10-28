@@ -23,6 +23,7 @@ def transitPlot():
 @socketio.on('connect')
 def socketio_connet():
 
+    
     # start: t-hub dashboard
     print "socketio_connect"
     time_change_simulation()
@@ -32,7 +33,7 @@ def socketio_connet():
     print "data_segments", len(data_segments)
     socketio.emit('draw_all_route_segments', {'data': data_segments})
     # end: t-hub dashboard
-
+    
     print "-> socketio_connect()\n"
     socketio.emit("success")
 
@@ -63,6 +64,11 @@ def getPredict(msg):
     else:
         print "-----> get predict for FIRE"
         getPredictions("fire")
+
+
+@socketio.on('getOptimization')
+def getOptimization():
+    getBestDepotPos()
 '''
 max time is;;;;;;;;;;;;;;;;;
 2016-02-05 13:12:00
@@ -283,6 +289,9 @@ def getCrimeData(start, end, str):
             socketio.emit("crime_none")
     
 
+
+
+
 # 
 # Incidents Predictions
 # 
@@ -358,6 +367,35 @@ def getPredictions(type):
             print"Did not find prediction file"
             socketio.emit("predictions_none", [])
 
+def getBestDepotPos():
+    print "--> get best bestAssignment of depots"
+    filepath = os.getcwd() + "/myapp/"
+
+    arr = []
+    dicOfDepot = {}
+    with open(filepath + "bestAssignment") as f:
+        contents = pickle.load(f)
+        for i in range(len(contents[3])):
+            if contents[3][i] > 0:
+                arr.append(i)
+        for i in range(len(contents[2])):
+            if contents[2][i][0] is not 0:
+                if  contents[2][i][0] not in dicOfDepot:
+                    dicOfDepot[contents[2][i][0]] = []
+                dicOfDepot[contents[2][i][0]].append(i)
+    print dicOfDepot
+
+    
+    with open(filepath + "latLongGrids.pickle") as f:
+        contents = pickle.load(f)
+        arrOfDict = []
+        for key in dicOfDepot:
+            dic = {"depotKey": key, "depotLatLng": "", "inChargeOf": []}
+            dic["depotLatLng"] = contents[key]
+            for grid in dicOfDepot[key]:
+                dic["inChargeOf"].append(contents[grid])
+            arrOfDict.append(dic)
+        socketio.emit("bestAreaInCharge", arrOfDict)
 
 
 

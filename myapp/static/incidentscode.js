@@ -594,12 +594,12 @@ socket.on('vehicle_data', function(msg) {
 function setVehicle() {
     var r1 = data_vehicle;
     var image = {
-            path: google.maps.SymbolPath.CIRCLE,
-            fillColor: 'floralwhite',
-            fillOpacity: .4,
-            scale: 6,
-            strokeColor: 'brown',
-            strokeWeight: .5
+        path: google.maps.SymbolPath.CIRCLE,
+        fillColor: 'floralwhite',
+        fillOpacity: .4,
+        scale: 6,
+        strokeColor: 'brown',
+        strokeWeight: .5
     };
     for (var i = 0; i < (r1.locations).length; i++) {
         var content = "&#x1F692;<b>id: </b>"+r1._id +"</br>" +"<b>Apparatus ID: </b>" + 
@@ -1058,7 +1058,7 @@ function changeMode() {
         w.style.width = "0px";
     }
     if (document.getElementById("checkFuture").checked) { // future mode is checked
-        map.setOptions({styles: newStyles});
+        // map.setOptions({styles: newStyles});
         for (var i=0; i<3; i++) {
             a[i].style.borderColor = "#82D6FF";
         }
@@ -1089,7 +1089,7 @@ function changeMode() {
         cr.style.display = "block";
 
     } else { // historic mode is checked
-        map.setOptions({styles: oldStyles});
+        // map.setOptions({styles: oldStyles});
         w.style.height = "410px";
         ad.style.display = "none";
         cd.style.display = "none";
@@ -1279,6 +1279,18 @@ function createSubmitBtn(div) {
         }
         socket.emit('predictNOW', {ans: answer});
     });
+
+    var butto = document.createElement("button");
+    butto.className = "button";
+    butto.style.backgroundColor = "#A1A5E7";
+    butto.style.marginLeft = "25px";
+    butto.style.fontFamily = "Zilla Slab";
+    butto.style.fontSize = "14px";
+    butto.innerHTML = "Optimize!";
+    div.appendChild(butto);
+    butto.addEventListener ("click", function() {
+        socket.emit('getOptimization');
+    });
 }
 
 // get predictions_data from python file
@@ -1299,6 +1311,11 @@ socket.on('predictions_data_crime', function(msg) {
     setPrediction(msg);
 
 });
+
+socket.on('bestAreaInCharge', function(msg) {
+    console.log("--> best Area In Charge has length of: " + msg.length)
+    setBestDepotsArea(msg);
+}); 
 
 // set all predictions dots onto heat map
 var heatmapPredict;
@@ -1352,4 +1369,93 @@ function setPrediction(arr) {
     if(w.style.width !== "300px") {
         w.style.width = "300px";
     }
+}
+
+// set best assignment depots with different colors
+var gridInChargeOf = {};
+function setBestDepotsArea(arrOfDic) {
+    // depot image
+    var imgDepot = {
+        url: 'https://hydra-media.cursecdn.com/simcity.gamepedia.com/1/13/Fire_station_garage.png?version=e2d13f3d48d4d276f64d0cb8c04adbee',
+        scaledSize: new google.maps.Size(23, 23)
+    };
+
+    // transparent dot image
+    var image = {
+        path: google.maps.SymbolPath.CIRCLE,
+        fillColor: 'floralwhite',
+        fillOpacity: .4,
+        scale: 6,
+        strokeColor: 'lightgrey',
+        strokeWeight: .5
+    };
+
+    var dlong = 0.008942854;
+    var dlat = 0.0072;
+    for (var i=0; i<arrOfDic.length; i++) {
+        if (! (arrOfDic[i]["depotKey"] in gridInChargeOf)) {
+            gridInChargeOf[arrOfDic[i]["depotKey"]] = [];
+        }
+
+        for (var j=0; j<(arrOfDic[i]["inChargeOf"]).length; j++) {
+            var lat = (arrOfDic[i]["inChargeOf"])[j][1];
+            var lng = (arrOfDic[i]["inChargeOf"])[j][0];
+            // draw a rectangle for the in charge of 
+            var rectangle = new google.maps.Rectangle({
+                strokeColor: '#cccccc',
+                strokeOpacity: 0.6,
+                strokeWeight: 2,
+                fillColor: gridColors[i],
+                fillOpacity: 0.6,
+                map: map,
+                bounds: {
+                  north: lat+dlat,
+                  south: lat-dlat,
+                  east: lng+dlong,
+                  west: lng-dlong
+                }
+            });
+
+            // draw a marker for all centers of in charge of grids with transparent circles
+            var marker = new google.maps.Marker({
+                position: { lat: lat, lng: lng },
+                map: map,
+                icon: image,
+                label: {
+                    color: "black",
+                    fontSize: "5px",
+                    text: (arrOfDic[i]["depotKey"]).toString()
+                }
+            });
+            gridInChargeOf[arrOfDic[i]["depotKey"]].push(rectangle);
+        }
+
+        // draw marker for all best assignment depots
+        var content = (arrOfDic[i]["depotKey"]).toString();
+        var latLng = new google.maps.LatLng(arrOfDic[i]["depotLatLng"][1], arrOfDic[i]["depotLatLng"][0]),
+            marker = new google.maps.Marker(createMarkerObj(latLng,map,imgDepot,content));
+        setInfoWindow(marker);
+
+        // highlight this depot's in charge of rectangles when mouse over
+        marker.addListener('mouseover', function() {
+            for (var k=0; k<(gridInChargeOf[this.contentString]).length; k++) {
+                gridInChargeOf[this.contentString][k].setOptions({
+                    fillOpacity: 1,
+                    strokeColor: '#282828',
+                    strokeOpacity: 1
+                });
+            }
+        });
+        marker.addListener('mouseout', function() {
+            for (var k=0; k<(gridInChargeOf[this.contentString]).length; k++) {
+                gridInChargeOf[this.contentString][k].setOptions({
+                    fillOpacity: 0.6,
+                    strokeColor: '#cccccc',
+                    strokeOpacity: 0.6
+                });
+            }
+        });
+    }
+    console.log("-----> grids each depot in charge of");
+    console.log(gridInChargeOf);
 }
