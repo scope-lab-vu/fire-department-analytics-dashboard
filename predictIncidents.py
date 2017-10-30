@@ -26,7 +26,7 @@ def getPredictions(type="fire"):
             #sample poisson
             numSample = np.random.poisson(mean, 1)
 
-            #return sampled values
+            #return sampled val`ues
             output = []
             for sampleCounter in range(0,numSample):
                 indSample = randint(0,len(predictionsOutput))
