@@ -23,6 +23,7 @@ def transitPlot():
 @socketio.on('connect')
 def socketio_connet():
 
+    
     # start: t-hub dashboard
     print "socketio_connect"
     time_change_simulation()
@@ -32,7 +33,7 @@ def socketio_connet():
     print "data_segments", len(data_segments)
     socketio.emit('draw_all_route_segments', {'data': data_segments})
     # end: t-hub dashboard
-
+    
     print "-> socketio_connect()\n"
     socketio.emit("success")
 
@@ -46,18 +47,28 @@ def getDate (msg):
     delta = delta.days
     if (delta > 14):
         getIncidentHeat(start, end)
+        # getCrimeData(start, end, "heat")
         print "======================"
         socketio.emit("heat-success")
     else:
         getIncidentData(start, end)
         getVehiclesData(start, end)
-        getBurglaryData(start, end)
+        getCrimeData(start, end, "markers")
         socketio.emit("markers-success")
     
 @socketio.on('predictNOW')
-def getPredict():
-    print "-----> get predict"
-    getPredictions()
+def getPredict(msg):
+    if (msg['ans'] == 'crime'):
+        print "-----> get predict for CRIME"
+        getPredictions("crime")
+    else:
+        print "-----> get predict for FIRE"
+        getPredictions("fire")
+
+
+@socketio.on('getOptimization')
+def getOptimization():
+    getBestDepotPos()
 '''
 max time is;;;;;;;;;;;;;;;;;
 2016-02-05 13:12:00
@@ -66,7 +77,7 @@ min time is;;;;;;;;;;;;;;;;;
 '''
 
 # def findMinMax():
-#     client = MongoClient("mongodb://zilinwang:Mongo0987654321@129.59.107.60:27017/fire_department")
+#     client = MongoClient("mongodb://127.0.0.1:27017/fire_department")
 #     db = client["fire_department"]["simple__incident"]
 #     items = db.find()
 #     pretime = (items[0])['alarmDateTime']
@@ -90,7 +101,7 @@ min time is;;;;;;;;;;;;;;;;;
 # retrieve a simplified list of information for just heat map layer
 def getIncidentHeat(start, end):
     print "-> getIncident Heat()\n"
-    client = MongoClient("mongodb://zilinwang:Mongo0987654321@129.59.107.60:27017/fire_department")
+    client = MongoClient("mongodb://127.0.0.1:27017/fire_department")
     db = client["fire_department"]["simple__incident"]
     items = db.find()
     arr = []
@@ -110,6 +121,7 @@ def getIncidentHeat(start, end):
             arr.append(dictIn)
     socketio.emit("latlngarrofobj", arr)
 
+
 # retrieve data from mongo db
 def getIncidentData(start, end):
     
@@ -120,7 +132,7 @@ def getIncidentData(start, end):
         print data_file
         socketio.emit("accident_data", {'data':json.load(data_file)})
     '''
-    client = MongoClient("mongodb://zilinwang:Mongo0987654321@129.59.107.60:27017/fire_department")
+    client = MongoClient("mongodb://127.0.0.1:27017/fire_department")
     db = client["fire_department"]["simple__incident"]
     items = db.find()
     types = []
@@ -192,7 +204,7 @@ def getVehiclesData(start, end):
     global depot_cache
     print "-> getVehiclesData()\n"
 
-    client = MongoClient("mongodb://zilinwang:Mongo0987654321@129.59.107.60:27017/fire_department")
+    client = MongoClient("mongodb://127.0.0.1:27017/fire_department")
     db = client["fire_department"]["response_vehicle"]
     items = db.find()
     count = 0
@@ -248,36 +260,41 @@ def getVehiclesData(start, end):
 
 
 # retrieve data from csv file
-def getBurglaryData(start, end):
-    print(" --> get Burglary")
+def getCrimeData(start, end, str):
+    print(" --> get Crime Markers csv")
     arr = []
     i=0
-    with open('/Users/wangshibao/SummerProjects/dashboard-socket/myapp/burglarySnapshot.csv','rU') as f:
+    with open('/Users/wangshibao/SummerProjects/analytics-dashboard/myapp/CrimeHistory.csv','rU') as f:
         reader = csv.reader(f)
-        header = (reader.next())[0].split("\t")
+        header = reader.next()
+        for row in reader:
+            date = row[1]
+            date_time = datetime.datetime.strptime(date, "%Y%m%d %H:%M")
+            if (start <= date_time <= end):
+                print i
+                i += 1
 
-        for item in reader:
-            print i
-            obj = {}
-            content = item[0].split("\t")
-            for j in range(len(header)):
-                obj[header[j]] = content[j]
-
-            date = obj['_date']
-            date_time = date[:4] +"/"+date[4:6] +"/"+date[6:8]+" "+obj['_time']
-            date_time = datetime.datetime.strptime(date_time, "%Y/%m/%d %H:%M")
-            i +=1
-
-            if (start <= date_time <= end): 
-                obj['AlarmDateTime'] = str(date_time)
+                obj = {}
+                for j in range(len(header)):
+                    obj[header[j]] = row[j]
                 arr.append(obj)
-    if (arr != []):
-        print "-----> arr is NOT empty"
-        socketio.emit("burglary_data", arr)
-    else:
-        print "-----> arr is empty"
-        socketio.emit("burglary_none")
+    if (str == "heat"):
+        socketio.emit("crime_heat", arr)
+    else: 
+        if (arr != []):
+            print "-----> arr is NOT empty"
+            socketio.emit("crime_data", arr)
+        else:
+            print "-----> arr is empty"
+            socketio.emit("crime_none")
+    
 
+
+
+
+# 
+# Incidents Predictions
+# 
 import numpy as np
 from random import randint
 import os
@@ -288,10 +305,10 @@ p1 = Proj(
     '+proj=lcc +lat_1=36.41666666666666 +lat_2=35.25 +lat_0=34.33333333333334 +lon_0=-86 +x_0=600000 +y_0=0 +ellps=GRS80 +datum=NAD83 +no_defs')
 
 
-def getPredictions(type="fire"):
+def getPredictions(type):
     #type can either be fire or crime
+    filepath = os.getcwd() + "/myapp/"
     if type == "fire":
-        filepath = os.getcwd() + "/myapp/"
         if os.path.isfile(filepath + 'meanTraffic.txt'):
             exists = True
             print"Found mean file"
@@ -322,11 +339,11 @@ def getPredictions(type="fire"):
             print"Did not find prediction file"
             socketio.emit("predictions_none", [])
     elif type == "crime":
-        if os.path.isfile("crimePredicted.xls"):
-            predictedWorkbook = xlrd.open_workbook("crimePredicted.xls")
+        if os.path.isfile(filepath + "crimePredicted.xls"):
+            predictedWorkbook = xlrd.open_workbook(filepath + "crimePredicted.xls")
             predictionWorksheet = predictedWorkbook.sheet_by_index(0)
             # get total rows:
-            rows = predictionWorksheet.nrows
+            rows = predictionWorksheet.nrows - 1
             try:
                 columns = len(predictionWorksheet.row(0))
             except ValueError:
@@ -338,12 +355,47 @@ def getPredictions(type="fire"):
                 index = randint(1, rows)
                 row = []
                 for counterCol in range(columns):
-                    row.append(predictionWorksheet.cell_value(index, counterCol))
+                    try:
+                        row.append(predictionWorksheet.cell_value(index, counterCol))
+                    except IndexError:
+                        print "Issue with row {} and column {}".format(index,counterCol)
                 output.append(row)
-            return output
+                numSampled+=1
+            print len(output)
+            socketio.emit("predictions_data_crime", output)
         else:
-            return []
+            print"Did not find prediction file"
+            socketio.emit("predictions_none", [])
 
+def getBestDepotPos():
+    print "--> get best bestAssignment of depots"
+    filepath = os.getcwd() + "/myapp/"
+
+    arr = []
+    dicOfDepot = {}
+    with open(filepath + "bestAssignment") as f:
+        contents = pickle.load(f)
+        for i in range(len(contents[3])):
+            if contents[3][i] > 0:
+                arr.append(i)
+        for i in range(len(contents[2])):
+            if contents[2][i][0] is not 0:
+                if  contents[2][i][0] not in dicOfDepot:
+                    dicOfDepot[contents[2][i][0]] = []
+                dicOfDepot[contents[2][i][0]].append(i)
+    print dicOfDepot
+
+    
+    with open(filepath + "latLongGrids.pickle") as f:
+        contents = pickle.load(f)
+        arrOfDict = []
+        for key in dicOfDepot:
+            dic = {"depotKey": key, "depotLatLng": "", "inChargeOf": []}
+            dic["depotLatLng"] = contents[key]
+            for grid in dicOfDepot[key]:
+                dic["inChargeOf"].append(contents[grid])
+            arrOfDict.append(dic)
+        socketio.emit("bestAreaInCharge", arrOfDict)
 
 
 
@@ -446,6 +498,7 @@ def socketio_get_predictions_for_trip(message):
 def socketio_get_all_routeid():
     route_segment = dashboard.route_segment()
     data = route_segment.get_all_routeid()
+    # print "dfasdfasdf:", data
     socketio.emit('all_routeid', {'data': data})
 
 @socketio.on('get_directions_for_routeid')

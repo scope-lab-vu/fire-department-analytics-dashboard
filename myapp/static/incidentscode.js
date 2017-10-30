@@ -27,11 +27,37 @@ function initMap() {
     // constructor passing in this DIV.
     var centerControlDiv = document.createElement('div');
     var centerControl = new CenterControl(centerControlDiv, map);
-
     centerControlDiv.index = 1;
     map.controls[google.maps.ControlPosition.TOP_CENTER].push(centerControlDiv);
 
+    // Create the DIV to hold the control and call the TopRightControl()
+    // constructor passing in this DIV.
+    var topControlDiv = document.createElement('div');
+    var topControl = new TopRightControl(topControlDiv, map, "Add a depot");
+    topControlDiv.index = 2;
+    topControlDiv.id = "addDepot"
+    topControlDiv.style.display = "none";
+    map.controls[google.maps.ControlPosition.RIGHT_TOP].push(topControlDiv);
+
+    // Create the DIV to hold the control and call the TopRightControl()
+    // constructor passing in this DIV.
+    var topControlDiv2 = document.createElement('div');
+    var topControl2 = new TopRightControl(topControlDiv2, map, "Clear my depots");
+    topControlDiv2.index = 1;
+    topControlDiv2.id = "clearDepot"
+    topControlDiv2.style.display = "none";
+    map.controls[google.maps.ControlPosition.RIGHT_TOP].push(topControlDiv2);
+
+    var today = new Date();
+    document.getElementById('timeNow').innerHTML=today.toLocaleDateString() + "  " + today.toLocaleTimeString();
     createSlider();
+}
+
+function setInnerHTML(id, msg) {
+    if (msg === 'time') {
+        var today = new Date();
+        document.getElementById(id).innerHTML=today.toLocaleDateString() + "  " + today.toLocaleTimeString();
+    }
 }
 
 /* generate a data slider that follows the date input box;
@@ -170,8 +196,8 @@ socket.on('success', function() {
 var markers = [],  // an array of all markers objects
     markersArr = [], // an array of markers according to types of incidents
     heatDataAll = [],
-    heatDataTraffic = [],
-    heatDataBurglary = [];
+    heatDataFire = [],
+    heatDataCrime = [];
 var sumOfIncidents = [];
 
 
@@ -242,12 +268,22 @@ function prepMarkers() {
     if (heatmapPredict) {
         heatmapPredict.setMap(null);
     }
+
+    if (document.getElementById("selectType") !== null) {
+        var t = document.getElementById("selectType");
+        t.parentNode.removeChild(t);
+    }
+
     // delete all by removing reference to them,
     // so that when user hit "submit" again, previous markers are gone
     markers = [];
     markers.length = 0;
     heatDataAll = [];
     heatDataAll.length = 0;
+    heatDataFire = [];
+    heatDataFire.length = 0;
+    heatDataCrime = [];
+    heatDataCrime.length = 0;
     markersArr = [];
     markersArr.length = 0;
     vehiclesArr = [];
@@ -262,7 +298,7 @@ function prepMarkers() {
 }
 
 
-/* create floating panel for map, on click can center map */
+/* create floating button for map, on click can center map */
 function CenterControl(controlDiv, map) {
     // Set CSS for the control border.
     var controlUI = document.createElement('div');
@@ -297,46 +333,127 @@ function CenterControl(controlDiv, map) {
     );
 }
 
+function TopRightControl(controlDiv, map, msg) {
+    // Set CSS for the control border.
+    var controlUI = document.createElement('div');
+    controlUI.style.backgroundColor = 'lightcyan';
+    controlUI.style.border = '1px solid #BEBEBE';
+    controlUI.style.borderRadius = '1px';
+    controlUI.style.boxShadow = '0 3px 3px rgba(0,0,0,.3)';
+    controlUI.style.cursor = 'pointer';
+    controlUI.style.marginTop = "30px";
+    controlUI.style.marginRight = "28px";
+    controlDiv.appendChild(controlUI);
+
+    // Set CSS for the control interior.
+    var controlText = document.createElement('div');
+    controlText.style.color = 'rgb(25,25,25)';
+    controlText.style.fontFamily = 'Roboto,Arial,sans-serif';
+    controlText.style.fontSize = '11px';
+    controlText.style.lineHeight = '18px';
+    controlText.style.paddingLeft = '5px';
+    controlText.style.paddingRight = '5px';
+    controlText.innerHTML = msg;
+    controlUI.appendChild(controlText);
+
+    // Setup the click event listeners: simply set the map to Nashville.
+    if (msg === "Add a depot") {
+        controlUI.addEventListener(
+            'click', addDepot
+        );
+        controlUI.style.marginRight = "120px";
+    } else {
+        controlUI.addEventListener(
+            'click', clearDepot
+        );
+    }
+
+
+}
+
+var customDepots = [];
+function addDepot() {
+    var imgDepot = {
+        url: 'https://maxcdn.icons8.com/office/PNG/512/City/fire_station-512.png',
+        scaledSize: new google.maps.Size(23, 23),
+        anchor: new google.maps.Point(9, 9)
+    };
+    var marker = new google.maps.Marker({
+      position: map.getCenter(),
+      icon: imgDepot,
+      draggable: true,
+      map: map
+    });
+    // Add an event listener on the draggable marker.
+    infoWindow = new google.maps.InfoWindow();
+    marker.addListener('position_changed', 
+        function(){
+            var latLng = marker.getPosition();
+            var contentString = '<b>Custom depot moved.</b><br>' +
+            'New lat long is: ' + latLng.lat() + ', ' + latLng.lng();
+            // Set the info window's content and position.
+            infoWindow.setContent(contentString);
+            infoWindow.setPosition(latLng);
+            infoWindow.open(map);
+        }
+    );
+    customDepots.push(marker);
+}
+function clearDepot() {
+    for (var i=0; i<customDepots.length; i++) {
+        customDepots[i].setMap(null);
+    }
+    customDepots = [];
+}
+
 socket.on('success', function() {
     console.log("socketio success");
 });
 
-socket.on('burglary_none', function() {
-    console.log("burglary none")
+socket.on('crime_none', function() {
+    console.log("crime none")
 });
-/* socket to get burglary data from server*/
-var data_burglary;
-socket.on('burglary_data', function(msg) {
+/* socket to get crime data from server*/
+var data_crime;
+socket.on('crime_data', function(msg) {
+    console.log("--> crime data length is: " + msg.length);
+    data_crime = msg;
+    setCrime();
+});
 
-    // console.log(msg);
-    data_burglary = msg;
-    setBurglary();
+socket.on('crime_heat', function(msg) {
+    console.log("--> crime HEAT length is: " + msg.length);
+    data_crime = msg;
+    setCrimeHeat(data_crime);
 });
 
 function setButtonDisplay(str) {
     document.getElementById("markers").style.visibility = str;
     document.getElementById("heat").style.visibility = str;
+    document.getElementById("heatHide").style.visibility = str;
     document.getElementById("gradient").style.visibility = str;
     document.getElementById("vehide").style.visibility = str;
 }
 
-// set burglary data
-function setBurglary() {
+// set crime data
+function setCrime() {
     arr = [];
-    var r1 = data_burglary;
+    var r1 = data_crime;
     var image = {
         url: 'http://paybefore.com/wp-content/uploads/2016/09/burglar-icon-208x300.png',
-        scaledSize: new google.maps.Size(16, 24)
+        scaledSize: new google.maps.Size(14, 21)
     };
     for (var i = 0; i < r1.length; i++) {
-        var contentString = "Occured: "+r1[i].AlarmDateTime +"</br>" +"Reported: " + 
-            r1[i].IncidentReported + "</br>Incident Status: " + r1[i]["Incident Status"] + 
-            "</br>Number of Victims: " + r1[i].VICTIM_NO;
+        var contentString = "<h3>"+"&#x1F4B8;"+" "+meaningList["80"]+"</h3>"+
+            "<b>Occured: </b>"+r1[i]["Incident Occurred"] +"</br>" +"<b>Reported: </b>" + 
+            r1[i]["Incident Reported"] + "</br><b>Incident Type: </b>" + r1[i]["NIB_CODE_DESC"] + 
+            "</br>Incident Number: " + r1[i]["Incident number"];
         
         var latLng = new google.maps.LatLng(r1[i].LATITUDE, r1[i].LONGITUDE),
             marker = new google.maps.Marker(createMarkerObj(latLng,map,image,contentString));
 
         heatDataAll.push(latLng);
+        heatDataCrime.push(latLng);
         setInfoWindow(marker);
         arr.push(marker);
         markers.push(marker);
@@ -348,6 +465,8 @@ function setBurglary() {
         markersArr.length++;
         types.push("80");
     }
+    var policeCheckBox = document.getElementById("police");
+    policeCheckBox.checked = true;
 }
 
 /* set a marker of "position" on "map" with "icon" and "content" */
@@ -413,6 +532,7 @@ function setIncident(r, index) {
             img.url = imgURLFireDpmt[i];
             emoji = emojis[i];
             emojiPicked = true;
+            break;
         }
     } 
     if (!emojiPicked) {
@@ -422,6 +542,7 @@ function setIncident(r, index) {
 
     var latLng = new google.maps.LatLng(r._lat, r._lng);
     heatDataAll.push(latLng);
+    heatDataFire.push(latLng);
     var content = "<h3>"+emoji+" "+meaningList[protocol]+"</h3>"+
         '<b>Incident Number: </b>' + r.incidentNumber +
         '</br><b>Alarm Date: </b>' + r.alarmDate +
@@ -473,12 +594,12 @@ socket.on('vehicle_data', function(msg) {
 function setVehicle() {
     var r1 = data_vehicle;
     var image = {
-            path: google.maps.SymbolPath.CIRCLE,
-            fillColor: 'floralwhite',
-            fillOpacity: .4,
-            scale: 6,
-            strokeColor: 'brown',
-            strokeWeight: .5
+        path: google.maps.SymbolPath.CIRCLE,
+        fillColor: 'floralwhite',
+        fillOpacity: .4,
+        scale: 6,
+        strokeColor: 'brown',
+        strokeWeight: .5
     };
     for (var i = 0; i < (r1.locations).length; i++) {
         var content = "&#x1F692;<b>id: </b>"+r1._id +"</br>" +"<b>Apparatus ID: </b>" + 
@@ -533,7 +654,7 @@ function setInfoWindow(marker) {
 socket.on('markers-success', function() {
     setButtonDisplay("visible");
     console.log("-->All markers success");
-    console.log("types[]: ");
+    console.log("--->types[]: ");
     console.log(types);
     console.log("markersArr length:   "+ markersArr.length);   
     console.log("heatDataAll length:   "+ heatDataAll.length);   
@@ -563,7 +684,12 @@ socket.on('heat-success', function() {
     console.log("-->All heat pushed success");
     console.log("heatDataAll:   "+heatDataAll.length);
     
-    setHeatMap();
+    heatmap= new google.maps.visualization.HeatmapLayer({
+        data: heatDataAll,
+        dissipating: false,
+        map: map,
+        radius: 0.01
+    });
     setBar(sumOfIncidents);
 
     var arr = [['Types', 'Number']];
@@ -621,7 +747,7 @@ function printSummary() {
     div.appendChild(selectList);
 
     // create 5 main groups under the select list
-    var groups = ["Cardiac", "Trauma", "Fire", "MVA","Other"];
+    var groups = ["Cardiac", "Trauma", "MVA", "Fire", "Other"];
     var optionGroups = [];
     for (var i = 0; i < groups.length; i++) {
         var optionGroup = document.createElement("optGroup");
@@ -638,15 +764,17 @@ function printSummary() {
         option.text = meaningList[types[i]];
         option.selected = true;
 
-        for (var j=0; j<strFireDpmt.length; j++) {
-            if (strFireDpmt[j].includes(types[i])) {
-                optionGroups[j].appendChild(option);
-                appended = true;
-            }
-        }
-        if (!appended) {
+        if (strFireDpmt[0].includes(types[i])) {
+            optionGroups[0].appendChild(option);
+        } else if (strFireDpmt[1].includes(types[i])) {
+            optionGroups[1].appendChild(option);
+        } else if (strFireDpmt[2].includes(types[i])) {
+            optionGroups[2].appendChild(option);
+        } else if (strFireDpmt[3].includes(types[i])) {
+            optionGroups[3].appendChild(option);
+        } else {
             optionGroups[4].appendChild(option);
-        }
+        } 
     }
 
     // generate submit button
@@ -684,22 +812,35 @@ function getType() {
             }
         }
     }
+    document.getElementById('markers').onclick = function () {
+        getMarkersOnMap();
+    }
 }
 
 /* toggle markers by changing their visibility */
-function toggleMarkers(arrOfArr) {
-    for (var j = 0; j < types.length; j++) {
-        if (document.getElementById(types[j]).selected) {
-            var arr = arrOfArr[types[j]];
-            for (var i = 0; i < arr.length; i++) {
-                if (arr[i].getVisible()) {
-                    arr[i].setVisible(false);
-                    document.getElementById('markers').innerHTML = 'Show Incidents';
-                } else {
-                    arr[i].setVisible(true);
-                    document.getElementById('markers').innerHTML = 'Hide Incidents';
-                }
-            }
+function getMarkersOnMap() {
+    var tmpArr = [];
+    for (var j = 0; j < markers.length; j++) {
+        if (markers[j].getVisible()) {
+            tmpArr.push(markers[j]);
+        }
+    }
+    document.getElementById('markers').onclick = function () {
+        toggleMarkers(tmpArr);
+    }
+    
+}
+
+function toggleMarkers(arr) {
+    if (arr[0].getVisible()) {
+        document.getElementById('markers').innerHTML = 'Show Incidents';
+        for (var i=0; i<arr.length; i++) {
+            arr[i].setVisible(false);
+        }
+    } else {
+        document.getElementById('markers').innerHTML = 'Hide Incidents';
+        for (var k=0; k<arr.length; k++) {
+            arr[k].setVisible(true);
         }
     }
 }
@@ -754,16 +895,25 @@ socket.on('latlngarrofobj', function(msg) {
 // generate heat map layer, after which change button
 var heatmap;
 function setHeatMap() {
+    // clear old heatmap first
+    if (heatmap) {
+        heatmap.setMap(null);
+    }
+    var dataNow = [];
+    dataNow.length = 0;
+    for (var i=0; i<markers.length; i++) {
+        if (markers[i].getVisible()) {
+            dataNow.push(markers[i].getPosition());
+        }
+    }
+    console.log("--------> dataNow length is: "+dataNow.length);
+    console.log(dataNow);
     heatmap= new google.maps.visualization.HeatmapLayer({
-        data: heatDataAll,
+        data: dataNow,
         dissipating: false,
         map: map,
         radius: 0.01
     });
-    document.getElementById('heat').innerHTML = 'Show/hide Heatmap';
-    document.getElementById('heat').onclick = function () {
-        toggleHeatmap();
-    }
 }
 
 // toggle heat map
@@ -877,6 +1027,9 @@ function enlargeMap() {
         mapDiv.style.height = "610px";
         a.style.height = "610px";
     }
+    if (document.getElementById("checkFuture").checked) {
+        a.style.height = "130px";
+    }
     google.maps.event.trigger(mapDiv, 'resize');
     map.setCenter(centerNash);
 }
@@ -892,6 +1045,10 @@ function changeMode() {
     var c = document.getElementById("sliderDouble");
     var d = document.getElementById("initialMsgOnMap");
     var w = document.getElementById("mySideMenu");
+    var o = document.getElementsByClassName("icon-bar");
+    var ad = document.getElementById("addDepot");
+    var cd = document.getElementById("clearDepot");
+    var cr = document.getElementById("clockRetrain");
 
     d.innerHTML = "Please Pick A Date In the FUTURE to see Predictions";
     d = document.getElementById("initialMsgOnMap1");
@@ -901,8 +1058,8 @@ function changeMode() {
         w.style.width = "0px";
     }
     if (document.getElementById("checkFuture").checked) { // future mode is checked
-        map.setOptions({styles: newStyles});
-        for (var i=0; i<4; i++) {
+        // map.setOptions({styles: newStyles});
+        for (var i=0; i<3; i++) {
             a[i].style.borderColor = "#82D6FF";
         }
         document.body.style.backgroundColor = "rgba(0,0,0,0.88)";
@@ -925,11 +1082,19 @@ function changeMode() {
                 document.getElementsByClassName("loading")[i].style.color = "darkgrey";
             }
         }
-
+        w.style.height = "130px";
+        o[0].style.display = "none";
+        ad.style.display = "block";
+        cd.style.display = "block";
+        cr.style.display = "block";
 
     } else { // historic mode is checked
-        map.setOptions({styles: oldStyles});
-        for (var j=0; j<4; j++) {
+        // map.setOptions({styles: oldStyles});
+        w.style.height = "410px";
+        ad.style.display = "none";
+        cd.style.display = "none";
+        cr.style.display = "none";
+        for (var j=0; j<3; j++) {
             a[j].style.borderColor = "#4f4f4f";
         }
         document.body.style.backgroundColor = "rgba(0,0,0,0.85)";
@@ -938,6 +1103,8 @@ function changeMode() {
         c.style.display = "block";
         document.getElementById("sliderNew").style.display = "none";
         document.getElementById("inputSingle").style.display = "none";
+        o[0].style.display = "block";
+
     }
 
 
@@ -957,6 +1124,60 @@ function changeColor(color) {
     a[0].style.color = color;
 }
 
+function hideFire() {
+    var fireCheckBox = document.getElementById("fire");
+    if (!fireCheckBox.checked) {
+        for (var i=0; i<types.length; i++) {
+            if (types[i] !== "80") {
+                var arr = markersArr[types[i]];
+                for (var j=0; j<arr.length; j++) {
+                    if (arr[j].getVisible()) {
+                        arr[j].setVisible(false);
+                    }
+                }
+            }
+        }
+    } else {
+        for (var j=0; j<types.length; j++) {
+            if (types[j] !== "80") {
+                var arr = markersArr[types[j]];
+                for (var k=0; k<arr.length; k++) {
+                    if (!arr[k].getVisible()) {
+                        arr[k].setVisible(true);
+                    }
+                }
+            }
+        }
+    }
+    document.getElementById("heat").style.visibility = "visible";
+    document.getElementById('markers').onclick = function () {
+        getMarkersOnMap();
+    }
+
+}
+
+function hidePolice() {
+    var policeCheckBox = document.getElementById("police");
+    if (!policeCheckBox.checked) {
+        var arr = markersArr["80"];
+        for (var j=0; j<arr.length; j++) {
+            if (arr[j].getVisible()) {
+                arr[j].setVisible(false);
+            }
+        }
+    } else {
+        var arr = markersArr["80"];
+        for (var i=0; i<arr.length; i++) {
+            if (!arr[i].getVisible()) {
+                arr[i].setVisible(true);
+            }
+        }
+    }
+    document.getElementById("heat").style.visibility = "visible";
+    document.getElementById('markers').onclick = function () {
+        getMarkersOnMap();
+    }
+}
 
 /* Create a single slider, a submit button a single date input box
  * this slider changes along with the input box;
@@ -964,8 +1185,8 @@ function changeColor(color) {
 function createSingleSlider() {
     var singleSlider = document.getElementById('sliderNew');
     var today = new Date();
-    var dateLimit = new Date("2030-01-01T00:00:00.00");
-    var dateStart = new Date("2020-01-01T00:00:00.00");
+    var dateLimit = new Date("2017-12-01T00:00:00.00");
+    var dateStart = new Date("2017-09-01T00:00:00.00");
     noUiSlider.create(singleSlider, {
         start: [dateStart.getTime()],
         range: {
@@ -983,9 +1204,10 @@ function createSingleSlider() {
     inputbox.type = 'date';
     inputbox.value = getTodayDate();
     inputbox.min = getTodayDate();
-    inputbox.max = '2030-01-01';
+    inputbox.max = '2017-12-01';
     div.appendChild(inputbox);
-
+    
+    createSelectBox(div);
     createSubmitBtn(div);
 
     // input box changes according to slider
@@ -1003,6 +1225,20 @@ function createSingleSlider() {
             ",&nbsp;&nbsp;" +deltaDays.toString() + " days away from today";
     });
 
+}
+
+function createSelectBox(div) {
+    var selectList = document.createElement("select");
+    selectList.style.marginLeft = "15px";
+    var opt = document.createElement("option");
+    opt.innerHTML = "Crime(Police Department)";
+    opt.id = "predictCrime";
+    selectList.appendChild(opt);
+    opt = document.createElement("option");
+    opt.innerHTML = "Incidents(Fire Department)";
+    opt.id = "predictFire";
+    selectList.appendChild(opt);    
+    div.appendChild(selectList);
 }
 
 // return string in the form of yyyy-mm-dd of today's date
@@ -1030,22 +1266,37 @@ function createSubmitBtn(div) {
     button.style.marginLeft = "25px";
     button.style.fontFamily = "Zilla Slab";
     button.style.fontSize = "14px";
-    button.innerHTML = "Predict Crime";
+    button.innerHTML = "Predict!";
     div.appendChild(button);
 
     button.addEventListener ("click", function() {
         document.getElementsByClassName("loading")[0].style.display = "none";
-        socket.emit('predictNOW');
+        var answer = "";
+        if (document.getElementById("predictCrime").selected) {
+            answer = "crime";
+        } else {
+            answer = "fire";
+        }
+        socket.emit('predictNOW', {ans: answer});
+    });
+
+    var butto = document.createElement("button");
+    butto.className = "button";
+    butto.style.backgroundColor = "#A1A5E7";
+    butto.style.marginLeft = "25px";
+    butto.style.fontFamily = "Zilla Slab";
+    butto.style.fontSize = "14px";
+    butto.innerHTML = "Optimize!";
+    div.appendChild(butto);
+    butto.addEventListener ("click", function() {
+        socket.emit('getOptimization');
     });
 }
 
 // get predictions_data from python file
 socket.on('predictions_data', function(msg) {
-    console.log("predictions_data")
-    console.log(msg);
-    data_predictions = msg;
-    setPredictions(data_predictions);
-
+    console.log("--> predictions_data length is: " + msg.length)
+    setPredictions(msg);
 });
 
 // predictions is empty []
@@ -1054,6 +1305,18 @@ socket.on('predictions_none', function(msg) {
     console.log(msg);
 });
 
+// get predictions_data from python file
+socket.on('predictions_data_crime', function(msg) {
+    console.log("--> predictions_data CRIME length is: " + msg.length)
+    setPrediction(msg);
+
+});
+
+socket.on('bestAreaInCharge', function(msg) {
+    console.log("--> best Area In Charge has length of: " + msg.length)
+    setBestDepotsArea(msg);
+}); 
+
 // set all predictions dots onto heat map
 var heatmapPredict;
 function setPredictions(arr) {
@@ -1061,13 +1324,14 @@ function setPredictions(arr) {
     for (var i = 0; i < arr.length; i++) {
         var obj = {};
         obj.location = new google.maps.LatLng((arr[i])[1], (arr[i])[0]);
-        obj.weight = (arr[i])[2]*5000;
+        obj.weight = (arr[i])[2]*12000;
         heatMapData.push(obj);
     }
 
-    heatmapPredictNew = new google.maps.visualization.HeatmapLayer({
+    var heatmapPredictNew = new google.maps.visualization.HeatmapLayer({
         data: heatMapData,
-        radius: 25
+        dissipating: false,
+        radius: 0.02
     });
     map.setCenter(centerNash);
     heatmapPredictNew.setMap(map);
@@ -1081,4 +1345,117 @@ function setPredictions(arr) {
     if(w.style.width !== "300px") {
         w.style.width = "300px";
     }
+}
+
+function setPrediction(arr) {
+    var heatMapData = [];
+    for (var i=0; i<arr.length; i++) {
+        heatMapData.push(new google.maps.LatLng(arr[i][3], arr[i][4]));
+    }
+
+    var heatmapPredictNew = new google.maps.visualization.HeatmapLayer({
+        data: heatMapData,
+        radius: 20
+    });
+    map.setCenter(centerNash);
+    heatmapPredictNew.setMap(map);
+
+    if (heatmapPredict) {
+        heatmapPredict.setMap(null);
+    }
+    heatmapPredict = heatmapPredictNew;
+
+    var w = document.getElementById("mySideMenu");
+    if(w.style.width !== "300px") {
+        w.style.width = "300px";
+    }
+}
+
+// set best assignment depots with different colors
+var gridInChargeOf = {};
+function setBestDepotsArea(arrOfDic) {
+    // depot image
+    var imgDepot = {
+        url: 'https://hydra-media.cursecdn.com/simcity.gamepedia.com/1/13/Fire_station_garage.png?version=e2d13f3d48d4d276f64d0cb8c04adbee',
+        scaledSize: new google.maps.Size(23, 23)
+    };
+
+    // transparent dot image
+    var image = {
+        path: google.maps.SymbolPath.CIRCLE,
+        fillColor: 'floralwhite',
+        fillOpacity: .4,
+        scale: 6,
+        strokeColor: 'lightgrey',
+        strokeWeight: .5
+    };
+
+    var dlong = 0.008942854;
+    var dlat = 0.0072;
+    for (var i=0; i<arrOfDic.length; i++) {
+        if (! (arrOfDic[i]["depotKey"] in gridInChargeOf)) {
+            gridInChargeOf[arrOfDic[i]["depotKey"]] = [];
+        }
+
+        for (var j=0; j<(arrOfDic[i]["inChargeOf"]).length; j++) {
+            var lat = (arrOfDic[i]["inChargeOf"])[j][1];
+            var lng = (arrOfDic[i]["inChargeOf"])[j][0];
+            // draw a rectangle for the in charge of 
+            var rectangle = new google.maps.Rectangle({
+                strokeColor: '#cccccc',
+                strokeOpacity: 0.6,
+                strokeWeight: 2,
+                fillColor: gridColors[i],
+                fillOpacity: 0.6,
+                map: map,
+                bounds: {
+                  north: lat+dlat,
+                  south: lat-dlat,
+                  east: lng+dlong,
+                  west: lng-dlong
+                }
+            });
+
+            // draw a marker for all centers of in charge of grids with transparent circles
+            var marker = new google.maps.Marker({
+                position: { lat: lat, lng: lng },
+                map: map,
+                icon: image,
+                label: {
+                    color: "black",
+                    fontSize: "5px",
+                    text: (arrOfDic[i]["depotKey"]).toString()
+                }
+            });
+            gridInChargeOf[arrOfDic[i]["depotKey"]].push(rectangle);
+        }
+
+        // draw marker for all best assignment depots
+        var content = (arrOfDic[i]["depotKey"]).toString();
+        var latLng = new google.maps.LatLng(arrOfDic[i]["depotLatLng"][1], arrOfDic[i]["depotLatLng"][0]),
+            marker = new google.maps.Marker(createMarkerObj(latLng,map,imgDepot,content));
+        setInfoWindow(marker);
+
+        // highlight this depot's in charge of rectangles when mouse over
+        marker.addListener('mouseover', function() {
+            for (var k=0; k<(gridInChargeOf[this.contentString]).length; k++) {
+                gridInChargeOf[this.contentString][k].setOptions({
+                    fillOpacity: 1,
+                    strokeColor: '#282828',
+                    strokeOpacity: 1
+                });
+            }
+        });
+        marker.addListener('mouseout', function() {
+            for (var k=0; k<(gridInChargeOf[this.contentString]).length; k++) {
+                gridInChargeOf[this.contentString][k].setOptions({
+                    fillOpacity: 0.6,
+                    strokeColor: '#cccccc',
+                    strokeOpacity: 0.6
+                });
+            }
+        });
+    }
+    console.log("-----> grids each depot in charge of");
+    console.log(gridInChargeOf);
 }
