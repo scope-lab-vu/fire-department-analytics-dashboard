@@ -23,7 +23,7 @@ def transitPlot():
 @socketio.on('connect')
 def socketio_connet():
 
-    
+    '''
     # start: t-hub dashboard
     print "socketio_connect"
     time_change_simulation()
@@ -37,6 +37,7 @@ def socketio_connet():
     print "-> socketio_connect()\n"
     socketio.emit("success")
 
+'''
 @socketio.on('get_date')
 def getDate (msg):
     # findMinMax()
@@ -398,7 +399,7 @@ def getBestDepotPos():
         socketio.emit("bestAreaInCharge", arrOfDict)
 
 
-
+'''
 # 
 # t-hub dashboard
 # 
@@ -517,3 +518,4 @@ def socketio_get_trips_for_routeid_direction(message):
     trip_headsign = message.get('trip_headsign')
     data = route_segment.get_trips(route_id, trip_headsign)
     socketio.emit('trips_for_routeid_direction', {'tripids': data[0], 'departuretimes': data[1]})
+'''
