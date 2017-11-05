@@ -144,7 +144,6 @@ body {
     height: inherit;
     top: 80px;
     left: 5%;
-    padding: 0 8px;
     color: white;
     font-size: 40px;
     font-family: 'Alegreya Sans SC', sans-serif;
@@ -162,7 +161,6 @@ body {
     color: white;
     font-family: "Copperplate";
     font-size: larger;
-    padding: 0;
 }
 
 .column {
@@ -185,7 +183,7 @@ body {
 
 #floating-panel {
     position: absolute;
-    top: 125px;
+    top: 36px;
     width: inherit;
     text-align: center;
 }
@@ -258,7 +256,7 @@ text.value {
 /* Popup container - "help" */
 /* class */
 .popup {
-    position: fixed;
+    position: absolute;
     cursor: help;
     width: 4%;
     bottom: 40px;
@@ -372,11 +370,30 @@ hr {
     box-shadow: 0 3px 4px rgba(0,0,0,.3);
 }
 
+/* button to change modes */
+.buttonChangeMode {
+    background-color: white;
+    border: 1px solid #BEBEBE;
+    color: black;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 12px;
+    cursor: pointer;
+    border-radius: 3px;
+}
+
+.buttonChangeMode:hover {
+    text-decoration: underline;
+    background-color: #3e8e41;
+}
+
+
 /* social media */
 .fa {
-    padding: 10px;
-    font-size: 25px;
-    width: 35px;
+    padding: 5px;
+    font-size: 15px;
+    width: 15px;
     text-align: center;
 }
 
@@ -389,11 +406,6 @@ hr {
     color: black;
 }
 
-.fa-facebook {
-    background: #3B5998;
-    color: white;
-}
-
 .fa-google {
     background: #bb0000;
     color: white;
@@ -402,11 +414,6 @@ hr {
 .fa-github {
     background: whitesmoke;
     color: black;
-}
-
-.fa-linkedin {
-    background: #007bb5;
-    color: white;
 }
 
 .input {
@@ -500,7 +507,7 @@ input:checked + .slider:before {
 .icon-bar {
     position: absolute;
     right: 73px;
-    top:115px;
+    top: 30px;
     height: 67px;
     background-color: whitesmoke;
     width: 47px;

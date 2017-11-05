@@ -23,7 +23,7 @@ def transitPlot():
 @socketio.on('connect')
 def socketio_connet():
 
-    
+    '''
     # start: t-hub dashboard
     print "socketio_connect"
     time_change_simulation()
@@ -33,6 +33,7 @@ def socketio_connet():
     print "data_segments", len(data_segments)
     socketio.emit('draw_all_route_segments', {'data': data_segments})
     # end: t-hub dashboard
+    '''
     
     print "-> socketio_connect()\n"
     socketio.emit("success")
@@ -101,6 +102,7 @@ min time is;;;;;;;;;;;;;;;;;
 # retrieve a simplified list of information for just heat map layer
 def getIncidentHeat(start, end):
     print "-> getIncident Heat()\n"
+    # client = MongoClient("mongodb://zilinwang:Mongo0987654321@129.59.107.60:27017/fire_department")
     client = MongoClient("mongodb://127.0.0.1:27017/fire_department")
     db = client["fire_department"]["simple__incident"]
     items = db.find()
@@ -132,6 +134,7 @@ def getIncidentData(start, end):
         print data_file
         socketio.emit("accident_data", {'data':json.load(data_file)})
     '''
+    # client = MongoClient("mongodb://zilinwang:Mongo0987654321@129.59.107.60:27017/fire_department")
     client = MongoClient("mongodb://127.0.0.1:27017/fire_department")
     db = client["fire_department"]["simple__incident"]
     items = db.find()
@@ -140,6 +143,9 @@ def getIncidentData(start, end):
     count = 0
     for item in items:
         time = item['alarmDateTime']
+        if not isinstance(time, datetime.date):
+            time = datetime.datetime.strptime(time, '%Y,%m,%d,%H,%M,%S,%f')
+        
         if (item['incidentNumber']=="sample"):
             break
         if (start <= time <= end):
@@ -204,6 +210,7 @@ def getVehiclesData(start, end):
     global depot_cache
     print "-> getVehiclesData()\n"
 
+    # client = MongoClient("mongodb://zilinwang:Mongo0987654321@129.59.107.60:27017/fire_department")
     client = MongoClient("mongodb://127.0.0.1:27017/fire_department")
     db = client["fire_department"]["response_vehicle"]
     items = db.find()
@@ -398,7 +405,7 @@ def getBestDepotPos():
         socketio.emit("bestAreaInCharge", arrOfDict)
 
 
-
+'''
 # 
 # t-hub dashboard
 # 
@@ -517,3 +524,5 @@ def socketio_get_trips_for_routeid_direction(message):
     trip_headsign = message.get('trip_headsign')
     data = route_segment.get_trips(route_id, trip_headsign)
     socketio.emit('trips_for_routeid_direction', {'tripids': data[0], 'departuretimes': data[1]})
+'''
+
