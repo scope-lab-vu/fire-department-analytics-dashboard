@@ -35,7 +35,7 @@ function initMap() {
     var topControlDiv = document.createElement('div');
     var topControl = new TopRightControl(topControlDiv, map, "Add a depot");
     topControlDiv.index = 2;
-    topControlDiv.id = "addDepot"
+    topControlDiv.id = "addDepot";
     topControlDiv.style.display = "none";
     map.controls[google.maps.ControlPosition.RIGHT_TOP].push(topControlDiv);
 
@@ -44,7 +44,7 @@ function initMap() {
     var topControlDiv2 = document.createElement('div');
     var topControl2 = new TopRightControl(topControlDiv2, map, "Clear my depots");
     topControlDiv2.index = 1;
-    topControlDiv2.id = "clearDepot"
+    topControlDiv2.id = "clearDepot";
     topControlDiv2.style.display = "none";
     map.controls[google.maps.ControlPosition.RIGHT_TOP].push(topControlDiv2);
 
@@ -88,7 +88,7 @@ function createSlider() {
         // Steps of one hour
         step: 60 * 60 * 1000,
         // Two more timestamps indicate the handle starting positions.
-        start: [timestamp(start), timestamp(end)],
+        start: [timestamp(start), timestamp(end)]
     });
     
     // change connect color between two handles according to date interval length
@@ -336,7 +336,7 @@ function CenterControl(controlDiv, map) {
 function TopRightControl(controlDiv, map, msg) {
     // Set CSS for the control border.
     var controlUI = document.createElement('div');
-    controlUI.style.backgroundColor = 'lightcyan';
+    controlUI.style.backgroundColor = '#A1A5E7';
     controlUI.style.border = '1px solid #BEBEBE';
     controlUI.style.borderRadius = '1px';
     controlUI.style.boxShadow = '0 3px 3px rgba(0,0,0,.3)';
@@ -978,7 +978,7 @@ function setPie(arr) {
             textStyle: {color: 'white', fontSize: 12}
         },
         titleTextStyle: {
-            color: 'white', 
+            color: 'white'
         }
     };
     var chart = new google.visualization.PieChart(document.getElementById('pieForType'));
@@ -1016,19 +1016,13 @@ function showMenu() {
 function enlargeMap() {
     var mapView = document.getElementById("mapView");
     var mapDiv = document.getElementById("map");
-    var a = document.getElementById("mySideMenu");
     
     if (mapView.style.height === "700px") {
         mapView.style.height = "500px";
         mapDiv.style.height = "410px";
-        a.style.height = "410px";
     } else {
         mapView.style.height = "700px";
         mapDiv.style.height = "610px";
-        a.style.height = "610px";
-    }
-    if (document.getElementById("checkFuture").checked) {
-        a.style.height = "130px";
     }
     google.maps.event.trigger(mapDiv, 'resize');
     map.setCenter(centerNash);
@@ -1038,58 +1032,80 @@ function enlargeMap() {
  * 1) change interface color
  * 2) change double slider to one
  * 3) create a single input date box*/
-function changeMode() {
+function changeMode(i) {
     prepMarkers(); // clear map first
     var a = document.getElementsByClassName("column");
-    var b = document.getElementById("futureLine");
     var c = document.getElementById("sliderDouble");
     var d = document.getElementById("initialMsgOnMap");
     var w = document.getElementById("mySideMenu");
+    var wBtn = document.getElementById("showmenu");
     var o = document.getElementsByClassName("icon-bar");
+
     var ad = document.getElementById("addDepot");
     var cd = document.getElementById("clearDepot");
     var cr = document.getElementById("clockRetrain");
 
-    d.innerHTML = "Please Pick A Date In the FUTURE to see Predictions";
-    d = document.getElementById("initialMsgOnMap1");
-    d.innerHTML = "";
+    var mode = document.getElementsByClassName("buttonChangeMode");
+    var playground = document.getElementsByClassName("playground");
+    var mapView = document.getElementById("mapView");
+    var mapDiv = document.getElementById("map");
 
     if(w.style.width !== "0px") {
         w.style.width = "0px";
     }
-    if (document.getElementById("checkFuture").checked) { // future mode is checked
-        // map.setOptions({styles: newStyles});
-        for (var i=0; i<3; i++) {
-            a[i].style.borderColor = "#82D6FF";
-        }
+
+    if (i === 1) { // predicion mode
+        playground[0].style.width = "100%";
+        playground[0].style.left = "-2%";
+        playground[0].style.top = "30px";
+        mapView.style.width = "inherit";
+        mapView.style.height = "750px";
+        mapDiv.style.height = "660px";
+        google.maps.event.trigger(mapDiv, 'resize');
+        map.setCenter(centerNash);
+        wBtn.style.display = "none";
+        document.body.style.overflowY = "hidden";
+
+        mode[0].style.backgroundColor = "white";
+        mode[1].style.backgroundColor = "#3e8e41";
+        mode[2].style.backgroundColor = "white";
+
+        d.innerHTML = "Please Pick A Date In the FUTURE to see Predictions";
+        d = document.getElementById("initialMsgOnMap1");
+        d.innerHTML = "";
+
         document.body.style.backgroundColor = "rgba(0,0,0,0.88)";
         changeColor("#82D6FF");
-        b.style.color = "black";
         c.style.display = "none";
+        document.getElementById("spaceExplore").style.display = "none";
         if (document.getElementById("sliderNew").innerHTML === "") {
             createSingleSlider();
         } else {
             document.getElementById("sliderNew").style.display = "block";
             document.getElementById("inputSingle").style.display = "block";
         }
-
-        for (var i=0; i<3; i++) {
-            if (i === 0) {
-                document.getElementsByClassName("loadingMsg")[i].innerHTML = "";
-            } else {
-                document.getElementsByClassName("loadingMsg")[i].innerHTML = 
-                    "Please toggle back to Historical Mode to see charts";
-                document.getElementsByClassName("loading")[i].style.color = "darkgrey";
-            }
-        }
         w.style.height = "130px";
         o[0].style.display = "none";
-        ad.style.display = "block";
-        cd.style.display = "block";
+        ad.style.display = "none";
+        cd.style.display = "none";
         cr.style.display = "block";
-
-    } else { // historic mode is checked
+    
+    } else if (i === 0){ // historic mode
         // map.setOptions({styles: oldStyles});
+        playground[0].style.width = "90%";
+        playground[0].style.left = "5%";
+        playground[0].style.top = "80px";
+        mapView.style.width = "1200px";
+        mapView.style.height = "500px";
+        mapDiv.style.height = "410px";
+        google.maps.event.trigger(mapDiv, 'resize');
+        map.setCenter(centerNash);
+        wBtn.style.display = "block";
+
+        mode[0].style.backgroundColor = "#3e8e41";
+        mode[1].style.backgroundColor = "white";
+        mode[2].style.backgroundColor = "white";
+
         w.style.height = "410px";
         ad.style.display = "none";
         cd.style.display = "none";
@@ -1098,16 +1114,54 @@ function changeMode() {
             a[j].style.borderColor = "#4f4f4f";
         }
         document.body.style.backgroundColor = "rgba(0,0,0,0.85)";
+        document.body.style.overflowY = "scroll";
         changeColor("lime");
-        b.style.color = "grey";
         c.style.display = "block";
         document.getElementById("sliderNew").style.display = "none";
         document.getElementById("inputSingle").style.display = "none";
+        document.getElementById("spaceExplore").style.display = "none";
         o[0].style.display = "block";
 
-    }
+    } else { // explore mode
+        playground[0].style.width = "100%";
+        playground[0].style.left = "-2%";
+        playground[0].style.top = "30px";
+        mapView.style.width = "inherit";
+        mapView.style.height = "750px";
+        mapDiv.style.height = "660px";
+        google.maps.event.trigger(mapDiv, 'resize');
+        map.setCenter(centerNash);
+        wBtn.style.display = "none";
+        c.style.display = "none";
 
+        mode[0].style.backgroundColor = "white";
+        mode[1].style.backgroundColor = "white";
+        mode[2].style.backgroundColor = "#3e8e41";
 
+        document.getElementById("inputSingle").style.display = "none";
+        document.body.style.overflowY = "hidden";
+        changeColor("#A1A5E7");
+
+        ad.style.display = "block";
+        cd.style.display = "block";
+        cr.style.display = "block";
+
+        var div = document.getElementById("spaceExplore");
+        div.style.display = "block";
+        div.innerHTML = "Best depot location has been updated: ";
+        var butto = document.createElement("button");
+            butto.className = "button";
+            butto.id = "buttonOptimize";
+            butto.style.backgroundColor = "#A1A5E7";
+            butto.style.marginLeft = "5px";
+            butto.style.fontFamily = "Zilla Slab";
+            butto.style.fontSize = "14px";
+            butto.innerHTML = "Optimize!";
+            div.appendChild(butto);
+            butto.addEventListener ("click", function() {
+                socket.emit('getOptimization');
+            });
+        }
 }
 
 /* Change interface color*/
@@ -1279,41 +1333,29 @@ function createSubmitBtn(div) {
         }
         socket.emit('predictNOW', {ans: answer});
     });
-
-    var butto = document.createElement("button");
-    butto.className = "button";
-    butto.style.backgroundColor = "#A1A5E7";
-    butto.style.marginLeft = "25px";
-    butto.style.fontFamily = "Zilla Slab";
-    butto.style.fontSize = "14px";
-    butto.innerHTML = "Optimize!";
-    div.appendChild(butto);
-    butto.addEventListener ("click", function() {
-        socket.emit('getOptimization');
-    });
 }
 
 // get predictions_data from python file
 socket.on('predictions_data', function(msg) {
-    console.log("--> predictions_data length is: " + msg.length)
+    console.log("--> predictions_data length is: " + msg.length);
     setPredictions(msg);
 });
 
 // predictions is empty []
 socket.on('predictions_none', function(msg) {
-    console.log("predictions_none")
+    console.log("predictions_none");
     console.log(msg);
 });
 
 // get predictions_data from python file
 socket.on('predictions_data_crime', function(msg) {
-    console.log("--> predictions_data CRIME length is: " + msg.length)
+    console.log("--> predictions_data CRIME length is: " + msg.length);
     setPrediction(msg);
 
 });
 
 socket.on('bestAreaInCharge', function(msg) {
-    console.log("--> best Area In Charge has length of: " + msg.length)
+    console.log("--> best Area In Charge has length of: " + msg.length);
     setBestDepotsArea(msg);
 }); 
 
@@ -1340,11 +1382,6 @@ function setPredictions(arr) {
         heatmapPredict.setMap(null);
     }
     heatmapPredict = heatmapPredictNew;
-
-    var w = document.getElementById("mySideMenu");
-    if(w.style.width !== "300px") {
-        w.style.width = "300px";
-    }
 }
 
 function setPrediction(arr) {
@@ -1364,11 +1401,6 @@ function setPrediction(arr) {
         heatmapPredict.setMap(null);
     }
     heatmapPredict = heatmapPredictNew;
-
-    var w = document.getElementById("mySideMenu");
-    if(w.style.width !== "300px") {
-        w.style.width = "300px";
-    }
 }
 
 // set best assignment depots with different colors
