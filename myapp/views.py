@@ -113,7 +113,7 @@ def getIncidentHeat(start, end):
         time = item['alarmDateTime']
         if (item['incidentNumber']=="sample"):
             break
-        if (start <= time <= end):
+        if (isinstance(time, datetime.date) and start <= time <= end):
             count+=1
             print count
             dictIn = {}
