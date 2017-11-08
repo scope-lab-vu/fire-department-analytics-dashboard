@@ -15,9 +15,9 @@
 <script src="./static/nouislider/nouislider.js"></script>
 <div id="logo">
     <img src="https://admissions.vanderbilt.edu/insidedores/manage/wp-content/uploads/vanderbilt-logo-2008.gif"
-             width="45" height="45" style="position:absolute; left: 5px; " />
+         width="45" height="45" style="position:absolute; left: 5px; " />
     vData
-    
+
 </div>
 
 <!-- Menu sign - wiz animation -->
@@ -29,9 +29,6 @@
 
 <div class="socialMediaBox" style="right:0">
     <a href="https://github.com/visor-vu/analytics-dashboard" target="_blank"><i class="fa fa-github"></i></a>
-    <i class="fa fa-facebook"></i>
-    <i class="fa fa-google"></i>
-    <i class="fa fa-linkedin"></i>
 </div>
 
 <!-- Ask for user input -->
@@ -45,11 +42,10 @@
             <b>127.0.0/simple-incident</b></li>
         <li><i class="fa-li fa fa-bar-chart"></i>Chart Options:
             <b>
-                <label class="switch">
-                    <input type="checkbox" id="checkFuture" onclick="changeMode()">
-                    <span class="slider"></span>
-                </label>
-                <span style="color: grey" id="futureLine">Future Predictions</span><br>
+                <button class="buttonChangeMode" onclick="changeMode(0)" style="background-color: #3e8e41">
+                    📍History</button>
+                <button class="buttonChangeMode" onclick="changeMode(1)">🔭Prediction</button>
+                <button class="buttonChangeMode" onclick="changeMode(2)">🔮Explore</button>
             </b>
         </li>
         <li><i class="fa-li fa fa-calendar"></i>Year:
@@ -70,17 +66,14 @@
     <b>visor-vu/2017/analytics dashboard</b><br>
 </div>
 
-
 <!-- where maps, graphs, charts live -->
 <div class="playground">
-    Overview
-    <hr>
-<!-- map column -->
+    <!-- map column -->
     <div class="column" id="mapView" style="width: 1200px">
         <div class="title">
             Nashville Map
-            <i class="fa fa-arrows-alt" id="enlargeMap" onclick = "enlargeMap()" 
-            style="font-size: 16px; float: right; padding: 1px; color: #4eff35; cursor: pointer"></i>
+            <i class="fa fa-arrows-alt" id="enlargeMap" onclick = "enlargeMap()"
+               style="font-size: 16px; float: right; padding: 1px; color: #4eff35; cursor: pointer"></i>
         </div>
 
         <div id="initialHint">
@@ -120,15 +113,15 @@
         <div id="map" style="color: black"></div>
         <div id="floating-panel">
             <button class="button" style="background-color: lightgoldenrodyellow" id='markers' onclick="getMarkersOnMap()">
-            Show Incidents</button>
+                Show Incidents</button>
             <button class="button" id='heat' onclick="setHeatMap()">
-            Generate heatmap</button>
+                Generate heatmap</button>
             <button class="button" id='heatHide' onclick="toggleHeatmap();">
-            Hide heatmap</button>
+                Hide heatmap</button>
             <button class="button" id='gradient' onclick="changeGradient()">
-            Change gradient</button>
+                Change gradient</button>
             <button class="button" style="background-color: lightgray" id="vehide"onclick="hideVehicles()">
-            Hide Responding Vehicles</button>
+                Hide Responding Vehicles</button>
         </div>
 
         <div style="width: inherit; position:absolute; top: 20%; text-align: center; z-index: 2">
@@ -137,13 +130,14 @@
 
         <div id="sliderGround">
             <div id="sliderNew" style="width: inherit"></div>
+            <div class="input" id="spaceExplore" style="margin-top: 5px; font-family: 'Zilla Slab'"></div>
             <div class="input" id="inputSingle" style="margin-top: 5px; font-family: 'Zilla Slab'"></div>
             <div id = "clockRetrain" style="position: absolute; margin-top: -28px; font-family: 'Zilla Slab'; display: none;
                 width: 120px; font-size: 10px">
-                Model Updated at: 
+                Model Updated at:
                 <div id = "timeNow"></div>
                 <button class="button" style="background-color: lightblue" id="manualRetrainBtn" onclick="setInnerHTML('timeNow', 'time')">
-                Click to refresh model</button>
+                    Click to refresh model</button>
             </div>
             <div id = "sliderDouble">
                 <div id="slider"></div>
@@ -164,7 +158,7 @@
         </div>
     </div>
 
-<!-- bar chart column--> 
+    <!-- bar chart column-->
     <div class="column" id="barView" style="width: 42%; height: 350px">
         <div class="title">Bar Chart - Level of Severity:</div>
         <div class="loading">
@@ -176,7 +170,7 @@
         </div>
     </div>
 
-<!-- pie chart column--> 
+    <!-- pie chart column-->
     <div class="column" id="pieView" style="width: 50%; height: 350px">
         <div class="title">Pie Chart - %Types of Incidents:</div>
         <div class="loading">
@@ -184,23 +178,9 @@
             <span class="loadingMsg">Waiting For User Input</span>
         </div>
         <div class="card">
-            <div id="pieForType" style="width: 610px; height: 360px; margin:0; padding: 0"></div>        
+            <div id="pieForType" style="width: 610px; height: 360px; margin:0; padding: 0"></div>
         </div>
     </div>
-
-    <!-- <div class="column" id="summaryView" style = "width: inherit; height: 300px">
-        <div class="title">Summary:</div>
-        <div class="loading">
-            <i class="fa fa-spinner fa-pulse"></i>
-            <span class="loadingMsg">Waiting For User Input</span>
-        </div>
-
-        <div class="card" style="font-family: 'Georgia'">
-            <div class="example-val" id="event"></div>
-            <p id="total"></p>
-            <div id="chooseType" style="display: block"></div>
-        </div>
-    </div> -->
 </div>
 
 <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.6/socket.io.min.js"></script>

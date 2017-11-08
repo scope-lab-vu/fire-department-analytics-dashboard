@@ -10,5 +10,5 @@ protobuf_to_dict==0.1.0
 mongoengine==0.10.6
 pykalman==0.9.5
 numpydoc==0.5
-scipy==0.16.1
 scikit-learn==0.16.1
+xlrd==1.1.0

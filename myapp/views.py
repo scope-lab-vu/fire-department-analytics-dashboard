@@ -10,6 +10,10 @@ import requests
 import pytz
 import csv
 import xlrd
+from myconfig import MONGODB_HOST, MONGODB_PORT
+
+url_mongo_fire_depart = "%s:%d/fire_department" % (MONGODB_HOST, MONGODB_PORT)
+print "--> url_mongo_fire_depart:", url_mongo_fire_depart
 
 @app.route('/')
 @app.route('/index')
@@ -33,11 +37,12 @@ def socketio_connet():
     print "data_segments", len(data_segments)
     socketio.emit('draw_all_route_segments', {'data': data_segments})
     # end: t-hub dashboard
+    '''
     
     print "-> socketio_connect()\n"
     socketio.emit("success")
 
-'''
+
 @socketio.on('get_date')
 def getDate (msg):
     # findMinMax()
@@ -115,7 +120,9 @@ min time is;;;;;;;;;;;;;;;;;
 # retrieve a simplified list of information for just heat map layer
 def getIncidentHeat(start, end):
     print "-> getIncident Heat()\n"
-    client = MongoClient("mongodb://127.0.0.1:27017/fire_department")
+    # client = MongoClient("mongodb://zilinwang:Mongo0987654321@129.59.107.60:27017/fire_department")
+    # client = MongoClient("mongodb://127.0.0.1:27017/fire_department")
+    client = MongoClient(url_mongo_fire_depart)
     db = client["fire_department"]["simple__incident"]
     items = db.find()
     arr = []
@@ -125,7 +132,7 @@ def getIncidentHeat(start, end):
         time = item['alarmDateTime']
         if (item['incidentNumber']=="sample"):
             break
-        if (start <= time <= end):
+        if (isinstance(time, datetime.date) and start <= time <= end):
             count+=1
             print count
             dictIn = {}
@@ -146,7 +153,10 @@ def getIncidentData(start, end):
         print data_file
         socketio.emit("accident_data", {'data':json.load(data_file)})
     '''
-    client = MongoClient("mongodb://127.0.0.1:27017/fire_department")
+    # client = MongoClient("mongodb://zilinwang:Mongo0987654321@129.59.107.60:27017/fire_department")
+
+    # client = MongoClient("mongodb://127.0.0.1:27017/fire_department")
+    client = MongoClient(url_mongo_fire_depart)
     db = client["fire_department"]["simple__incident"]
     items = db.find()
     types = []
@@ -154,6 +164,9 @@ def getIncidentData(start, end):
     count = 0
     for item in items:
         time = item['alarmDateTime']
+        if not isinstance(time, datetime.date):
+            time = datetime.datetime.strptime(time, '%Y,%m,%d,%H,%M,%S,%f')
+        
         if (item['incidentNumber']=="sample"):
             break
         if (start <= time <= end):
@@ -218,7 +231,9 @@ def getVehiclesData(start, end):
     global depot_cache
     print "-> getVehiclesData()\n"
 
-    client = MongoClient("mongodb://127.0.0.1:27017/fire_department")
+    # client = MongoClient("mongodb://zilinwang:Mongo0987654321@129.59.107.60:27017/fire_department")
+    # client = MongoClient("mongodb://127.0.0.1:27017/fire_department")
+    client = MongoClient(url_mongo_fire_depart)
     db = client["fire_department"]["response_vehicle"]
     items = db.find()
     count = 0
