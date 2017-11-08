@@ -10,6 +10,10 @@ import requests
 import pytz
 import csv
 import xlrd
+from myconfig import MONGODB_HOST, MONGODB_PORT
+
+url_mongo_fire_depart = "%s:%d/fire_department" % (MONGODB_HOST, MONGODB_PORT)
+print "--> url_mongo_fire_depart:", url_mongo_fire_depart
 
 @app.route('/')
 @app.route('/index')
@@ -103,7 +107,8 @@ min time is;;;;;;;;;;;;;;;;;
 def getIncidentHeat(start, end):
     print "-> getIncident Heat()\n"
     # client = MongoClient("mongodb://zilinwang:Mongo0987654321@129.59.107.60:27017/fire_department")
-    client = MongoClient("mongodb://127.0.0.1:27017/fire_department")
+    # client = MongoClient("mongodb://127.0.0.1:27017/fire_department")
+    client = MongoClient(url_mongo_fire_depart)
     db = client["fire_department"]["simple__incident"]
     items = db.find()
     arr = []
@@ -135,7 +140,9 @@ def getIncidentData(start, end):
         socketio.emit("accident_data", {'data':json.load(data_file)})
     '''
     # client = MongoClient("mongodb://zilinwang:Mongo0987654321@129.59.107.60:27017/fire_department")
-    client = MongoClient("mongodb://127.0.0.1:27017/fire_department")
+
+    # client = MongoClient("mongodb://127.0.0.1:27017/fire_department")
+    client = MongoClient(url_mongo_fire_depart)
     db = client["fire_department"]["simple__incident"]
     items = db.find()
     types = []
@@ -211,7 +218,8 @@ def getVehiclesData(start, end):
     print "-> getVehiclesData()\n"
 
     # client = MongoClient("mongodb://zilinwang:Mongo0987654321@129.59.107.60:27017/fire_department")
-    client = MongoClient("mongodb://127.0.0.1:27017/fire_department")
+    # client = MongoClient("mongodb://127.0.0.1:27017/fire_department")
+    client = MongoClient(url_mongo_fire_depart)
     db = client["fire_department"]["response_vehicle"]
     items = db.find()
     count = 0
