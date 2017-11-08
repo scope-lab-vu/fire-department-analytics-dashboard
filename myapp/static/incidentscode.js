@@ -201,6 +201,17 @@ var markers = [],  // an array of all markers objects
 var sumOfIncidents = [];
 
 
+function logIncident(){
+    var gridNum = document.getElementById('date1').value
+    if (gridNum===""){
+        alert("Date must be filled!!!");
+    } else {
+        socket.emit('log_incident', {
+            'grid' : gridNum
+        });
+    }
+}
+
 /* On submit button: get data from left menu bar, 
  * calls to formulate data correctly 
  * socket emit start and end date to retrieve data*/

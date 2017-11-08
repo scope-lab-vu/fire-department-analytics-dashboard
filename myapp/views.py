@@ -67,6 +67,19 @@ def getPredict(msg):
         getPredictions("fire")
 
 
+#Added by Ayan : Temporary. Show incident when logged.
+@socketio.on('log_incident')
+def logIncident(msg):
+    gridNum = msg['gridNum']
+    socketio.emit("emergency",gridNum)
+
+#Added by Ayan : Show Last Known positions of vehicles.
+@socketio.on('get_responders')
+def getResponderData():
+    #get responder data in format : responder Num, gridNum, lat long
+    responderData = []
+    socketio.emit("responderData",responderData)
+
 @socketio.on('getOptimization')
 def getOptimization():
     getBestDepotPos()
