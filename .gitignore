@@ -96,3 +96,9 @@ nohup.out
 
 #predictIncident File: 
 predictIncidents.py
+
+#python compile
+*.pyc
+
+#workspace
+.idea/workspace.xml

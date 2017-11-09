@@ -48,6 +48,13 @@ function initMap() {
     topControlDiv2.style.display = "none";
     map.controls[google.maps.ControlPosition.RIGHT_TOP].push(topControlDiv2);
 
+    // Create the DIV to hold the control and call the TopRightControl()
+    // constructor passing in this DIV.
+    var topControlDiv3 = document.createElement('div');
+    var topControl3 = new TopRightControl(topControlDiv3, map, "Show responders");
+    topControlDiv3.index = 2;
+    map.controls[google.maps.ControlPosition.LEFT_TOP].push(topControlDiv3);
+
     var today = new Date();
     document.getElementById('timeNow').innerHTML=today.toLocaleDateString() + "  " + today.toLocaleTimeString();
     createSlider();
@@ -200,7 +207,72 @@ var markers = [],  // an array of all markers objects
     heatDataCrime = [];
 var sumOfIncidents = [];
 
+function getResponders(){
+    alert("Trying to get responder data");
+    socket.emit('get_responders');
+}
 
+function logIncident(){
+    var gridNum = document.getElementById('gridNum').value;
+    if (gridNum===""){
+        alert("Date must be filled!!!");
+    } else {
+        socket.emit('log_incident', {
+            'grid' : gridNum
+        });
+        console.log("gridNum"); 
+        console.log(gridNum);    
+    }
+}
+
+socket.on('emergency', function(msg) {
+    console.log("--> button is clicked: grid number: " + msg[0]);
+    var contentString = "Emergency happened at:" + msg[0];
+    var image = {
+        url: 'https://financialtribune.com/sites/default/files/field/image/17january/12_ambulances.png',
+        scaledSize: new google.maps.Size(26, 26)
+    };
+    var latLng = new google.maps.LatLng(msg[1][1], msg[1][0]),
+        marker1 = new google.maps.Marker(createMarkerObj(latLng,map,image,contentString));
+    marker1.setAnimation(google.maps.Animation.BOUNCE);
+    marker1.addListener('click', function() {
+        if (marker1.getAnimation() !== null) {
+            marker1.setAnimation(null);
+        }
+    });
+
+    var imageNorm = {
+        url: 'https://icon-icons.com/icons2/803/PNG/512/Ambulance_Emergency_icon-icons.com_65908.png',
+        scaledSize: new google.maps.Size(25, 25)
+    };
+    var imageBlack = {
+        url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Ambulance_font_awesome.svg/2000px-Ambulance_font_awesome.svg.png',
+        scaledSize: new google.maps.Size(25, 25)
+    };
+    for (var i=0; i<msg[2].length; i++) {
+        var latLng = new google.maps.LatLng(msg[2][i][4][1], msg[2][i][4][0]);
+        if (msg[2][i][1] == msg[3]) {
+            var marker = new google.maps.Marker(createMarkerObj(latLng,map,imageBlack,contentString));  
+        } else {
+            var marker = new google.maps.Marker(createMarkerObj(latLng,map,imageNorm,contentString)); 
+        }
+
+    }
+
+});
+
+socket.on('responderData', function(msg) {
+    console.log(msg[0]);
+    var contentString = "i am a responder";
+    var image = {
+        url: 'http://policyadvantage.com/wp-content/uploads/2016/05/ER-5.png',
+        scaledSize: new google.maps.Size(25, 25)
+    };
+    for (var i=0; i<msg.length; i++) {
+        var latLng = new google.maps.LatLng(msg[i][4][1], msg[i][4][0]),
+            marker = new google.maps.Marker(createMarkerObj(latLng,map,image,contentString));
+    }
+});
 /* On submit button: get data from left menu bar, 
  * calls to formulate data correctly 
  * socket emit start and end date to retrieve data*/
@@ -362,9 +434,15 @@ function TopRightControl(controlDiv, map, msg) {
             'click', addDepot
         );
         controlUI.style.marginRight = "120px";
-    } else {
+    } else if (msg === "Clear my depots") {
         controlUI.addEventListener(
             'click', clearDepot
+        );
+    } else {
+        controlUI.style.marginLeft = "35px";
+        controlUI.style.backgroundColor = 'white';
+        controlUI.addEventListener(
+            'click', getResponders
         );
     }
 

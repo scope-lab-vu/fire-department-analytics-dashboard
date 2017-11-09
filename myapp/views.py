@@ -24,6 +24,10 @@ def index():
 def transitPlot():
     return render_template('transitPlot.html')
 
+@app.route('/log')
+def logIncident():
+    return render_template('logIncident.html')
+
 @socketio.on('connect')
 def socketio_connet():
 
@@ -41,6 +45,7 @@ def socketio_connet():
     
     print "-> socketio_connect()\n"
     socketio.emit("success")
+
 
 @socketio.on('get_date')
 def getDate (msg):
@@ -70,6 +75,61 @@ def getPredict(msg):
         print "-----> get predict for FIRE"
         getPredictions("fire")
 
+
+#Added by Ayan : Temporary. Show incident when logged.
+@socketio.on('log_incident')
+def logIncident(msg):
+    with open(os.getcwd()+"/myapp/latLongGrids.pickle",'rb') as f:
+        grids = pickle.load(f)
+    gridNum = msg['grid']
+    latLong = grids[int(gridNum)]
+    print gridNum
+    print latLong
+    responders = __getResponderData__()
+    responderToSend = __chooseResponderToSend__()
+    socketio.emit("emergency",[gridNum,latLong,responders,responderToSend])
+
+
+def __chooseResponderToSend__():
+    #AYAN: REMOVE HARDOCED. GET FROM POLICY
+    return 348
+
+
+def __getResponderData__():
+    with open(os.getcwd()+"/myapp/latLongGrids.pickle",'rb') as f:
+        grids = pickle.load(f)
+    #get responder data in format : responder Num, gridNum, lat long
+    responderData = []
+    #read responder data from current state and update
+    with open(os.getcwd()+"/myapp/sampleState.txt",'r') as f:
+        contents = f.readlines()
+    currState = contents[0]
+    #recover responders from the state
+    stateComponents = currState.split('|')
+    event = stateComponents[0]
+    responders = []
+    counterResp = 0
+    for resp in stateComponents[1:]:
+        if resp != "":
+            respComponents = resp.split(',')
+            tempDepot = int(respComponents[0].replace(" ", ""))
+            tempPos = int(respComponents[1].replace(" ", ""))
+            # IF A RESPONDER IS SITTING AT DEPOT, ITS DESTINATION IS DEPOT
+            # BY USING THIS, WE CAN IDENTIFY A RESPONDER THAT IS FREE BUT NOT ASSIGNED
+            tempDest = None if respComponents[2].replace(" ", "") == '0' else int(respComponents[2])
+            tempStatus = "Free" if respComponents[3].replace(" ", "") == '1' else "Service"
+            #get responder location in lat long
+            responderPosLatLong = grids[tempPos]
+            responders.append([tempDepot,tempPos,tempDest,tempStatus,responderPosLatLong])
+
+    return responders
+
+#Added by Ayan : Show Last Known positions of vehicles.
+@socketio.on('get_responders')
+def getResponderData():
+    responders = __getResponderData__()
+
+    socketio.emit("responderData",responders)
 
 @socketio.on('getOptimization')
 def getOptimization():
@@ -533,4 +593,3 @@ def socketio_get_trips_for_routeid_direction(message):
     data = route_segment.get_trips(route_id, trip_headsign)
     socketio.emit('trips_for_routeid_direction', {'tripids': data[0], 'departuretimes': data[1]})
 '''
-
