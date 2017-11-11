@@ -385,7 +385,7 @@ hr {
 
 .buttonChangeMode:hover {
     text-decoration: underline;
-    background-color: #3e8e41;
+    background-color: #83c985;
 }
 
 
@@ -489,6 +489,7 @@ hr {
     color: #666666; 
     background-color: whitesmoke; 
     margin: 10px; 
+    width: 30px;
     border: 1px solid lightgray;
 }
 

@@ -48,6 +48,15 @@ function initMap() {
     topControlDiv2.style.display = "none";
     map.controls[google.maps.ControlPosition.RIGHT_TOP].push(topControlDiv2);
 
+    // Create the DIV to hold the control and call the TopRightControl()
+    // constructor passing in this DIV.
+    var topControlDiv4 = document.createElement('div');
+    var topControl4 = new TopRightControl(topControlDiv4, map, "Show/hide real depots");
+    topControlDiv4.index = 1;
+    topControlDiv4.id = "realDepot";
+    topControlDiv4.style.display = "none";
+    map.controls[google.maps.ControlPosition.LEFT_TOP].push(topControlDiv4);
+
     var today = new Date();
     document.getElementById('timeNow').innerHTML=today.toLocaleDateString() + "  " + today.toLocaleTimeString();
     createSlider();
@@ -201,13 +210,20 @@ var markers = [],  // an array of all markers objects
 var sumOfIncidents = [];
 
 
-/* On submit button: get data from left menu bar, 
+/* ON SUBMIT button: 
+ * get data from left menu bar, 
  * calls to formulate data correctly 
  * socket emit start and end date to retrieve data*/
 var types = [];  // types of markers already on map
 var visited = false;
 function getData() {
     prepMarkers();
+    // remove real depots from the map, but still keeps them in the array
+    for (var c = 0; c < markersRealDepots.length; c++) {
+        markersRealDepots[c].setMap(null);
+    }
+    markersRealDepots = [];
+
     types.length = 0;
     types = [];
     document.getElementById("loader").style.display = "block";
@@ -261,6 +277,16 @@ function prepMarkers() {
         vehiclesArr[k].setMap(null);
     }
 
+    // remove BestAssign depots from the map, but still keeps them in the array
+    for (var o = 0; o < markerBestAssign.length; o++) {
+        markerBestAssign[o].setMap(null);
+    }
+
+    // remove BestAssign depots in charge of rectangles from the map, but still keeps them in the array
+    for (var j = 0; j < rectBestAssign.length; j++) {
+        rectBestAssign[j].setMap(null);
+    }
+
     if (heatmap) {
         heatmap.setMap(null);
     }
@@ -288,6 +314,9 @@ function prepMarkers() {
     markersArr.length = 0;
     vehiclesArr = [];
     vehiclesArr.length = 0;
+
+    markerBestAssign = [];
+    rectBestAssign = [];
 
     sumOfIncidents.length=0;
     sumOfIncidents = [0,0,0,0,0,0,0];  // sum of incidents happened at each level of severity
@@ -341,8 +370,8 @@ function TopRightControl(controlDiv, map, msg) {
     controlUI.style.borderRadius = '1px';
     controlUI.style.boxShadow = '0 3px 3px rgba(0,0,0,.3)';
     controlUI.style.cursor = 'pointer';
-    controlUI.style.marginTop = "30px";
     controlUI.style.marginRight = "28px";
+    controlUI.style.marginTop = "38px";
     controlDiv.appendChild(controlUI);
 
     // Set CSS for the control interior.
@@ -360,14 +389,33 @@ function TopRightControl(controlDiv, map, msg) {
     if (msg === "Add a depot") {
         controlUI.addEventListener(
             'click', addDepot
-        );
-        controlUI.style.marginRight = "120px";
-    } else {
+        ); 
+    } else if (msg === "Clear my depots") {
         controlUI.addEventListener(
             'click', clearDepot
         );
+    } else if (msg === "Show/hide real depots") {
+        controlUI.addEventListener(
+            'click', toggleRealDepot
+        );
+        controlUI.style.marginLeft = "58px";
     }
 
+
+}
+
+var markersRealDepots = [];
+
+function toggleRealDepot() {
+    if (markersRealDepots[0].getVisible()) {
+        for (var i=0; i<markersRealDepots.length; i++) {
+            markersRealDepots[i].setVisible(false);
+        }
+    } else {
+        for (var k=0; k<markersRealDepots.length; k++) {
+            markersRealDepots[k].setVisible(true);
+        }
+    }
 
 }
 
@@ -578,7 +626,9 @@ socket.on('depots_data', function(msg) {
         var latLng = new google.maps.LatLng((arr_depots[i])[0], (arr_depots[i])[1]),
             marker = new google.maps.Marker(createMarkerObj(latLng,map,imgDepot,content));
         setInfoWindow(marker);
+        markersRealDepots.push(marker);
     }
+
     console.log("depots_data length"+":  "+arr_depots.length);
 });
 
@@ -653,6 +703,8 @@ function setInfoWindow(marker) {
 /* socket after markers are drawn on map: set up pie charts*/
 socket.on('markers-success', function() {
     setButtonDisplay("visible");
+    var o = document.getElementsByClassName("icon-bar");
+    o[0].style.visibility = 'visible';
     console.log("-->All markers success");
     console.log("--->types[]: ");
     console.log(types);
@@ -679,7 +731,7 @@ socket.on('markers-success', function() {
 
 /* heat data of incidents successfully pushed to heatdataAll*/
 socket.on('heat-success', function() {
-    document.getElementById("heat").style.visibility = 'visible';
+    // document.getElementById("heat").style.visibility = 'visible';
     document.getElementById("gradient").style.visibility = 'visible';
     console.log("-->All heat pushed success");
     console.log("heatDataAll:   "+heatDataAll.length);
@@ -862,6 +914,9 @@ function hideVehicles() {
 
 /* get heat data of incidents from socket*/
 socket.on('latlngarrofobj', function(msg) {
+    var o = document.getElementsByClassName("icon-bar");
+    o[0].style.visibility = 'hidden';
+
     for (var i=0; i<msg.length; i++) {
         var latLng = new google.maps.LatLng((msg[i]).lat, (msg[i]).lng);
         heatDataAll.push(latLng);
@@ -995,7 +1050,7 @@ function barToX(x) {
     x.classList.toggle("change");
     var w = document.getElementById("mySideNav");
     if(w.style.width === "0px" || w.style.width ==="") {
-        w.style.width = "300px";
+        w.style.width = "350px";
     } else {
         w.style.width = "0px";
     }
@@ -1016,13 +1071,16 @@ function showMenu() {
 function enlargeMap() {
     var mapView = document.getElementById("mapView");
     var mapDiv = document.getElementById("map");
+    var w = document.getElementById("mySideMenu");
     
     if (mapView.style.height === "700px") {
         mapView.style.height = "500px";
         mapDiv.style.height = "410px";
+        w.style.height = "410px";
     } else {
         mapView.style.height = "700px";
         mapDiv.style.height = "610px";
+        w.style.height = "610px";
     }
     google.maps.event.trigger(mapDiv, 'resize');
     map.setCenter(centerNash);
@@ -1044,6 +1102,7 @@ function changeMode(i) {
     var ad = document.getElementById("addDepot");
     var cd = document.getElementById("clearDepot");
     var cr = document.getElementById("clockRetrain");
+    var rd = document.getElementById("realDepot");
 
     var mode = document.getElementsByClassName("buttonChangeMode");
     var playground = document.getElementsByClassName("playground");
@@ -1059,15 +1118,15 @@ function changeMode(i) {
         playground[0].style.left = "-2%";
         playground[0].style.top = "30px";
         mapView.style.width = "inherit";
-        mapView.style.height = "750px";
-        mapDiv.style.height = "660px";
+        mapView.style.height = "765px";
+        mapDiv.style.height = "675px";
         google.maps.event.trigger(mapDiv, 'resize');
         map.setCenter(centerNash);
         wBtn.style.display = "none";
         document.body.style.overflowY = "hidden";
 
         mode[0].style.backgroundColor = "white";
-        mode[1].style.backgroundColor = "#3e8e41";
+        mode[1].style.backgroundColor = "#83c985";
         mode[2].style.backgroundColor = "white";
 
         d.innerHTML = "Please Pick A Date In the FUTURE to see Predictions";
@@ -1084,11 +1143,16 @@ function changeMode(i) {
             document.getElementById("sliderNew").style.display = "block";
             document.getElementById("inputSingle").style.display = "block";
         }
-        w.style.height = "130px";
         o[0].style.display = "none";
-        ad.style.display = "none";
-        cd.style.display = "none";
         cr.style.display = "block";
+
+        ad.style.display = "inline";
+        cd.style.display = "inline";
+        rd.style.display = "inline";
+
+        ad.style.visibility = "visible";
+        cd.style.visibility = "visible";
+        rd.style.visibility = "visible";
     
     } else if (i === 0){ // historic mode
         // map.setOptions({styles: oldStyles});
@@ -1102,7 +1166,7 @@ function changeMode(i) {
         map.setCenter(centerNash);
         wBtn.style.display = "block";
 
-        mode[0].style.backgroundColor = "#3e8e41";
+        mode[0].style.backgroundColor = "#83c985";
         mode[1].style.backgroundColor = "white";
         mode[2].style.backgroundColor = "white";
 
@@ -1110,6 +1174,7 @@ function changeMode(i) {
         ad.style.display = "none";
         cd.style.display = "none";
         cr.style.display = "none";
+        rd.style.display = "none";
         for (var j=0; j<3; j++) {
             a[j].style.borderColor = "#4f4f4f";
         }
@@ -1127,24 +1192,30 @@ function changeMode(i) {
         playground[0].style.left = "-2%";
         playground[0].style.top = "30px";
         mapView.style.width = "inherit";
-        mapView.style.height = "750px";
-        mapDiv.style.height = "660px";
+        mapView.style.height = "765px";
+        mapDiv.style.height = "675px";
         google.maps.event.trigger(mapDiv, 'resize');
         map.setCenter(centerNash);
         wBtn.style.display = "none";
         c.style.display = "none";
+        document.body.style.overflowY = "hidden";
 
         mode[0].style.backgroundColor = "white";
         mode[1].style.backgroundColor = "white";
-        mode[2].style.backgroundColor = "#3e8e41";
+        mode[2].style.backgroundColor = "#83c985";
 
         document.getElementById("inputSingle").style.display = "none";
-        document.body.style.overflowY = "hidden";
         changeColor("#A1A5E7");
-
-        ad.style.display = "block";
-        cd.style.display = "block";
+        o[0].style.display = "none";
         cr.style.display = "block";
+
+        ad.style.display = "inline";
+        cd.style.display = "inline";
+        rd.style.display = "inline";
+
+        ad.style.visibility = "visible";
+        cd.style.visibility = "visible";
+        rd.style.visibility = "visible";
 
         var div = document.getElementById("spaceExplore");
         div.style.display = "block";
@@ -1162,6 +1233,7 @@ function changeMode(i) {
                 socket.emit('getOptimization');
             });
         }
+
 }
 
 /* Change interface color*/
@@ -1405,22 +1477,24 @@ function setPrediction(arr) {
 
 // set best assignment depots with different colors
 var gridInChargeOf = {};
+var markerBestAssign = [];
+var rectBestAssign = [];
 function setBestDepotsArea(arrOfDic) {
     // depot image
     var imgDepot = {
-        url: 'https://hydra-media.cursecdn.com/simcity.gamepedia.com/1/13/Fire_station_garage.png?version=e2d13f3d48d4d276f64d0cb8c04adbee',
-        scaledSize: new google.maps.Size(23, 23)
+        url: 'https://statefireschool.delaware.gov/wp-content/themes/dosgic_SFS_theme/img/sfs-icons-training.png',
+        scaledSize: new google.maps.Size(25, 25)
     };
 
-    // transparent dot image
-    var image = {
-        path: google.maps.SymbolPath.CIRCLE,
-        fillColor: 'floralwhite',
-        fillOpacity: .4,
-        scale: 6,
-        strokeColor: 'lightgrey',
-        strokeWeight: .5
-    };
+    // // transparent dot image
+    // var image = {
+    //     path: google.maps.SymbolPath.CIRCLE,
+    //     fillColor: 'floralwhite',
+    //     fillOpacity: .4,
+    //     scale: 6,
+    //     strokeColor: 'lightgrey',
+    //     strokeWeight: .5
+    // };
 
     var dlong = 0.008942854;
     var dlat = 0.0072;
@@ -1447,18 +1521,19 @@ function setBestDepotsArea(arrOfDic) {
                   west: lng-dlong
                 }
             });
+            rectBestAssign.push(rectangle);
 
-            // draw a marker for all centers of in charge of grids with transparent circles
-            var marker = new google.maps.Marker({
-                position: { lat: lat, lng: lng },
-                map: map,
-                icon: image,
-                label: {
-                    color: "black",
-                    fontSize: "5px",
-                    text: (arrOfDic[i]["depotKey"]).toString()
-                }
-            });
+            // // draw a marker for all centers of in charge of grids with transparent circles
+            // var marker = new google.maps.Marker({
+            //     position: { lat: lat, lng: lng },
+            //     map: map,
+            //     icon: image,
+            //     label: {
+            //         color: "black",
+            //         fontSize: "5px",
+            //         text: (arrOfDic[i]["depotKey"]).toString()
+            //     }
+            // });
             gridInChargeOf[arrOfDic[i]["depotKey"]].push(rectangle);
         }
 
@@ -1466,6 +1541,7 @@ function setBestDepotsArea(arrOfDic) {
         var content = (arrOfDic[i]["depotKey"]).toString();
         var latLng = new google.maps.LatLng(arrOfDic[i]["depotLatLng"][1], arrOfDic[i]["depotLatLng"][0]),
             marker = new google.maps.Marker(createMarkerObj(latLng,map,imgDepot,content));
+        markerBestAssign.push(marker);
         setInfoWindow(marker);
 
         // highlight this depot's in charge of rectangles when mouse over

@@ -90,7 +90,7 @@ var imgURLFireDpmt = [
     	'https://cdn2.iconfinder.com/data/icons/medical-flat-icons-part-1/513/30-512.png',
     	'https://cdn3.iconfinder.com/data/icons/flat-icons-2/600/traffic.png',
     	'http://vignette3.wikia.nocookie.net/camphalfbloodroleplay/images/a/a5/Fire.gif/revision/latest?cb=20130614161535',
-    	'http://splashextend.co.uk/images/GreenDot.png'
+    	'http://www.clker.com/cliparts/q/V/y/m/9/w/glossy-green-icon-button-hi.png'
     ];
 
 
