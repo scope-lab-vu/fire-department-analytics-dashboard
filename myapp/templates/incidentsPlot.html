@@ -77,7 +77,7 @@
                 &nbsp;&nbsp;&#x1F538;&nbsp;dates more than 14 days apart will appear golden</span>
         </div>
 
-        <div class="icon-bar">
+<!--         <div class="icon-bar">
             <label class = switch>
                 <input type="checkbox" id="police" style="opacity: 0" onclick="hidePolice()">
                 <div class = "box" >👮</div>
@@ -86,7 +86,7 @@
                 <input type="checkbox" id="fire" style="opacity: 0" onclick="hideFire()">
                 <div class = "box">👨‍🚒</div>
             </label>
-        </div>
+        </div> -->
 
         <div class = "buttonSideMenu" id="showmenu" onclick = "showMenu()">
             <i class="fa fa-caret-square-o-down" style="font-size: 24px; margin-left: 2px; padding: 3px"></i>
@@ -138,10 +138,10 @@
                 <div class="input" style="margin-top: 5px; font-family: 'Zilla Slab'">
                     &#x1F5D3;&nbsp;
                     From: <input type="date" min="2014-01-01" max="2016-12-31" value="2014-05-01" id="date1"/>
-                    Hour: <input type="number" min="0" max="23" id="hour1" value="10"/>
+                    <input type="time" id="hour1" value="08:00"/>
                     &nbsp; &nbsp; &nbsp;
                     To: <input type="date" min="2014-01-01" max="2017-01-01" value="2014-05-20" id="date2"/>
-                    Hour: <input type="number" min="0" max="23" id="hour2" value="10"/>
+                    <input type="time" id="hour2" value="16:00"/>
                     &nbsp; &nbsp; &nbsp;
                     <button class="button" id="submitDates" onclick="getData()" style = "background-color: goldenrod;
                     padding: 3px 5px; color: black; font-size: 14px; font-family:'Zilla Slab'" >
@@ -185,7 +185,7 @@
 <script src="./static/incidentscode.js"></script>
 
 <script async defer src=
-        "https://maps.googleapis.com/maps/api/js?key=[APIKey]&libraries=visualization&callback=initMap">
+        "https://maps.googleapis.com/maps/api/js?key=[KEY]&libraries=visualization&callback=initMap">
 </script>
 
 <div id="bottomHint">

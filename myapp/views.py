@@ -25,6 +25,10 @@ def index():
 def transitPlot():
     return render_template('transitPlot.html')
 
+@app.route('/log')
+def logIncident():
+    return render_template('logIncident.html')
+
 @socketio.on('connect')
 def socketio_connet():
 
@@ -47,8 +51,8 @@ def socketio_connet():
 def getDate (msg):
     # findMinMax()
     print "-> got date, start = " + msg['start'] +", end = "+ msg['end']
-    start = datetime.datetime.strptime(msg['start'], "%Y-%m-%d %H %M")
-    end = datetime.datetime.strptime(msg['end'], "%Y-%m-%d %H %M")
+    start = datetime.datetime.strptime(msg['start'], "%Y-%m-%d %H:%M")
+    end = datetime.datetime.strptime(msg['end'], "%Y-%m-%d %H:%M")
     delta = end - start
     delta = delta.days
     if (delta > 14):
@@ -59,7 +63,7 @@ def getDate (msg):
     else:
         getIncidentData(start, end)
         getVehiclesData(start, end)
-        getCrimeData(start, end, "markers")
+        # getCrimeData(start, end, "markers")
         socketio.emit("markers-success")
     
 @socketio.on('predictNOW')

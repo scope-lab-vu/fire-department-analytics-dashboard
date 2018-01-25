@@ -77,8 +77,8 @@ function createSlider() {
         end_Date = document.getElementById('date2'),
         end_Hour = document.getElementById('hour2');
 
-    var start = start_Date.value + 'T' + (start_Hour.value).toString() + ":00:00.00",
-        end = end_Date.value + "T" + (end_Hour.value).toString() + ":00:00.00";
+    var start = start_Date.value + 'T' + start_Hour.value + ":00.00",
+        end = end_Date.value + "T" + end_Hour.value + ":00.00";
 
     // slider object with double handles
     var dateSlider = document.getElementById('slider');
@@ -90,12 +90,10 @@ function createSlider() {
         },
         connect: true,
         behaviour: 'tap-drag',
-        // Min interval: an hour
-        margin: 60 * 60 * 1000,
-        // // Max interval: 30 days
-        // limit: 30 * 24 * 60 * 60 * 1000,
-        // Steps of one hour
-        step: 60 * 60 * 1000,
+        // Max interval: 30 days
+        limit: 30 * 24 * 60 * 60 * 1000,
+        // Steps of one day
+        step: 24 * 60 * 60 * 1000,
         // Two more timestamps indicate the handle starting positions.
         start: [timestamp(start), timestamp(end)]
     });
@@ -114,36 +112,30 @@ function createSlider() {
     });
 
     // input tables change along with handle
-    var inputs = [start_Date, end_Date, start_Hour, end_Hour];
+    var inputs = [start_Date, end_Date];
     dateSlider.noUiSlider.on('update', function(values, handle) {
         var date = new Date(+values[handle]);
         inputs[handle].value = formulateDate(date);
-        inputs[handle+2].value = date.getHours();
     });
 
     var dateValues = document.getElementById('event');
     dateSlider.noUiSlider.on('update', function(values) {
-        dateValues.innerHTML = formatDate(new Date(+values[0]))+ " ~ " 
-                                + formatDate(new Date(+values[1]));
+        dateValues.innerHTML = formatDate(new Date(+values[0]))+ document.getElementById('hour1').value + " ~ " 
+                                + formatDate(new Date(+values[1])) + document.getElementById('hour2').value;
     });
 
     // handle changes along input tables
-    var tmpdate;
+    var tmp;
     start_Date.addEventListener('change', function(){
-        tmpdate = this.value;
-        dateSlider.noUiSlider.set([timestamp(this.value), null]);
-    });
-    start_Hour.addEventListener('change', function(){
-        tmpdate = tmpdate + "T" + (start_Hour.value).toString() + ":00:00.00";
-        dateSlider.noUiSlider.set([timestamp(tmpdate), null]);
+        tmp = new Date(this.value);
+        setTimeout(function(){  // wait till user enters all fields and then update slider
+            dateSlider.noUiSlider.set([tmp.getTime(), null]); }, 1000);
+        
     });
     end_Date.addEventListener('change', function(){
-        tmpdate = this.value;
-        dateSlider.noUiSlider.set([null, timestamp(this.value)]);
-    });
-    end_Hour.addEventListener('change', function(){
-        tmpdate = tmpdate + "T" + (end_Hour.value).toString() + ":00:00.00";
-        dateSlider.noUiSlider.set([null, timestamp(tmpdate)]);
+        tmp = new Date(this.value);
+        setTimeout(function(){    
+            dateSlider.noUiSlider.set([null, tmp.getTime()]); }, 1000);
     });
 }
 
@@ -184,7 +176,7 @@ function nth (d) {
 // format date into "Weekday, YYYY/MM/DDth  00:00"
 function formatDate (date) {
     return weekdays[date.getDay()] + ", " +date.getFullYear() + "/"
-    + (date.getMonth()+1)+"/"+date.getDate() + nth(date.getDate())+"  "+date.getHours()+":00";
+    + (date.getMonth()+1)+"/"+date.getDate() + nth(date.getDate())+"  ";
 }
 
 // create socket connect
@@ -208,6 +200,73 @@ var markers = [],  // an array of all markers objects
     heatDataFire = [],
     heatDataCrime = [];
 var sumOfIncidents = [];
+
+function getResponders(){
+    alert("Trying to get responder data");
+    socket.emit('get_responders');
+}
+
+function logIncident(){
+    var gridNum = document.getElementById('gridNum').value;
+    if (gridNum===""){
+        alert("Date must be filled!!!");
+    } else {
+        socket.emit('log_incident', {
+            'grid' : gridNum
+        });
+        console.log("gridNum"); 
+        console.log(gridNum);    
+    }
+}
+
+socket.on('emergency', function(msg) {
+    console.log("--> button is clicked: grid number: " + msg[0]);
+    var contentString = "Emergency happened at:" + msg[0];
+    var image = {
+        url: 'https://financialtribune.com/sites/default/files/field/image/17january/12_ambulances.png',
+        scaledSize: new google.maps.Size(26, 26)
+    };
+    var latLng = new google.maps.LatLng(msg[1][1], msg[1][0]),
+        marker1 = new google.maps.Marker(createMarkerObj(latLng,map,image,contentString));
+    marker1.setAnimation(google.maps.Animation.BOUNCE);
+    marker1.addListener('click', function() {
+        if (marker1.getAnimation() !== null) {
+            marker1.setAnimation(null);
+        }
+    });
+
+    var imageNorm = {
+        url: 'https://icon-icons.com/icons2/803/PNG/512/Ambulance_Emergency_icon-icons.com_65908.png',
+        scaledSize: new google.maps.Size(25, 25)
+    };
+    var imageBlack = {
+        url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Ambulance_font_awesome.svg/2000px-Ambulance_font_awesome.svg.png',
+        scaledSize: new google.maps.Size(25, 25)
+    };
+    for (var i=0; i<msg[2].length; i++) {
+        var latLng = new google.maps.LatLng(msg[2][i][4][1], msg[2][i][4][0]);
+        if (msg[2][i][1] == msg[3]) {
+            var marker = new google.maps.Marker(createMarkerObj(latLng,map,imageBlack,contentString));  
+        } else {
+            var marker = new google.maps.Marker(createMarkerObj(latLng,map,imageNorm,contentString)); 
+        }
+
+    }
+
+});
+
+socket.on('responderData', function(msg) {
+    console.log(msg[0]);
+    var contentString = "i am a responder";
+    var image = {
+        url: 'http://policyadvantage.com/wp-content/uploads/2016/05/ER-5.png',
+        scaledSize: new google.maps.Size(25, 25)
+    };
+    for (var i=0; i<msg.length; i++) {
+        var latLng = new google.maps.LatLng(msg[i][4][1], msg[i][4][0]),
+            marker = new google.maps.Marker(createMarkerObj(latLng,map,image,contentString));
+    }
+});
 
 
 /* ON SUBMIT button: 
@@ -244,19 +303,19 @@ function getData() {
         end_Date = document.getElementById('date2').value,
         end_Hour = document.getElementById('hour2').value;
 
-    if  (start_Hour === "") {
-        start_Hour = 0;
+    if (start_Hour === "") {
+        start_Hour = "8:00";
     }
     if (end_Hour === "") {
-        end_Hour = 23;
+        end_Hour = "23:00";
     }
 
     if (start_Date==="" || end_Date==="") {
         alert("Date must be filled!!!");
     } else {
         socket.emit('get_date', {
-            'start': start_Date+" "+start_Hour.toString()+" 0", 
-            'end': end_Date + " "+ end_Hour.toString()+" 59"
+            'start': start_Date+" "+start_Hour.toString(), 
+            'end': end_Date + " "+ end_Hour.toString()
         });
     }
 }
@@ -298,6 +357,7 @@ function prepMarkers() {
     if (document.getElementById("selectType") !== null) {
         var t = document.getElementById("selectType");
         t.parentNode.removeChild(t);
+        document.getElementById('submitButton').style.display = 'none';
     }
 
     // delete all by removing reference to them,
@@ -407,22 +467,27 @@ function TopRightControl(controlDiv, map, msg) {
 var markersRealDepots = [];
 
 function toggleRealDepot() {
-    if (markersRealDepots[0].getVisible()) {
-        for (var i=0; i<markersRealDepots.length; i++) {
-            markersRealDepots[i].setVisible(false);
+    try {
+        if (markersRealDepots[0].getVisible()) {
+            for (var i=0; i<markersRealDepots.length; i++) {
+                markersRealDepots[i].setVisible(false);
+            }
+        } else {
+            for (var k=0; k<markersRealDepots.length; k++) {
+                markersRealDepots[k].setVisible(true);
+            }
         }
-    } else {
-        for (var k=0; k<markersRealDepots.length; k++) {
-            markersRealDepots[k].setVisible(true);
-        }
+    } catch (error) {
+        console.log("!!!Caught: toggleRealDepot():" + error.message);
     }
+    
 
 }
 
 var customDepots = [];
 function addDepot() {
     var imgDepot = {
-        url: 'https://maxcdn.icons8.com/office/PNG/512/City/fire_station-512.png',
+        url: 'https://cdn1.iconfinder.com/data/icons/orientation-2/32/location-add-512.png',
         scaledSize: new google.maps.Size(23, 23),
         anchor: new google.maps.Point(9, 9)
     };
@@ -555,8 +620,7 @@ socket.on('incident_data', function(msg) {
 
 });
 
-/* set traffic incidents markers, markers are circles color-coded to indicate
- * level of severity */
+/* set traffic incidents markers*/
 function setIncident(r, index) {
     var emojiPicked = false;
     var r_severity = (r.emdCardNumber).charAt(index);
@@ -703,13 +767,14 @@ function setInfoWindow(marker) {
 /* socket after markers are drawn on map: set up pie charts*/
 socket.on('markers-success', function() {
     setButtonDisplay("visible");
-    var o = document.getElementsByClassName("icon-bar");
-    o[0].style.visibility = 'visible';
+    // var o = document.getElementsByClassName("icon-bar");
+    // o[0].style.visibility = 'visible';
     console.log("-->All markers success");
     console.log("--->types[]: ");
     console.log(types);
     console.log("markersArr length:   "+ markersArr.length);   
-    console.log("heatDataAll length:   "+ heatDataAll.length);   
+    console.log("heatDataAll length:   "+ heatDataAll.length);  
+    console.log("vehiclesArr length:   "+ vehiclesArr.length);  
     // console.log(markersArr); // should look like [Incidents: Array(x), Burglary: Array(y)]
     
     setBar(sumOfIncidents);
@@ -774,14 +839,15 @@ function printSummary() {
     document.getElementById('total').innerHTML = "Total incidents: "+ (heatDataAll.length);
     document.getElementById('chooseType').innerHTML = "Choose type by brushing or pressing '&#8984;' or ctrl";
     document.getElementById("loader").style.display = "none";
+    document.getElementsByClassName("loading")[0].style.display= "none";
 
     var w = document.getElementById("mySideMenu");
     if(w.style.width !== "300px") {
         w.style.width = "300px";
     }
 
-    var fireCheckBox = document.getElementById("fire");
-    fireCheckBox.checked = true;
+    // var fireCheckBox = document.getElementById("fire");
+    // fireCheckBox.checked = true;
 
     if (document.getElementById("selectType") !== null) {
         var t = document.getElementById("selectType");
@@ -841,6 +907,8 @@ function printSummary() {
         submit.style.marginTop = '10px';
         submit.style.marginLeft = '40px';
         div.appendChild(submit);
+    } else {
+        document.getElementById('submitButton').style.display = 'block';
     }
     document.getElementsByClassName("loading")[0].style.display= "none";
 
@@ -914,8 +982,8 @@ function hideVehicles() {
 
 /* get heat data of incidents from socket*/
 socket.on('latlngarrofobj', function(msg) {
-    var o = document.getElementsByClassName("icon-bar");
-    o[0].style.visibility = 'hidden';
+    // var o = document.getElementsByClassName("icon-bar");
+    // o[0].style.visibility = 'hidden';
 
     for (var i=0; i<msg.length; i++) {
         var latLng = new google.maps.LatLng((msg[i]).lat, (msg[i]).lng);
@@ -1096,8 +1164,8 @@ function changeMode(i) {
     var c = document.getElementById("sliderDouble");
     var d = document.getElementById("initialMsgOnMap");
     var w = document.getElementById("mySideMenu");
-    var wBtn = document.getElementById("showmenu");
-    var o = document.getElementsByClassName("icon-bar");
+    var showmenuBtn = document.getElementById("showmenu");
+    // var o = document.getElementsByClassName("icon-bar");
 
     var ad = document.getElementById("addDepot");
     var cd = document.getElementById("clearDepot");
@@ -1122,7 +1190,7 @@ function changeMode(i) {
         mapDiv.style.height = "675px";
         google.maps.event.trigger(mapDiv, 'resize');
         map.setCenter(centerNash);
-        wBtn.style.display = "none";
+        showmenuBtn.style.display = "none";
         document.body.style.overflowY = "hidden";
 
         mode[0].style.backgroundColor = "white";
@@ -1143,7 +1211,7 @@ function changeMode(i) {
             document.getElementById("sliderNew").style.display = "block";
             document.getElementById("inputSingle").style.display = "block";
         }
-        o[0].style.display = "none";
+        // o[0].style.display = "none";
         cr.style.display = "block";
 
         ad.style.display = "inline";
@@ -1164,7 +1232,7 @@ function changeMode(i) {
         mapDiv.style.height = "410px";
         google.maps.event.trigger(mapDiv, 'resize');
         map.setCenter(centerNash);
-        wBtn.style.display = "block";
+        showmenuBtn.style.display = "block";
 
         mode[0].style.backgroundColor = "#83c985";
         mode[1].style.backgroundColor = "white";
@@ -1185,7 +1253,7 @@ function changeMode(i) {
         document.getElementById("sliderNew").style.display = "none";
         document.getElementById("inputSingle").style.display = "none";
         document.getElementById("spaceExplore").style.display = "none";
-        o[0].style.display = "block";
+        // o[0].style.display = "block";
 
     } else { // explore mode
         playground[0].style.width = "100%";
@@ -1196,7 +1264,7 @@ function changeMode(i) {
         mapDiv.style.height = "675px";
         google.maps.event.trigger(mapDiv, 'resize');
         map.setCenter(centerNash);
-        wBtn.style.display = "none";
+        showmenuBtn.style.display = "none";
         c.style.display = "none";
         document.body.style.overflowY = "hidden";
 
@@ -1206,7 +1274,7 @@ function changeMode(i) {
 
         document.getElementById("inputSingle").style.display = "none";
         changeColor("#A1A5E7");
-        o[0].style.display = "none";
+        // o[0].style.display = "none";
         cr.style.display = "block";
 
         ad.style.display = "inline";
@@ -1231,6 +1299,21 @@ function changeMode(i) {
             div.appendChild(butto);
             butto.addEventListener ("click", function() {
                 socket.emit('getOptimization');
+            });
+        
+
+        var butto1 = document.createElement("button");
+            butto1.className = "button";
+            butto1.id = "buttonCalculate";
+            butto1.style.backgroundColor = "#A1A5E7";
+            butto1.style.marginLeft = "5px";
+            butto1.style.fontFamily = "Zilla Slab";
+            butto1.style.fontSize = "14px";
+            butto1.innerHTML = "Submit new depot location!";
+            div.appendChild(butto1);
+            butto1.addEventListener ("click", function() {
+                alert("grids selected, recalculating response time now...");
+                document.getElementById("loader").style.display = "block";
             });
         }
 
@@ -1311,13 +1394,12 @@ function hidePolice() {
 function createSingleSlider() {
     var singleSlider = document.getElementById('sliderNew');
     var today = new Date();
-    var dateLimit = new Date("2017-12-01T00:00:00.00");
-    var dateStart = new Date("2017-09-01T00:00:00.00");
+    var enddate = new Date(today.getTime() + 24 * 60 * 60 * 1000 * 30); // end in 30 days
     noUiSlider.create(singleSlider, {
-        start: [dateStart.getTime()],
+        start: [today.getTime()],
         range: {
             min: today.getTime(),
-            max: dateLimit.getTime()
+            max: enddate.getTime()
         },
         // Steps of one day
         step: 24 * 60 * 60 * 1000
@@ -1328,9 +1410,9 @@ function createSingleSlider() {
     var inputbox = document.createElement("input");
     inputbox.id = 'singleDate';
     inputbox.type = 'date';
-    inputbox.value = getTodayDate();
-    inputbox.min = getTodayDate();
-    inputbox.max = '2017-12-01';
+    inputbox.value = getDateString(today);
+    inputbox.min = getDateString(today);
+    inputbox.max = getDateString(enddate);
     div.appendChild(inputbox);
     
     createSelectBox(div);
@@ -1342,46 +1424,42 @@ function createSingleSlider() {
         inputbox.value = formulateDate(date);
     });
 
-    var dateValues = document.getElementById('event');
-    singleSlider.noUiSlider.on('update', function(values, handle) {
-        date = new Date(+values[handle]);
-        var timeDiff = Math.abs(date.getTime() - today.getTime());
-        var deltaDays = Math.ceil(timeDiff / (1000 * 60 * 60 * 24)); 
-        dateValues.innerHTML = formulateDate(date)+ 
-            ",&nbsp;&nbsp;" +deltaDays.toString() + " days away from today";
+    // handle changes along input table
+    inputbox.addEventListener('change', function(){
+        console.log(this.value);
+        var tmp = new Date(this.value+"T12:00:00.00");
+        setTimeout(function(){ singleSlider.noUiSlider.set(tmp.getTime()); }, 800);
     });
-
 }
 
 function createSelectBox(div) {
     var selectList = document.createElement("select");
     selectList.style.marginLeft = "15px";
     var opt = document.createElement("option");
-    opt.innerHTML = "Crime(Police Department)";
+    opt.innerHTML = "Incidents(Fire Department)";
     opt.id = "predictCrime";
     selectList.appendChild(opt);
     opt = document.createElement("option");
-    opt.innerHTML = "Incidents(Fire Department)";
+    opt.innerHTML = "Crime(Police Department)";
     opt.id = "predictFire";
     selectList.appendChild(opt);    
     div.appendChild(selectList);
 }
 
 // return string in the form of yyyy-mm-dd of today's date
-function getTodayDate() {
-    var today = new Date();
-    var dd = today.getDate();
-    var mm = today.getMonth()+1; //January is 0!
+function getDateString(date) {
+    var dd = date.getDate();
+    var mm = date.getMonth()+1; //January is 0!
 
-    var yyyy = today.getFullYear();
+    var yyyy = date.getFullYear();
     if(dd<10){
         dd='0'+dd;
     }
     if(mm<10){
         mm='0'+mm;
     }
-    today = yyyy + '-' + mm + '-' + dd;
-    return today;
+    var dateStr = yyyy + '-' + mm + '-' + dd;
+    return dateStr;
 }
 
 // create a Submit btn that appends to parameter div
@@ -1428,7 +1506,7 @@ socket.on('predictions_data_crime', function(msg) {
 
 socket.on('bestAreaInCharge', function(msg) {
     console.log("--> best Area In Charge has length of: " + msg.length);
-    setBestDepotsArea(msg);
+    setBestDepotsArea(msg[0], msg[1]);
 }); 
 
 // set all predictions dots onto heat map
@@ -1479,40 +1557,29 @@ function setPrediction(arr) {
 var gridInChargeOf = {};
 var markerBestAssign = [];
 var rectBestAssign = [];
-function setBestDepotsArea(arrOfDic) {
+var allGrids = {}; // grid number: [lat, lng, rectangle]
+function setBestDepotsArea(dicOfArr, grid2LatLng) {
     // depot image
     var imgDepot = {
         url: 'https://statefireschool.delaware.gov/wp-content/themes/dosgic_SFS_theme/img/sfs-icons-training.png',
         scaledSize: new google.maps.Size(25, 25)
     };
 
-    // // transparent dot image
-    // var image = {
-    //     path: google.maps.SymbolPath.CIRCLE,
-    //     fillColor: 'floralwhite',
-    //     fillOpacity: .4,
-    //     scale: 6,
-    //     strokeColor: 'lightgrey',
-    //     strokeWeight: .5
-    // };
-
-    var dlong = 0.008942854;
+    var dlong = 0.00898;
     var dlat = 0.0072;
-    for (var i=0; i<arrOfDic.length; i++) {
-        if (! (arrOfDic[i]["depotKey"] in gridInChargeOf)) {
-            gridInChargeOf[arrOfDic[i]["depotKey"]] = [];
-        }
 
-        for (var j=0; j<(arrOfDic[i]["inChargeOf"]).length; j++) {
-            var lat = (arrOfDic[i]["inChargeOf"])[j][1];
-            var lng = (arrOfDic[i]["inChargeOf"])[j][0];
+    // draw all grid, create allGrids look up
+    for (var key in grid2LatLng) {
+        (function () {
+            var lat = grid2LatLng[key][1];
+            var lng = grid2LatLng[key][0];
             // draw a rectangle for the in charge of 
             var rectangle = new google.maps.Rectangle({
-                strokeColor: '#cccccc',
-                strokeOpacity: 0.6,
-                strokeWeight: 2,
-                fillColor: gridColors[i],
-                fillOpacity: 0.6,
+                strokeColor: 'darkgrey',
+                strokeOpacity: 1,
+                strokeWeight: 1,
+                fillColor: 'transparent',
+                fillOpacity: 1,
                 map: map,
                 bounds: {
                   north: lat+dlat,
@@ -1521,35 +1588,47 @@ function setBestDepotsArea(arrOfDic) {
                   west: lng-dlong
                 }
             });
-            rectBestAssign.push(rectangle);
+            rectangle.addListener('click', function() {
+                rectangle.setOptions({
+                    strokeWeight: 2,
+                    fillColor: 'lime',
+                    fillOpacity: 0.9
+                });
+            });
+            allGrids[key] = [lat, lng, rectangle];
+        }());  
+    }
 
-            // // draw a marker for all centers of in charge of grids with transparent circles
-            // var marker = new google.maps.Marker({
-            //     position: { lat: lat, lng: lng },
-            //     map: map,
-            //     icon: image,
-            //     label: {
-            //         color: "black",
-            //         fontSize: "5px",
-            //         text: (arrOfDic[i]["depotKey"]).toString()
-            //     }
-            // });
-            gridInChargeOf[arrOfDic[i]["depotKey"]].push(rectangle);
-        }
-
+    var count = 0;
+    for (var key in dicOfArr) {
         // draw marker for all best assignment depots
-        var content = (arrOfDic[i]["depotKey"]).toString();
-        var latLng = new google.maps.LatLng(arrOfDic[i]["depotLatLng"][1], arrOfDic[i]["depotLatLng"][0]),
+        var content = key.toString();
+        var latLng = new google.maps.LatLng(allGrids[key][0], allGrids[key][1]),
             marker = new google.maps.Marker(createMarkerObj(latLng,map,imgDepot,content));
         markerBestAssign.push(marker);
         setInfoWindow(marker);
+
+        // color rectangles that this depot in charge of
+        for (var i=0; i<dicOfArr[key].length; i++) {
+            (allGrids[dicOfArr[key][i]])[2].setOptions({
+                strokeColor: '#cccccc',
+                strokeOpacity: 0.6,
+                strokeWeight: 2,
+                fillColor: gridColors[count],
+                fillOpacity: 0.6,
+            });
+            if (! (key in gridInChargeOf)) {
+                gridInChargeOf[key] = [];
+            }
+            gridInChargeOf[key].push((allGrids[dicOfArr[key][i]])[2]);
+        } 
 
         // highlight this depot's in charge of rectangles when mouse over
         marker.addListener('mouseover', function() {
             for (var k=0; k<(gridInChargeOf[this.contentString]).length; k++) {
                 gridInChargeOf[this.contentString][k].setOptions({
                     fillOpacity: 1,
-                    strokeColor: '#282828',
+                    strokeColor: '#282828', //dark grey
                     strokeOpacity: 1
                 });
             }
@@ -1558,12 +1637,15 @@ function setBestDepotsArea(arrOfDic) {
             for (var k=0; k<(gridInChargeOf[this.contentString]).length; k++) {
                 gridInChargeOf[this.contentString][k].setOptions({
                     fillOpacity: 0.6,
-                    strokeColor: '#cccccc',
+                    strokeColor: '#cccccc', //light grey
                     strokeOpacity: 0.6
                 });
             }
-        });
+        });  
+
+        count++;
     }
+    
     console.log("-----> grids each depot in charge of");
     console.log(gridInChargeOf);
 }
