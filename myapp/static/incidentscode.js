@@ -4,8 +4,8 @@
  */
 var map;
 var centerNash = {lat: 36.18, lng: -86.7816};
-var minDate = new Date("2014-02-20T00:00:00.00");
-var maxDate = new Date("2016-02-06T00:00:00.00");
+var minDate;
+var maxDate;
 
 // Create an initial map - plain, center at centerNash
 function initMap() {
@@ -59,7 +59,7 @@ function initMap() {
 
     var today = new Date();
     document.getElementById('timeNow').innerHTML=today.toLocaleDateString() + "  " + today.toLocaleTimeString();
-    createSlider();
+    
 }
 
 function setInnerHTML(id, msg) {
@@ -85,13 +85,13 @@ function createSlider() {
     noUiSlider.create(dateSlider, {
         // Create two timestamps to define a range.
         range: {
-            min: minDate.getTime(),
-            max: maxDate.getTime()
+            min: minDate * 1000,
+            max: maxDate * 1000
         },
         connect: true,
         behaviour: 'tap-drag',
-        // Max interval: 30 days
-        limit: 30 * 24 * 60 * 60 * 1000,
+        // // Max interval: 30 days
+        // limit: 30 * 24 * 60 * 60 * 1000,
         // Steps of one day
         step: 24 * 60 * 60 * 1000,
         // Two more timestamps indicate the handle starting positions.
@@ -214,10 +214,17 @@ function logIncident(){
         socket.emit('log_incident', {
             'grid' : gridNum
         });
-        console.log("gridNum"); 
-        console.log(gridNum);    
+        // console.log("gridNum"); 
+        // console.log(gridNum);    
     }
 }
+
+socket.on('gotNewMinMaxTime', function(msg) {
+    // console.log(msg);
+    minDate = msg[0];
+    maxDate = msg[1];
+    createSlider();
+});
 
 socket.on('emergency', function(msg) {
     console.log("--> button is clicked: grid number: " + msg[0]);
@@ -256,7 +263,7 @@ socket.on('emergency', function(msg) {
 });
 
 socket.on('responderData', function(msg) {
-    console.log(msg[0]);
+    // console.log(msg[0]);
     var contentString = "i am a responder";
     var image = {
         url: 'http://policyadvantage.com/wp-content/uploads/2016/05/ER-5.png',
@@ -327,6 +334,7 @@ function prepMarkers() {
     document.getElementById('initialHint').style.display = 'none';
     document.getElementById('markers').innerHTML = 'Hide Incidents';
     setButtonDisplay("hidden");
+    document.getElementById("gradient").style.visibility = "hidden";
     // remove incidents from the map, but still keeps them in the array
     for (var i = 0; i < markers.length; i++) {
         markers[i].setMap(null);
@@ -381,9 +389,9 @@ function prepMarkers() {
     sumOfIncidents.length=0;
     sumOfIncidents = [0,0,0,0,0,0,0];  // sum of incidents happened at each level of severity
 
-    console.log("vehiclesArr length:   "+ vehiclesArr.length+ "\n   "+vehiclesArr); 
-    console.log("markersArr length:   "+ markersArr.length+ "\n   "+markersArr);   
-    console.log("heatDataAll length:   "+ heatDataAll.length+ "\n   "+heatDataAll);   
+    // console.log("vehiclesArr length:   "+ vehiclesArr.length+ "\n   "+vehiclesArr); 
+    // console.log("markersArr length:   "+ markersArr.length+ "\n   "+markersArr);   
+    // console.log("heatDataAll length:   "+ heatDataAll.length+ "\n   "+heatDataAll);   
 }
 
 
@@ -529,13 +537,13 @@ socket.on('crime_none', function() {
 /* socket to get crime data from server*/
 var data_crime;
 socket.on('crime_data', function(msg) {
-    console.log("--> crime data length is: " + msg.length);
+    // console.log("--> crime data length is: " + msg.length);
     data_crime = msg;
     setCrime();
 });
 
 socket.on('crime_heat', function(msg) {
-    console.log("--> crime HEAT length is: " + msg.length);
+    // console.log("--> crime HEAT length is: " + msg.length);
     data_crime = msg;
     setCrimeHeat(data_crime);
 });
@@ -543,8 +551,6 @@ socket.on('crime_heat', function(msg) {
 function setButtonDisplay(str) {
     document.getElementById("markers").style.visibility = str;
     document.getElementById("heat").style.visibility = str;
-    document.getElementById("heatHide").style.visibility = str;
-    document.getElementById("gradient").style.visibility = str;
     document.getElementById("vehide").style.visibility = str;
 }
 
@@ -693,7 +699,7 @@ socket.on('depots_data', function(msg) {
         markersRealDepots.push(marker);
     }
 
-    console.log("depots_data length"+":  "+arr_depots.length);
+    // console.log("depots_data length"+":  "+arr_depots.length);
 });
 
 /* socket to get vehicles location from server*/
@@ -769,12 +775,12 @@ socket.on('markers-success', function() {
     setButtonDisplay("visible");
     // var o = document.getElementsByClassName("icon-bar");
     // o[0].style.visibility = 'visible';
-    console.log("-->All markers success");
-    console.log("--->types[]: ");
-    console.log(types);
-    console.log("markersArr length:   "+ markersArr.length);   
-    console.log("heatDataAll length:   "+ heatDataAll.length);  
-    console.log("vehiclesArr length:   "+ vehiclesArr.length);  
+    // console.log("-->All markers success");
+    // console.log("--->types[]: ");
+    // console.log(types);
+    // console.log("markersArr length:   "+ markersArr.length);   
+    // console.log("heatDataAll length:   "+ heatDataAll.length);  
+    // console.log("vehiclesArr length:   "+ vehiclesArr.length);  
     // console.log(markersArr); // should look like [Incidents: Array(x), Burglary: Array(y)]
     
     setBar(sumOfIncidents);
@@ -785,7 +791,7 @@ socket.on('markers-success', function() {
         a.push(markersArr[types[j]].length);
         arr.push(a);
     }
-    console.log(arr);
+    // console.log(arr);
     // set up pie chart
     google.charts.load('current', {packages: ['corechart']});
     google.charts.setOnLoadCallback(function() {
@@ -798,8 +804,8 @@ socket.on('markers-success', function() {
 socket.on('heat-success', function() {
     // document.getElementById("heat").style.visibility = 'visible';
     document.getElementById("gradient").style.visibility = 'visible';
-    console.log("-->All heat pushed success");
-    console.log("heatDataAll:   "+heatDataAll.length);
+    // console.log("-->All heat pushed success");
+    // console.log("heatDataAll:   "+heatDataAll.length);
     
     heatmap= new google.maps.visualization.HeatmapLayer({
         data: heatDataAll,
@@ -816,7 +822,7 @@ socket.on('heat-success', function() {
         a.push(markersArr[types[j]]);
         arr.push(a);
     }
-    console.log(arr);
+    // console.log(arr);
     // set up pie chart
     google.charts.load('current', {packages: ['corechart']});
     google.charts.setOnLoadCallback(function() {
@@ -932,35 +938,27 @@ function getType() {
             }
         }
     }
-    document.getElementById('markers').onclick = function () {
-        getMarkersOnMap();
-    }
+    document.getElementById('markers').innerHTML = 'Hide Incidents';
 }
 
-/* toggle markers by changing their visibility */
-function getMarkersOnMap() {
-    var tmpArr = [];
-    for (var j = 0; j < markers.length; j++) {
-        if (markers[j].getVisible()) {
-            tmpArr.push(markers[j]);
-        }
-    }
-    document.getElementById('markers').onclick = function () {
-        toggleMarkers(tmpArr);
-    }
-    
-}
-
-function toggleMarkers(arr) {
-    if (arr[0].getVisible()) {
-        document.getElementById('markers').innerHTML = 'Show Incidents';
-        for (var i=0; i<arr.length; i++) {
-            arr[i].setVisible(false);
-        }
-    } else {
-        document.getElementById('markers').innerHTML = 'Hide Incidents';
-        for (var k=0; k<arr.length; k++) {
-            arr[k].setVisible(true);
+function toggleMarkers() {
+    document.getElementById('markers').innerHTML = 
+        (document.getElementById('markers').innerHTML=='Hide Incidents'? 'Show Incidents': 'Hide Incidents');
+    var arrOfArr = markersArr;
+    // console.log(markersArr);
+    var flagYes = false;
+    for (var j = 0; j < types.length; j++) {
+        if (document.getElementById(types[j]).selected === true) {
+            var arr = arrOfArr[types[j]];
+            if (arr[0].getVisible()) {
+                for (var i = 0; i < arr.length; i++) {
+                   arr[i].setVisible(false); 
+                }
+            } else {
+                for (var i = 0; i < arr.length; i++) {
+                   arr[i].setVisible(true); 
+                }
+            }
         }
     }
 }
@@ -1029,25 +1027,30 @@ function setHeatMap() {
             dataNow.push(markers[i].getPosition());
         }
     }
-    console.log("--------> dataNow length is: "+dataNow.length);
-    console.log(dataNow);
+    // console.log("--------> dataNow length is: "+dataNow.length);
+    // console.log(dataNow);
     heatmap= new google.maps.visualization.HeatmapLayer({
         data: dataNow,
         dissipating: false,
         map: map,
         radius: 0.01
     });
+    document.getElementById("heatHide").style.visibility = "visible";
+    document.getElementById("gradient").style.visibility = "visible";
 }
 
 // toggle heat map
 function toggleHeatmap() {
     heatmap.setMap(heatmap.getMap() ? null : map);
+    var gradient = document.getElementById("gradient");
+    gradient.style.visibility = (heatmap.getMap() ? "visible" : "hidden");
 }
+
 
 // toggle gradient
 function changeGradient() {
     heatmap.set('gradient', heatmap.get('gradient') ? null : gradient);
-}
+} 
 
 // When the user clicks on "help", open the popup
 function help() {
@@ -1221,6 +1224,9 @@ function changeMode(i) {
         ad.style.visibility = "visible";
         cd.style.visibility = "visible";
         rd.style.visibility = "visible";
+
+        document.getElementById("heatHide").style.visibility = "hidden";
+        document.getElementById("gradient").style.visibility = "hidden";
     
     } else if (i === 0){ // historic mode
         // map.setOptions({styles: oldStyles});
@@ -1394,7 +1400,7 @@ function hidePolice() {
 function createSingleSlider() {
     var singleSlider = document.getElementById('sliderNew');
     var today = new Date();
-    var enddate = new Date(today.getTime() + 24 * 60 * 60 * 1000 * 30); // end in 30 days
+    var enddate = new Date(today.getTime() + 6 * 30 * 24 * 60 * 60 * 1000); // end in 6 months
     noUiSlider.create(singleSlider, {
         start: [today.getTime()],
         range: {
@@ -1426,7 +1432,7 @@ function createSingleSlider() {
 
     // handle changes along input table
     inputbox.addEventListener('change', function(){
-        console.log(this.value);
+        // console.log(this.value);
         var tmp = new Date(this.value+"T12:00:00.00");
         setTimeout(function(){ singleSlider.noUiSlider.set(tmp.getTime()); }, 800);
     });
@@ -1439,10 +1445,10 @@ function createSelectBox(div) {
     opt.innerHTML = "Incidents(Fire Department)";
     opt.id = "predictCrime";
     selectList.appendChild(opt);
-    opt = document.createElement("option");
-    opt.innerHTML = "Crime(Police Department)";
-    opt.id = "predictFire";
-    selectList.appendChild(opt);    
+    // opt = document.createElement("option");
+    // opt.innerHTML = "Crime(Police Department)";
+    // opt.id = "predictFire";
+    // selectList.appendChild(opt);    
     div.appendChild(selectList);
 }
 
@@ -1487,25 +1493,25 @@ function createSubmitBtn(div) {
 
 // get predictions_data from python file
 socket.on('predictions_data', function(msg) {
-    console.log("--> predictions_data length is: " + msg.length);
+    // console.log("--> predictions_data length is: " + msg.length);
     setPredictions(msg);
 });
 
 // predictions is empty []
 socket.on('predictions_none', function(msg) {
-    console.log("predictions_none");
-    console.log(msg);
+    // console.log("predictions_none");
+    // console.log(msg);
 });
 
 // get predictions_data from python file
 socket.on('predictions_data_crime', function(msg) {
-    console.log("--> predictions_data CRIME length is: " + msg.length);
+    // console.log("--> predictions_data CRIME length is: " + msg.length);
     setPrediction(msg);
 
 });
 
 socket.on('bestAreaInCharge', function(msg) {
-    console.log("--> best Area In Charge has length of: " + msg.length);
+    // console.log("--> best Area In Charge has length of: " + msg.length);
     setBestDepotsArea(msg[0], msg[1]);
 }); 
 
@@ -1646,6 +1652,6 @@ function setBestDepotsArea(dicOfArr, grid2LatLng) {
         count++;
     }
     
-    console.log("-----> grids each depot in charge of");
-    console.log(gridInChargeOf);
+    // console.log("-----> grids each depot in charge of");
+    // console.log(gridInChargeOf);
 }

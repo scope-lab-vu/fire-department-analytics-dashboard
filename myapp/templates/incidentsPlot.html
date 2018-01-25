@@ -49,7 +49,7 @@
             </b>
         </li>
         <li><i class="fa-li fa fa-code-fork"></i>Version:
-            <b>1.0.1</b>
+            <b>1.0.2</b>
         </li>
     </ul>
     <br><br><br><br><br><br><br><br><br><br>
@@ -106,16 +106,16 @@
 
         <div id="map" style="color: black"></div>
         <div id="floating-panel">
-            <button class="button" style="background-color: lightgoldenrodyellow" id='markers' onclick="getMarkersOnMap()">
+            <button class="button" style="background-color: lightgoldenrodyellow" id='markers' onclick="toggleMarkers()">
                 Show Incidents</button>
-            <button class="button" id='heat' onclick="setHeatMap()">
-                Generate heatmap</button>
-            <button class="button" id='heatHide' onclick="toggleHeatmap();">
-                Hide heatmap</button>
-            <button class="button" id='gradient' onclick="changeGradient()">
-                Change gradient</button>
-            <button class="button" style="background-color: lightgray" id="vehide"onclick="hideVehicles()">
+            <button class="button" style="background-color: azure" id="vehide"onclick="hideVehicles()">
                 Hide Responding Vehicles</button>
+            <button class="button" id='heat' style="background-color: palegreen" onclick="setHeatMap()">
+                Generate new heatmap</button>
+            <button class="button" id='heatHide' style="background-color: palegreen; visibility: hidden" onclick="toggleHeatmap();">
+                Toggle heatmap</button> 
+            <button class="button" id='gradient' style="background-color: palegreen; visibility: hidden" onclick="changeGradient()">
+                Change heatmap gradient</button>
         </div>
 
         <div style="width: inherit; position:absolute; top: 20%; text-align: center; z-index: 2">
@@ -185,7 +185,7 @@
 <script src="./static/incidentscode.js"></script>
 
 <script async defer src=
-        "https://maps.googleapis.com/maps/api/js?key=[KEY]&libraries=visualization&callback=initMap">
+        "https://maps.googleapis.com/maps/api/js?key=[key]&libraries=visualization&callback=initMap">
 </script>
 
 <div id="bottomHint">

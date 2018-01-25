@@ -5,6 +5,7 @@ from flask_socketio import send, emit
 from myapp import socketio
 from pymongo import MongoClient
 import datetime
+import time
 import json
 import requests
 import pytz
@@ -31,6 +32,7 @@ def logIncident():
 
 @socketio.on('connect')
 def socketio_connet():
+    findMinMax()
 
     '''
     # start: t-hub dashboard
@@ -49,7 +51,6 @@ def socketio_connet():
 
 @socketio.on('get_date')
 def getDate (msg):
-    # findMinMax()
     print "-> got date, start = " + msg['start'] +", end = "+ msg['end']
     start = datetime.datetime.strptime(msg['start'], "%Y-%m-%d %H:%M")
     end = datetime.datetime.strptime(msg['end'], "%Y-%m-%d %H:%M")
@@ -85,28 +86,38 @@ max time is;;;;;;;;;;;;;;;;;
 min time is;;;;;;;;;;;;;;;;;
 2014-02-20 10:24:00
 '''
+global minmax
+minmax = [None] * 2
+global lastsearch
+lastsearch = None
+def findMinMax():
+    global minmax
+    global lastsearch
+    # if (not minmax or not lastsearch or time.time() - lastsearch > 24 * 60 * 60):
+    if True:
+        client = MongoClient("mongodb://127.0.0.1:27017/fire_department")
+        db = client["fire_department"]["simple__incident"]
+        items = db.find()
+        pretime = (items[0])['alarmDateTime']
+        print pretime
+        maxT = pretime
+        minT = pretime
+        for item in items:
+            if (type(item['alarmDateTime'])!=datetime.datetime):
+                continue
+            time_ = item['alarmDateTime']
+            if (time_>maxT):
+                maxT = time_
+            
+            if (time_<minT):
+                minT = time_
+        minmax[0] = (minT - datetime.datetime(1970,1,1)).total_seconds()
+        minmax[1] = (maxT - datetime.datetime(1970,1,1)).total_seconds()
+        lastsearch = time.time()
+        print minmax
+        socketio.emit("gotNewMinMaxTime", minmax)
 
-# def findMinMax():
-#     client = MongoClient("mongodb://127.0.0.1:27017/fire_department")
-#     db = client["fire_department"]["simple__incident"]
-#     items = db.find()
-#     pretime = (items[0])['alarmDateTime']
-#     print pretime
-#     maxT = pretime
-#     minT = pretime
-#     for item in items:
-#         if (type(item['alarmDateTime'])!=datetime.datetime):
-#             break
-#         time = item['alarmDateTime']
-#         if (time>maxT):
-#             maxT = time
-        
-#         if (time<minT):
-#             minT = time
-#     print "max time is;;;;;;;;;;;;;;;;;"
-#     print maxT
-#     print "min time is;;;;;;;;;;;;;;;;;"
-#     print minT
+
 
 # retrieve a simplified list of information for just heat map layer
 def getIncidentHeat(start, end):
@@ -123,7 +134,6 @@ def getIncidentHeat(start, end):
             break
         if (isinstance(time, datetime.date) and start <= time <= end):
             count+=1
-            print count
             dictIn = {}
             dictIn['lat'] = item['latitude']
             dictIn['lng'] = item['longitude']
@@ -159,9 +169,9 @@ def getIncidentData(start, end):
             if (item['incidentNumber']=="sample"):
                 continue
             if (start <= time <= end):
-                count+=1
-                print count
-                print time
+                # count+=1
+                # print count
+                # print time
 
                 dictIn = {}
                 dictIn['_id'] = str(item['_id'])
@@ -236,8 +246,8 @@ def getVehiclesData(start, end):
                 if stationArr[0] not in depot:
                     depot.append(stationArr[0])
                 indexOfthis = depot.index(stationArr[0])
-                print stationArr
-                print indexOfthis
+                # print stationArr
+                # print indexOfthis
                 if not vehiclesInDepot[indexOfthis]:
                     vehiclesInDepot[indexOfthis] = [];
                 vehiclesInDepot[indexOfthis].append(item['apparatusID'])
@@ -249,8 +259,8 @@ def getVehiclesData(start, end):
         for location in locations:
             if (start <= location['timestamp'] <= end):
                 count +=1
-                print count
-                print location['timestamp']
+                # print count
+                # print location['timestamp']
 
                 if not visited:
                     dictOut['_id'] = str(item['_id'])
@@ -291,8 +301,8 @@ def getCrimeData(start, end, str):
             date = row[1]
             date_time = datetime.datetime.strptime(date, "%Y%m%d %H:%M")
             if (start <= date_time <= end):
-                print i
-                i += 1
+                # print i
+                # i += 1
 
                 obj = {}
                 for j in range(len(header)):
@@ -403,7 +413,7 @@ def getBestDepotPos():
                 if  contents[2][i][0] not in dicOfDepot:
                     dicOfDepot[contents[2][i][0]] = []
                 dicOfDepot[contents[2][i][0]].append(i)
-    print dicOfDepot
+    # print dicOfDepot
 
     
     with open(filepath + "latLongGrids.pickle") as f:
