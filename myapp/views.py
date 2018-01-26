@@ -90,37 +90,46 @@ minmax = [None] * 2
 global lastsearch
 lastsearch = None
 def findMinMax():
-    global minmax
-    global lastsearch
-    if (not minmax or not lastsearch or time.time() - lastsearch > 24 * 60 * 60):
-        client = MongoClient("mongodb://127.0.0.1:27017/fire_department")
-        db = client["fire_department"]["simple__incident"]
-        items = db.find()
-        pretime = (items[0])['alarmDateTime']
-        if isinstance(pretime, unicode):
-            pretime = datetime.datetime.strptime(pretime, "%Y,%m,%d,%H,%M,%S,%f")
-            print pretime
-        maxT = pretime
-        minT = pretime
+    # global minmax
+    # global lastsearch
+    # if (not minmax or not lastsearch or time.time() - lastsearch > 24 * 60 * 60):
+    #     client = MongoClient("mongodb://127.0.0.1:27017/fire_department")
+    #     db = client["fire_department"]["simple__incident"]
+    #     items = db.find()
+    #     pretime = (items[0])['alarmDateTime']
+    #     if isinstance(pretime, unicode):
+    #         pretime = datetime.datetime.strptime(pretime, "%Y,%m,%d,%H,%M,%S,%f")
+    #         print pretime
+    #     maxT = pretime
+    #     minT = pretime
 
-        for item in items:
-            _time_ = item['alarmDateTime']
-            if isinstance(_time_, unicode):
-                if (_time_[0]!="2"): # _time_: "Essentially the time at which the accident occurred"
-                    continue
-                else:
-                    _time_ = datetime.datetime.strptime(_time_, "%Y,%m,%d,%H,%M,%S,%f")
+    #     for item in items:
+    #         _time_ = item['alarmDateTime']
+    #         if isinstance(_time_, unicode):
+    #             if (_time_[0]!="2"): # _time_: "Essentially the time at which the accident occurred"
+    #                 continue
+    #             else:
+    #                 _time_ = datetime.datetime.strptime(_time_, "%Y,%m,%d,%H,%M,%S,%f")
 
-            if (_time_>maxT):
-                maxT = _time_
+    #         if (_time_>maxT):
+    #             maxT = _time_
             
-            if (_time_<minT):
-                minT = _time_
+    #         if (_time_<minT):
+    #             minT = _time_
 
-        minmax[0] = (minT - datetime.datetime(1970,1,1)).total_seconds()
-        minmax[1] = (maxT - datetime.datetime(1970,1,1)).total_seconds()
+    #     minmax[0] = (minT - datetime.datetime(1970,1,1)).total_seconds()
+    #     minmax[1] = (maxT - datetime.datetime(1970,1,1)).total_seconds()
+
+        '''
+        2014-03-21 10:02:48.253000
+        [datetime.datetime(2014, 2, 20, 10, 24, 51, 297000), datetime.datetime(2017, 6, 20, 13, 31, 11)]
+        '''
+
+        minmax[0] = (datetime.datetime(2014,2,21) - datetime.datetime(1970,1,1)).total_seconds()
+        minmax[1] = (datetime.datetime(2017,6,19) - datetime.datetime(1970,1,1)).total_seconds()
+
         lastsearch = time.time()
-        print [minT, maxT]
+        # print [minT, maxT]
         socketio.emit("gotNewMinMaxTime", minmax)
 
 
