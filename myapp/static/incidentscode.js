@@ -627,6 +627,7 @@ socket.on('incident_data', function(msg) {
 });
 
 /* set traffic incidents markers*/
+var vehiclesArr = [];
 function setIncident(r, index) {
     var emojiPicked = false;
     var r_severity = (r.emdCardNumber).charAt(index);
@@ -666,16 +667,54 @@ function setIncident(r, index) {
         '</br><b>Alarm Date: </b>' + r.alarmDate +
         '</br><b>Location: </b>' + r.streetNumber + " " + r.streetPrefix + " "
             + r.streetName + " " + r.streetSuffix + " " + r.streetType + ", "
-            + r.city + ", " + r.county + ", TN" +
+            + r.city + ", " + r.county + ", TN " + r.zipCode + 
         '</br><b>EMD Card Number: </b>' + r.emdCardNumber +
         '</br><b>Fire Zone: </b>' + r.fireZone +
-        '</br>Object Id: ' + r._id;
+        '</br><b>Responding Vehicles: </b>' + r.allIDs
+        '</br>Object Id: ' + r._id
     content = content.replace(/na/g, "");
 
     var marker = new google.maps.Marker(createMarkerObj(latLng,map,img,content));
     setInfoWindow(marker);
     markers.push(marker);
     markersArr[""+protocol].push(marker);
+
+    if (r.respondingVehicles == "na") {
+        return;
+    }
+    var image = {
+        path: google.maps.SymbolPath.CIRCLE,
+        fillColor: 'white',
+        fillOpacity: .3,
+        scale: 6,
+        strokeColor: 'brown',
+        strokeWeight: .5
+    };
+
+    for (var num=0; num<(r.respondingVehicles).length; num++) {
+        var contentVehicle = "&#x1F692;<b>id: </b>"+
+            "<b>Apparatus ID: </b>" + (r.respondingVehicles)[num].apparatusID + 
+            "</br>"+"<b>Dispatch Time</b>"+ (r.respondingVehicles)[num].dispatchDateTime +
+            "</br>"+"<b>Arrival Time</b>"+ (r.respondingVehicles)[num].arrivalDateTime +
+            "</br>"+"<b>Clear Time</b>"+ (r.respondingVehicles)[num].clearDateTime
+        contentVehicle = contentVehicle.replace(/na/g, "Unknown");
+
+        var markerVehicle = new google.maps.Marker({
+                position: latLng,
+                map: map,
+                icon: image,
+                label: {
+                    color: "brown",
+                    fontSize: "5px",
+                    text: (r.respondingVehicles)[num].apparatusID
+                },
+                contentString: contentVehicle
+            });
+
+        setInfoWindow(markerVehicle);
+        vehiclesArr.push(markerVehicle); 
+    }
+
 }
 
 /* socket to get depots location from server*/
@@ -702,48 +741,6 @@ socket.on('depots_data', function(msg) {
     // console.log("depots_data length"+":  "+arr_depots.length);
 });
 
-/* socket to get vehicles location from server*/
-var data_vehicle;
-var vehiclesArr = [];
-socket.on('vehicle_data', function(msg) {
-    data_vehicle = msg;
-    setVehicle();
-});
-
-/* set markers for responding vehicles location*/
-function setVehicle() {
-    var r1 = data_vehicle;
-    var image = {
-        path: google.maps.SymbolPath.CIRCLE,
-        fillColor: 'floralwhite',
-        fillOpacity: .4,
-        scale: 6,
-        strokeColor: 'brown',
-        strokeWeight: .5
-    };
-    for (var i = 0; i < (r1.locations).length; i++) {
-        var content = "&#x1F692;<b>id: </b>"+r1._id +"</br>" +"<b>Apparatus ID: </b>" + 
-            r1.apparatusID + "</br>"+"<b>Time of location: </b>"+ (r1.locations)[i].time +
-            "</br>"+"<b>Station Location: </b>" + (r1.stationLocation)[0]
-        
-        var latLng = new google.maps.LatLng((r1.locations)[i]._lat, (r1.locations)[i]._lng),
-            marker = new google.maps.Marker({
-                position: latLng,
-                map: map,
-                icon: image,
-                label: {
-                    color: "brown",
-                    fontSize: "5px",
-                    text: r1.apparatusID
-                },
-                contentString: content
-            });
-
-        content = content.replace(/na/g, "Unknown");
-        setInfoWindow(marker);
-        vehiclesArr.push(marker);        
-    }
-}
 
 /* set info windows and make markers bounce 3 times*/
 var infowindow;

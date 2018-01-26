@@ -59,11 +59,10 @@ def getDate (msg):
     if (delta > 14):
         getIncidentHeat(start, end)
         # getCrimeData(start, end, "heat")
-        print "======================"
         socketio.emit("heat-success")
     else:
         getIncidentData(start, end)
-        getVehiclesData(start, end)
+        getDepotsData()
         # getCrimeData(start, end, "markers")
         socketio.emit("markers-success")
     
@@ -93,47 +92,58 @@ lastsearch = None
 def findMinMax():
     global minmax
     global lastsearch
-    # if (not minmax or not lastsearch or time.time() - lastsearch > 24 * 60 * 60):
-    if True:
+    if (not minmax or not lastsearch or time.time() - lastsearch > 24 * 60 * 60):
         client = MongoClient("mongodb://127.0.0.1:27017/fire_department")
         db = client["fire_department"]["simple__incident"]
         items = db.find()
         pretime = (items[0])['alarmDateTime']
-        print pretime
+        if isinstance(pretime, unicode):
+            pretime = datetime.datetime.strptime(pretime, "%Y,%m,%d,%H,%M,%S,%f")
+            print pretime
         maxT = pretime
         minT = pretime
+
         for item in items:
-            if (type(item['alarmDateTime'])!=datetime.datetime):
-                continue
-            time_ = item['alarmDateTime']
-            if (time_>maxT):
-                maxT = time_
+            _time_ = item['alarmDateTime']
+            if isinstance(_time_, unicode):
+                if (_time_[0]!="2"): # _time_: "Essentially the time at which the accident occurred"
+                    continue
+                else:
+                    _time_ = datetime.datetime.strptime(_time_, "%Y,%m,%d,%H,%M,%S,%f")
+
+            if (_time_>maxT):
+                maxT = _time_
             
-            if (time_<minT):
-                minT = time_
+            if (_time_<minT):
+                minT = _time_
+
         minmax[0] = (minT - datetime.datetime(1970,1,1)).total_seconds()
         minmax[1] = (maxT - datetime.datetime(1970,1,1)).total_seconds()
         lastsearch = time.time()
-        print minmax
+        print [minT, maxT]
         socketio.emit("gotNewMinMaxTime", minmax)
 
 
 
 # retrieve a simplified list of information for just heat map layer
 def getIncidentHeat(start, end):
-    print "-> getIncident Heat()\n"
+    print "-> getIncidentHeat()\n"
     client = MongoClient(url_mongo_fire_depart)
     db = client["fire_department"]["simple__incident"]
     items = db.find()
     arr = []
 
-    count = 0
     for item in items:
-        time = item['alarmDateTime']
-        if (item['incidentNumber']=="sample"):
-            break
-        if (isinstance(time, datetime.date) and start <= time <= end):
-            count+=1
+        _time_ = item['alarmDateTime']
+        if isinstance(_time_, unicode):
+            if (_time_[0]!="2"): # _time_: "Essentially the time at which the accident occurred"
+                continue
+            else:
+                _time_ = datetime.datetime.strptime(_time_, "%Y,%m,%d,%H,%M,%S,%f")
+        elif not isinstance(_time_, datetime.date): 
+            print item
+
+        if (start <= _time_ <= end):
             dictIn = {}
             dictIn['lat'] = item['latitude']
             dictIn['lng'] = item['longitude']
@@ -144,35 +154,19 @@ def getIncidentHeat(start, end):
 
 # retrieve data from mongo db
 def getIncidentData(start, end):
-    
     print "-> getIncidentData()\n"
-    '''
-    with open('myapp/static/get.json') as data_file:
-        print "------> data"
-        print data_file
-        socketio.emit("accident_data", {'data':json.load(data_file)})
-    '''
-
     client = MongoClient(url_mongo_fire_depart)
     db = client["fire_department"]["simple__incident"]
     items = db.find()
     types = []
 
-    count = 0
     for item in items:
         try:
             time = item['alarmDateTime']
             if not isinstance(time, datetime.date):
-
                 time = datetime.datetime.strptime(time, '%Y,%m,%d,%H,%M,%S,%f')
             
-            if (item['incidentNumber']=="sample"):
-                continue
             if (start <= time <= end):
-                # count+=1
-                # print count
-                # print time
-
                 dictIn = {}
                 dictIn['_id'] = str(item['_id'])
                 dictIn['incidentNumber'] = item['incidentNumber']
@@ -180,57 +174,48 @@ def getIncidentData(start, end):
                 dictIn['_lng'] = item['longitude']
                 dictIn['alarmDate'] = str(item['alarmDateTime'])
                 dictIn['fireZone'] = item['fireZone']
-                if 'city' in item:
-                    dictIn['city'] = item['city']
-                else:
-                    dictIn['city'] = "na"
-                if 'county' in item:
-                    dictIn['county'] = item['county']
-                else:
-                    dictIn['county'] = "na"
                 dictIn['emdCardNumber'] = item['emdCardNumber']
-                if 'streetNumber' in item:
-                    dictIn['streetNumber'] = item['streetNumber']
-                else: 
-                    dictIn['streetNumber'] = "na"
-
-                if 'streetPrefix' in item:
-                    dictIn['streetPrefix'] = item['streetPrefix']
-                else: 
-                    dictIn['streetPrefix'] = "na"
-
-                if 'streetName' in item:
-                    dictIn['streetName'] = item['streetName']
-                else: 
-                    dictIn['streetName'] = "na"
-
-                if 'streetType' in item:
-                    dictIn['streetType'] = item['streetType']
-                else: 
-                    dictIn['streetType'] = "na"
-
-                if 'streetSuffix' in item:
-                    dictIn['streetSuffix'] = item['streetSuffix']
-                else: 
-                    dictIn['streetSuffix'] = "na"
-
-                if 'apartment' in item:
-                    dictIn['apartment'] = item['apartment']
-                else: 
-                    dictIn['apartment'] = "na"
-
                 
+                dictIn['city'] = item['city'] if ('city' in item) else "na"
+                dictIn['county'] = item['county'] if ('county' in item) else "na"
+                dictIn['streetNumber'] = item['streetNumber'] if ('streetNumber' in item) else "na"
+                dictIn['streetPrefix'] = item['streetPrefix'] if ('streetPrefix' in item) else "na"
+                dictIn['streetName'] = item['streetName'] if ('streetName' in item) else "na"
+                dictIn['streetType'] = item['streetType'] if ('streetType' in item) else "na"
+                dictIn['streetSuffix'] = item['streetSuffix'] if ('streetSuffix' in item) else "na"
+                dictIn['apartment'] = item['apartment'] if ('apartment' in item) else "na"
+                dictIn['zipCode'] = ((item['zipCode']).split('.'))[0] if ('zipCode' in item) else "na"
+
+                if 'respondingVehicles' in item:
+                    tmp = item['respondingVehicles']
+                    allIDs = ""
+                    for i in tmp: # i is a dict
+                        if 'dispatchDateTime' not in i:
+                            i['dispatchDateTime'] = "na"
+                        if 'arrivalDateTime' not in i:
+                            i['arrivalDateTime'] = "na"
+                        if 'clearDateTime' not in i:
+                            i['clearDateTime'] = "na" 
+                        allIDs += i['apparatusID'] + "| "
+                    
+                    dictIn['allIDs'] = allIDs
+                    dictIn['respondingVehicles'] = tmp
+                else:
+                    dictIn['respondingVehicles'] = "na"
+                    dictIn['allIDs'] = "na"
+        
                 socketio.emit("incident_data", dictIn)
         except:
             continue
 
+
 depot_cache = [];
-# Retrieve fire vehicles location
-def getVehiclesData(start, end):
+# Retrieve fire depots location and what vehicles live there
+def getDepotsData():
     depot = [];
     vehiclesInDepot = [None]*40;
     global depot_cache
-    print "-> getVehiclesData()\n"
+    print "-> getDepotsData()\n"
 
     client = MongoClient(url_mongo_fire_depart)
     db = client["fire_department"]["response_vehicle"]
@@ -252,36 +237,6 @@ def getVehiclesData(start, end):
                     vehiclesInDepot[indexOfthis] = [];
                 vehiclesInDepot[indexOfthis].append(item['apparatusID'])
 
-        visited = False
-        dictOut = {}
-        arr = []
-        locations = item['locations']
-        for location in locations:
-            if (start <= location['timestamp'] <= end):
-                count +=1
-                # print count
-                # print location['timestamp']
-
-                if not visited:
-                    dictOut['_id'] = str(item['_id'])
-                    if 'apparatusID' in item:
-                        dictOut['apparatusID'] = item['apparatusID']
-                    else: 
-                        dictOut['apparatusID'] = "na"
-                    visited = True
-                    if 'stationLocation' in item:
-                        dictOut['stationLocation'] = item['stationLocation']
-                    else: 
-                        dictOut['stationLocation'] = "na"
-
-                dictIn = {}
-                dictIn['_lat'] = location['latitude']
-                dictIn['_lng'] = location['longitude']
-                dictIn['time'] = str(location['timestamp'])
-                arr.append(dictIn)
-        if visited:
-            dictOut['locations'] = arr
-            socketio.emit("vehicle_data", dictOut)
     depot_cache = depot
     socketio.emit("depots_data", {'depotLocation': depot_cache, 'depotInterior': vehiclesInDepot})
 
