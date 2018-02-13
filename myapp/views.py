@@ -147,7 +147,7 @@ def findMinMax():
 def getIncidentHeat(start, end):
     print "-> getIncidentHeat()\n"
     client = MongoClient(url_mongo_fire_depart)
-    db = client["fire_department"]["simple__incident"]
+    db = client["fire_department"]["simple_incident"]
     items = db.find()
     arr = []
 
