@@ -147,10 +147,8 @@ def predictIncidents():
         fileNameClusters = ConfigSectionMap(Config, "filePaths")["clusters"]
         clusters = pickle.load(open(fileNameClusters, 'rb'))
 
-
 def __sampleIncidents():
     return []
-
 
 def __predict(predEndTime,predStartTime,grids,validGrids,influencePerGrid):
     global predCount
@@ -242,7 +240,6 @@ def convertToStatePlane(lat,long):
 
     return p1(lat,long)
 
-
 def getGridForCoordinate():
     pass
 
@@ -265,8 +262,6 @@ def createSurvivalInputData(mongoItems,start,end,grids,xLow,yLow):
             incidents.append([x,y,t1,gridX,gridY])
 
     interArrivalData = getInterArrivalData(incidents)
-
-
 
 def getRegressionFormula(distinctSeason, distinctTimeZone, dataType):
     # create regression formula based on whether factors can be used or not, based on bool values received

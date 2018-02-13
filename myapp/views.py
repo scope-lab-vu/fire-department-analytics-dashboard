@@ -13,6 +13,8 @@ import csv
 import xlrd
 import os
 from myconfig import MONGODB_HOST, MONGODB_PORT
+from math import ceil
+from copy import deepcopy
 
 url_mongo_fire_depart = "%s:%d/fire_department" % (MONGODB_HOST, MONGODB_PORT)
 print "--> url_mongo_fire_depart:", url_mongo_fire_depart
@@ -61,8 +63,15 @@ def getDate (msg):
         # getCrimeData(start, end, "heat")
         socketio.emit("heat-success")
     else:
+        #log time
+        timeStart = datetime.datetime.now()
         getIncidentData(start, end)
+        timeEnd = datetime.datetime.now()
+        print "Time taken to get incidents : {}".format((timeEnd-timeStart).total_seconds())
+        timeStart = datetime.datetime.now()
         getDepotsData()
+        timeEnd = datetime.datetime.now()
+
         # getCrimeData(start, end, "markers")
         socketio.emit("markers-success")
     
@@ -161,90 +170,133 @@ def getIncidentHeat(start, end):
     socketio.emit("latlngarrofobj", arr)
 
 
+def createDBDate(dt):
+    #parse the date in a format that can be queried
+    delimiter = '-'
+    separator = 'T'
+    timeSeparator = ':'
+    dateBuilder = str(dt.year) + delimiter
+    dateBuilder += str(dt.month) + delimiter
+    dateBuilder += str(dt.day) + separator
+    dateBuilder += str(dt.hour) + timeSeparator
+    dateBuilder += str(dt.minute) + timeSeparator
+    dateBuilder += str(dt.second)
+    return dateBuilder
+
+
+
 # retrieve data from mongo db
 def getIncidentData(start, end):
     print "-> getIncidentData()\n"
     client = MongoClient(url_mongo_fire_depart)
     db = client["fire_department"]["simple__incident"]
-    items = db.find()
-    types = []
 
+    ############################
+    ############################
+    ############################
+    # REMOVE BEFORE CHECK IN
+    # print "Debug: remove before check in. Start and end dates modified"
+    # start = datetime.datetime(2011, 1, 1)
+    # end = datetime.datetime(2018, 1, 1)
+    ############################
+    ############################
+    ############################
+
+
+    items = db.find({'alarmDateTime':{'$gte':start,'lt':end}})
+    #items = db.find({'alarmDateTime': {'$lt': datetime.datetime.now()}})
+    #print "Items that match date : {}".format(items.count())
+
+    #for counterBatch in range(totalBatches):
     for item in items:
         try:
             time = item['alarmDateTime']
             if not isinstance(time, datetime.date):
                 time = datetime.datetime.strptime(time, '%Y,%m,%d,%H,%M,%S,%f')
-            
-            if (start <= time <= end):
-                dictIn = {}
-                dictIn['_id'] = str(item['_id'])
-                dictIn['incidentNumber'] = item['incidentNumber']
-                dictIn['_lat'] = item['latitude']
-                dictIn['_lng'] = item['longitude']
-                dictIn['alarmDate'] = str(item['alarmDateTime'])
-                dictIn['fireZone'] = item['fireZone']
-                dictIn['emdCardNumber'] = item['emdCardNumber']
-                
-                dictIn['city'] = item['city'] if ('city' in item) else "na"
-                dictIn['county'] = item['county'] if ('county' in item) else "na"
-                dictIn['streetNumber'] = item['streetNumber'] if ('streetNumber' in item) else "na"
-                dictIn['streetPrefix'] = item['streetPrefix'] if ('streetPrefix' in item) else "na"
-                dictIn['streetName'] = item['streetName'] if ('streetName' in item) else "na"
-                dictIn['streetType'] = item['streetType'] if ('streetType' in item) else "na"
-                dictIn['streetSuffix'] = item['streetSuffix'] if ('streetSuffix' in item) else "na"
-                dictIn['apartment'] = item['apartment'] if ('apartment' in item) else "na"
-                dictIn['zipCode'] = ((item['zipCode']).split('.'))[0] if ('zipCode' in item) else "na"
 
-                if 'respondingVehicles' in item:
-                    tmp = item['respondingVehicles']
-                    allIDs = ""
-                    for i in tmp: # i is a dict
-                        if 'dispatchDateTime' not in i:
-                            i['dispatchDateTime'] = "na"
-                        if 'arrivalDateTime' not in i:
-                            i['arrivalDateTime'] = "na"
-                        if 'clearDateTime' not in i:
-                            i['clearDateTime'] = "na" 
-                        allIDs += i['apparatusID'] + "| "
-                    
-                    dictIn['allIDs'] = allIDs
-                    dictIn['respondingVehicles'] = tmp
-                else:
-                    dictIn['respondingVehicles'] = "na"
-                    dictIn['allIDs'] = "na"
-        
-                socketio.emit("incident_data", dictIn)
+            # if (start <= time <= end):
+            dictIn = {}
+            dictIn['_id'] = str(item['_id'])
+            dictIn['incidentNumber'] = item['incidentNumber']
+            dictIn['_lat'] = item['latitude']
+            dictIn['_lng'] = item['longitude']
+            dictIn['alarmDate'] = str(item['alarmDateTime'])
+            dictIn['fireZone'] = item['fireZone']
+            dictIn['emdCardNumber'] = item['emdCardNumber']
+
+            dictIn['city'] = item['city'] if ('city' in item) else "na"
+            dictIn['county'] = item['county'] if ('county' in item) else "na"
+            dictIn['streetNumber'] = item['streetNumber'] if ('streetNumber' in item) else "na"
+            dictIn['streetPrefix'] = item['streetPrefix'] if ('streetPrefix' in item) else "na"
+            dictIn['streetName'] = item['streetName'] if ('streetName' in item) else "na"
+            dictIn['streetType'] = item['streetType'] if ('streetType' in item) else "na"
+            dictIn['streetSuffix'] = item['streetSuffix'] if ('streetSuffix' in item) else "na"
+            dictIn['apartment'] = item['apartment'] if ('apartment' in item) else "na"
+            dictIn['zipCode'] = ((item['zipCode']).split('.'))[0] if ('zipCode' in item) else "na"
+
+            if 'respondingVehicles' in item:
+                tmp = item['respondingVehicles']
+                allIDs = ""
+                for i in tmp: # i is a dict
+                    if 'dispatchDateTime' not in i:
+                        i['dispatchDateTime'] = "na"
+                    if 'arrivalDateTime' not in i:
+                        i['arrivalDateTime'] = "na"
+                    if 'clearDateTime' not in i:
+                        i['clearDateTime'] = "na"
+                    allIDs += i['apparatusID'] + "| "
+
+                dictIn['allIDs'] = allIDs
+                dictIn['respondingVehicles'] = tmp
+            else:
+                dictIn['respondingVehicles'] = "na"
+                dictIn['allIDs'] = "na"
+
+            # batchIncident.append(dictIn)
+            socketio.emit("incident_data", dictIn)
+
         except:
             continue
+
+
 
 
 depot_cache = [];
 # Retrieve fire depots location and what vehicles live there
 def getDepotsData():
     depot = [];
-    vehiclesInDepot = [None]*40;
     global depot_cache
     print "-> getDepotsData()\n"
 
     client = MongoClient(url_mongo_fire_depart)
     db = client["fire_department"]["response_vehicle"]
-    items = db.find()
-    count = 0
-    for item in items:
-        if (item['apparatusID']=="sample"):
-            continue
-        
-        if not depot_cache: 
-            stationArr = item['stationLocation']
-            if stationArr[0]:
-                if stationArr[0] not in depot:
-                    depot.append(stationArr[0])
-                indexOfthis = depot.index(stationArr[0])
-                # print stationArr
-                # print indexOfthis
-                if not vehiclesInDepot[indexOfthis]:
-                    vehiclesInDepot[indexOfthis] = [];
-                vehiclesInDepot[indexOfthis].append(item['apparatusID'])
+    pipeline = [{'$group': {'_id':"$stationLocation","vehicle":{'$addToSet':'$apparatusID'}}}]
+    items = list(db.aggregate(pipeline))
+    vehiclesInDepot = [deepcopy([]) for x in range(len(items))]
+    for counter in range(len(items)):
+        if items[counter]['vehicle'][0] == 'sample':
+            vehiclesInDepot[counter] = items[counter]['vehicle']
+            depot_cache.append(items[counter]['_id'])
+
+
+    # count = 0
+    # for item in items:
+    #     print "Item"
+    #     ##replaced in query
+    #     # if (item['apparatusID']=="sample"):
+    #     #     continue
+    #
+    #     #if not depot_cache:
+    #     stationArr = item['stationLocation']
+    #     if stationArr[0]:
+    #         if stationArr[0] not in depot:
+    #             depot.append(stationArr[0])
+    #         indexOfthis = depot.index(stationArr[0])
+    #         # print stationArr
+    #         # print indexOfthis
+    #         if not vehiclesInDepot[indexOfthis]:
+    #             vehiclesInDepot[indexOfthis] = [];
+    #         vehiclesInDepot[indexOfthis].append(item['apparatusID'])
 
     depot_cache = depot
     socketio.emit("depots_data", {'depotLocation': depot_cache, 'depotInterior': vehiclesInDepot})

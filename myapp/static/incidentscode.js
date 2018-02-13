@@ -605,6 +605,8 @@ socket.on('incident_data', function(msg) {
     /* emdCardNumber is a digit that has length [3,5], the letter in between is the 
      * response determinant, a.k.a, the level of severity; or it has the value of 
      * "ctran" or "dupont"*/
+    // alert('Data Received');
+    
     var emdCardNumber = data_incident.emdCardNumber;
     var protocol;
     var u=0;
@@ -1440,7 +1442,7 @@ function createSelectBox(div) {
     selectList.style.marginLeft = "15px";
     var opt = document.createElement("option");
     opt.innerHTML = "Incidents(Fire Department)";
-    opt.id = "predictCrime";
+    opt.id = "predictFire";
     selectList.appendChild(opt);
     // opt = document.createElement("option");
     // opt.innerHTML = "Crime(Police Department)";
@@ -1479,10 +1481,10 @@ function createSubmitBtn(div) {
     button.addEventListener ("click", function() {
         document.getElementsByClassName("loading")[0].style.display = "none";
         var answer = "";
-        if (document.getElementById("predictCrime").selected) {
-            answer = "crime";
-        } else {
+        if (document.getElementById("predictFire").selected) {
             answer = "fire";
+        } else {
+            answer = "crime";
         }
         socket.emit('predictNOW', {ans: answer});
     });
@@ -1515,6 +1517,7 @@ socket.on('bestAreaInCharge', function(msg) {
 // set all predictions dots onto heat map
 var heatmapPredict;
 function setPredictions(arr) {
+    alert("Inside set predictions");
     var heatMapData = [];
     for (var i = 0; i < arr.length; i++) {
         var obj = {};
@@ -1538,6 +1541,7 @@ function setPredictions(arr) {
 }
 
 function setPrediction(arr) {
+    alert("Inside set prediction");
     var heatMapData = [];
     for (var i=0; i<arr.length; i++) {
         heatMapData.push(new google.maps.LatLng(arr[i][3], arr[i][4]));
@@ -1545,8 +1549,13 @@ function setPrediction(arr) {
 
     var heatmapPredictNew = new google.maps.visualization.HeatmapLayer({
         data: heatMapData,
-        radius: 20
+        radius: 20,
+        dissipating: false
     });
+    google.maps.event.addListener(heatmapPredictNew, 'zoom_changed', function () {
+              heatmap.setOptions({radius:getNewRadius()});
+          });
+
     map.setCenter(centerNash);
     heatmapPredictNew.setMap(map);
 
