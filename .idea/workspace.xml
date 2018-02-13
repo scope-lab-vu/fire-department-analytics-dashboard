@@ -3,10 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="3728ce50-07ea-4a4f-bf6d-ddbbf2f3f834" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/myapp/incidentPrediction.py" afterPath="$PROJECT_DIR$/myapp/incidentPrediction.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/myapp/myconfig.py" afterPath="$PROJECT_DIR$/myapp/myconfig.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/myapp/static/incidentscode.js" afterPath="$PROJECT_DIR$/myapp/static/incidentscode.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/myapp/templates/incidentsPlot.html" afterPath="$PROJECT_DIR$/myapp/templates/incidentsPlot.html" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/myapp/views.py" afterPath="$PROJECT_DIR$/myapp/views.py" />
     </list>
     <ignored path="analytics-dashboard.iws" />
@@ -34,11 +30,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="views.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="views.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/myapp/views.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="300">
-              <caret line="266" column="20" selection-start-line="266" selection-start-column="20" selection-end-line="266" selection-end-column="20" />
+            <state relative-caret-position="-300">
+              <caret line="191" column="43" selection-start-line="191" selection-start-column="43" selection-end-line="191" selection-end-column="43" />
               <folding>
                 <element signature="e#0#21#0" expanded="true" />
               </folding>
@@ -49,7 +45,7 @@
       <file leaf-file-name="incidentPrediction.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/myapp/incidentPrediction.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-52">
+            <state relative-caret-position="-53">
               <caret line="8" column="26" selection-start-line="8" selection-start-column="26" selection-end-line="8" selection-end-column="26" />
               <folding>
                 <element signature="e#405#746#0" expanded="false" />
@@ -57,7 +53,6 @@
                 <element signature="e#506#633#0" expanded="false" />
                 <element signature="e#662#729#0" expanded="false" />
                 <element signature="e#791#795#0" expanded="false" />
-                <element signature="e#1162#5063#0" expanded="false" />
                 <element signature="e#1335#1405#0" expanded="false" />
                 <element signature="e#1619#1948#0" expanded="false" />
                 <element signature="e#1670#1948#0" expanded="false" />
@@ -112,11 +107,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="myconfig.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="myconfig.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/myapp/myconfig.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="75">
-              <caret line="5" column="0" selection-start-line="5" selection-start-column="0" selection-end-line="5" selection-end-column="0" />
+            <state relative-caret-position="30">
+              <caret line="2" column="0" selection-start-line="2" selection-start-column="0" selection-end-line="2" selection-end-column="0" />
               <folding />
             </state>
           </provider>
@@ -481,8 +476,8 @@
         <option value="$PROJECT_DIR$/myapp/templates/incidentsPlot.html" />
         <option value="$PROJECT_DIR$/myapp/incidentPrediction.py" />
         <option value="$PROJECT_DIR$/myapp/static/incidentscode.js" />
-        <option value="$PROJECT_DIR$/myapp/views.py" />
         <option value="$PROJECT_DIR$/myapp/myconfig.py" />
+        <option value="$PROJECT_DIR$/myapp/views.py" />
       </list>
     </option>
   </component>
@@ -937,32 +932,27 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="python-line">
           <url>file://$PROJECT_DIR$/myapp/views.py</url>
-          <line>274</line>
+          <line>266</line>
           <option name="timeStamp" value="38" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="python-line">
           <url>file://$PROJECT_DIR$/myapp/views.py</url>
-          <line>290</line>
+          <line>282</line>
           <option name="timeStamp" value="39" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="python-line">
           <url>file://$PROJECT_DIR$/myapp/views.py</url>
-          <line>299</line>
+          <line>291</line>
           <option name="timeStamp" value="41" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="python-line">
           <url>file://$PROJECT_DIR$/myapp/views.py</url>
-          <line>283</line>
+          <line>275</line>
           <option name="timeStamp" value="43" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="python-line">
-          <url>file://$PROJECT_DIR$/myapp/incidentPrediction.py</url>
-          <line>29</line>
-          <option name="timeStamp" value="44" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="python-line">
           <url>file://$PROJECT_DIR$/myapp/views.py</url>
-          <line>363</line>
+          <line>355</line>
           <option name="timeStamp" value="45" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="javascript">
@@ -1966,9 +1956,17 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/myapp/myconfig.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="30">
+          <caret line="2" column="0" selection-start-line="2" selection-start-column="0" selection-end-line="2" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/myapp/incidentPrediction.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-52">
+        <state relative-caret-position="-53">
           <caret line="8" column="26" selection-start-line="8" selection-start-column="26" selection-end-line="8" selection-end-column="26" />
           <folding>
             <element signature="e#405#746#0" expanded="false" />
@@ -1976,7 +1974,6 @@
             <element signature="e#506#633#0" expanded="false" />
             <element signature="e#662#729#0" expanded="false" />
             <element signature="e#791#795#0" expanded="false" />
-            <element signature="e#1162#5063#0" expanded="false" />
             <element signature="e#1335#1405#0" expanded="false" />
             <element signature="e#1619#1948#0" expanded="false" />
             <element signature="e#1670#1948#0" expanded="false" />
@@ -2032,19 +2029,11 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/myapp/views.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="300">
-          <caret line="266" column="20" selection-start-line="266" selection-start-column="20" selection-end-line="266" selection-end-column="20" />
+        <state relative-caret-position="-300">
+          <caret line="191" column="43" selection-start-line="191" selection-start-column="43" selection-end-line="191" selection-end-column="43" />
           <folding>
             <element signature="e#0#21#0" expanded="true" />
           </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/myapp/myconfig.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="75">
-          <caret line="5" column="0" selection-start-line="5" selection-start-column="0" selection-end-line="5" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
