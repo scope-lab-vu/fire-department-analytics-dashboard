@@ -1517,7 +1517,6 @@ socket.on('bestAreaInCharge', function(msg) {
 // set all predictions dots onto heat map
 var heatmapPredict;
 function setPredictions(arr) {
-    // alert("Inside set predictions");
     var heatMapData = [];
     for (var i = 0; i < arr.length; i++) {
         var obj = {};
@@ -1541,7 +1540,6 @@ function setPredictions(arr) {
 }
 
 function setPrediction(arr) {
-    // alert("Inside set prediction");
     var heatMapData = [];
     for (var i=0; i<arr.length; i++) {
         heatMapData.push(new google.maps.LatLng(arr[i][3], arr[i][4]));
