@@ -147,7 +147,7 @@ def findMinMax():
 def getIncidentHeat(start, end):
     print "-> getIncidentHeat()\n"
     client = MongoClient(url_mongo_fire_depart)
-    db = client["fire_department"]["simple_incident"]
+    db = client["fire_department"]["simple_incidents"]
     items = db.find()
     arr = []
 
@@ -203,7 +203,7 @@ def getIncidentData(start, end):
     ############################
 
 
-    items = db.find({'alarmDateTime':{'$gte':start,'$lt':end}})
+    items = db.find({'alarmDateTime':{'$gte':start,'$lt':end}}).limit(500)
     #items = db.find({'alarmDateTime': {'$lt': datetime.datetime.now()}})
     print "Items that match date : {}".format(items.count())
 
