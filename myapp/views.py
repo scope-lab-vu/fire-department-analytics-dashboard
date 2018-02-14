@@ -189,7 +189,7 @@ def createDBDate(dt):
 def getIncidentData(start, end):
     print "-> getIncidentData()\n"
     client = MongoClient(url_mongo_fire_depart)
-    db = client["fire_department"]["simple_incident"]
+    db = client["fire_department"]["simple_incidents"]
 
     ############################
     ############################
@@ -203,7 +203,7 @@ def getIncidentData(start, end):
     ############################
 
 
-    items = db.find({'alarmDateTime':{'$gte':start,'lt':end}})
+    items = db.find({'alarmDateTime':{'$gte':start,'$lt':end}})
     #items = db.find({'alarmDateTime': {'$lt': datetime.datetime.now()}})
     print "Items that match date : {}".format(items.count())
 
@@ -257,9 +257,6 @@ def getIncidentData(start, end):
 
         except:
             continue
-
-
-
 
 depot_cache = [];
 # Retrieve fire depots location and what vehicles live there
