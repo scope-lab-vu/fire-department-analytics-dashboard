@@ -600,31 +600,33 @@ function createMarkerObj(position, map, icon, content) {
 
 /* socket to get incident_data from server */
 var data_incident;
-socket.on('incident_data', function(msg) {
-    data_incident = msg;
-    /* emdCardNumber is a digit that has length [3,5], the letter in between is the 
-     * response determinant, a.k.a, the level of severity; or it has the value of 
-     * "ctran" or "dupont"*/
-    // alert('Data Received');
-    
-    var emdCardNumber = data_incident.emdCardNumber;
-    var protocol;
-    var u=0;
-    if (! ("0123456789".includes(emdCardNumber.charAt(0)))) {
-        protocol = emdCardNumber;
-        u = protocol.length;
-    } else {
-        while (u<emdCardNumber.length && severity.indexOf(emdCardNumber.charAt(u))<0) {
-            u++
+socket.on('incident_data', function(msg) { // msg is arr of dict
+    for (var i=0; i<msg.length; i++) {
+        data_incident = msg[i]; // data_incident is dict obj
+        /* emdCardNumber is a digit that has length [3,5], the letter in between is the 
+         * response determinant, a.k.a, the level of severity; or it has the value of 
+         * "ctran" or "dupont"*/
+        // alert('Data Received');
+        
+        var emdCardNumber = data_incident.emdCardNumber;
+        var protocol;
+        var u=0;
+        if (! ("0123456789".includes(emdCardNumber.charAt(0)))) {
+            protocol = emdCardNumber;
+            u = protocol.length;
+        } else {
+            while (u<emdCardNumber.length && severity.indexOf(emdCardNumber.charAt(u))<0) {
+                u++
+            }
+            protocol = emdCardNumber.substring(0,u);
         }
-        protocol = emdCardNumber.substring(0,u);
+        if (! (protocol in markersArr)) {
+            markersArr[""+protocol] = [];
+            // markersArr.length++;
+            types.push(protocol);
+        }
+        setIncident(data_incident, u)
     }
-    if (! (protocol in markersArr)) {
-        markersArr[""+protocol] = [];
-        // markersArr.length++;
-        types.push(protocol);
-    }
-    setIncident(data_incident, u)
 
 });
 
@@ -1117,6 +1119,7 @@ function setPie(arr) {
  * "bar" to "x" function
  * show/hide side nav bar */
 function barToX(x) {
+    console.log(x);
     x.classList.toggle("change");
     var w = document.getElementById("mySideNav");
     if(w.style.width === "0px" || w.style.width ==="") {
@@ -1179,21 +1182,17 @@ function changeMode(i) {
     var mapView = document.getElementById("mapView");
     var mapDiv = document.getElementById("map");
 
+    var sideNav = document.getElementsByClassName("container");
+    barToX(sideNav[0]);
+
     if(w.style.width !== "0px") {
         w.style.width = "0px";
     }
 
     if (i === 1) { // predicion mode
-        playground[0].style.width = "100%";
-        playground[0].style.left = "-2%";
-        playground[0].style.top = "30px";
-        mapView.style.width = "inherit";
-        mapView.style.height = "765px";
-        mapDiv.style.height = "675px";
-        google.maps.event.trigger(mapDiv, 'resize');
         map.setCenter(centerNash);
         showmenuBtn.style.display = "none";
-        document.body.style.overflowY = "hidden";
+        // document.body.style.overflowY = "hidden";
 
         mode[0].style.backgroundColor = "white";
         mode[1].style.backgroundColor = "#83c985";
@@ -1261,17 +1260,10 @@ function changeMode(i) {
         // o[0].style.display = "block";
 
     } else { // explore mode
-        playground[0].style.width = "100%";
-        playground[0].style.left = "-2%";
-        playground[0].style.top = "30px";
-        mapView.style.width = "inherit";
-        mapView.style.height = "765px";
-        mapDiv.style.height = "675px";
-        google.maps.event.trigger(mapDiv, 'resize');
         map.setCenter(centerNash);
         showmenuBtn.style.display = "none";
         c.style.display = "none";
-        document.body.style.overflowY = "hidden";
+        // document.body.style.overflowY = "hidden";
 
         mode[0].style.backgroundColor = "white";
         mode[1].style.backgroundColor = "white";

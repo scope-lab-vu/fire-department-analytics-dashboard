@@ -34,6 +34,7 @@ def logIncident():
 
 @socketio.on('connect')
 def socketio_connet():
+
     findMinMax()
 
     '''
@@ -162,6 +163,7 @@ def getIncidentHeat(start, end):
             print item
 
         if (start <= _time_ <= end):
+            # print _time_
             dictIn = {}
             dictIn['lat'] = item['latitude']
             dictIn['lng'] = item['longitude']
@@ -203,10 +205,11 @@ def getIncidentData(start, end):
     ############################
 
 
-    items = db.find({'alarmDateTime':{'$gte':start,'$lt':end}}).limit(500)
+    items = db.find({'alarmDateTime':{'$gte':start,'$lt':end}})
     #items = db.find({'alarmDateTime': {'$lt': datetime.datetime.now()}})
     print "Items that match date : {}".format(items.count())
 
+    arr = []
     #for counterBatch in range(totalBatches):
     for item in items:
         try:
@@ -240,10 +243,16 @@ def getIncidentData(start, end):
                 for i in tmp: # i is a dict
                     if 'dispatchDateTime' not in i:
                         i['dispatchDateTime'] = "na"
+                    else:
+                        i['dispatchDateTime'] = str(i['dispatchDateTime'])
                     if 'arrivalDateTime' not in i:
                         i['arrivalDateTime'] = "na"
+                    else:
+                        i['arrivalDateTime'] = str(i['arrivalDateTime'])
                     if 'clearDateTime' not in i:
                         i['clearDateTime'] = "na"
+                    else:
+                        i['clearDateTime'] = str(i['clearDateTime'])
                     allIDs += i['apparatusID'] + "| "
 
                 dictIn['allIDs'] = allIDs
@@ -253,10 +262,13 @@ def getIncidentData(start, end):
                 dictIn['allIDs'] = "na"
 
             # batchIncident.append(dictIn)
-            socketio.emit("incident_data", dictIn)
+            
+            arr.append(dictIn)
 
         except:
             continue
+
+    socketio.emit("incident_data", arr)
 
 depot_cache = [];
 # Retrieve fire depots location and what vehicles live there
