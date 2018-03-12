@@ -148,25 +148,26 @@ def getIncidentHeat(start, end):
     print "-> getIncidentHeat()\n"
     client = MongoClient(url_mongo_fire_depart)
     db = client["fire_department"]["simple_incidents"]
-    items = db.find()
+    #items = db.find()
+    items = db.find({'alarmDateTime': {'$gte': start, '$lt': end}}).limit(1000)
     arr = []
 
     for item in items:
-        _time_ = item['alarmDateTime']
-        if isinstance(_time_, unicode):
-            if (_time_[0]!="2"): # _time_: "Essentially the time at which the accident occurred"
-                continue
-            else:
-                _time_ = datetime.datetime.strptime(_time_, "%Y,%m,%d,%H,%M,%S,%f")
-        elif not isinstance(_time_, datetime.date): 
-            print item
-
-        if (start <= _time_ <= end):
-            dictIn = {}
-            dictIn['lat'] = item['latitude']
-            dictIn['lng'] = item['longitude']
-            dictIn['emdCardNumber'] = item['emdCardNumber']
-            arr.append(dictIn)
+        # _time_ = item['alarmDateTime']
+        # if isinstance(_time_, unicode):
+        #     if (_time_[0]!="2"): # _time_: "Essentially the time at which the accident occurred"
+        #         continue
+        #     else:
+        #         _time_ = datetime.datetime.strptime(_time_, "%Y,%m,%d,%H,%M,%S,%f")
+        # elif not isinstance(_time_, datetime.date):
+        #     print item
+        #
+        # if (start <= _time_ <= end):
+        dictIn = {}
+        dictIn['lat'] = item['latitude']
+        dictIn['lng'] = item['longitude']
+        dictIn['emdCardNumber'] = item['emdCardNumber']
+        arr.append(dictIn)
     socketio.emit("latlngarrofobj", arr)
 
 
