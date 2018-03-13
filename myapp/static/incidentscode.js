@@ -601,6 +601,7 @@ function createMarkerObj(position, map, icon, content) {
 /* socket to get incident_data from server */
 var data_incident;
 socket.on('incident_data', function(msg) { // msg is arr of dict
+    console.log('Received Incident Data');
     for (var i=0; i<msg.length; i++) {
         data_incident = msg[i]; // data_incident is dict obj
         /* emdCardNumber is a digit that has length [3,5], the letter in between is the 
