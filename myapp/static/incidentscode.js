@@ -82,6 +82,9 @@ function createSlider() {
 
     // slider object with double handles
     var dateSlider = document.getElementById('slider');
+    if (document.getElementsByClassName("noUi-base").length !== 0) {
+        dateSlider.noUiSlider.destroy();
+    }
     noUiSlider.create(dateSlider, {
         // Create two timestamps to define a range.
         range: {
