@@ -804,6 +804,7 @@ socket.on('markers-success', function() {
 
 /* heat data of incidents successfully pushed to heatdataAll*/
 socket.on('heat-success', function() {
+    console.log('Recieved Heat Success');
     // document.getElementById("heat").style.visibility = 'visible';
     document.getElementById("gradient").style.visibility = 'visible';
     // console.log("-->All heat pushed success");
@@ -984,7 +985,7 @@ function hideVehicles() {
 socket.on('latlngarrofobj', function(msg) {
     // var o = document.getElementsByClassName("icon-bar");
     // o[0].style.visibility = 'hidden';
-
+    console.log('Received Incident Data');
     for (var i=0; i<msg.length; i++) {
         var latLng = new google.maps.LatLng((msg[i]).lat, (msg[i]).lng);
         heatDataAll.push(latLng);
