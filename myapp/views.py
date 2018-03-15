@@ -64,7 +64,7 @@ def getDate (msg):
         # getCrimeData(start, end, "heat")
         print request.sid
         from flask_socketio import send, emit
-        emit("latlngarrofobj",arr,room=request.sid)
+        emit("latlngarrofobj",arr,broadcast=False)
         # emit("latlngarrofobj", arr)
 
         socketio.emit("heat-success")
