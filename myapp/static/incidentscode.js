@@ -527,9 +527,9 @@ function clearDepot() {
     customDepots = [];
 }
 
-socket.on('success', function() {
-    console.log("socketio success");
-});
+// socket.on('success', function() {
+//     console.log("socketio success");
+// });
 
 socket.on('crime_none', function() {
     console.log("crime none")

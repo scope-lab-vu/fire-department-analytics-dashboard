@@ -60,8 +60,13 @@ def getDate (msg):
     delta = end - start
     delta = delta.days
     if (delta > 14):
-        getIncidentHeat(start, end)
+        arr = getIncidentHeat(start, end)
         # getCrimeData(start, end, "heat")
+        from flask_socketio import send, emit
+        print request.sid
+        socketio.emit("latlngarrofobj",arr,room=request.sid)
+        # emit("latlngarrofobj", arr)
+
         socketio.emit("heat-success")
     else:
         #log time
@@ -169,7 +174,8 @@ def getIncidentHeat(start, end):
         dictIn['lng'] = item['longitude']
         dictIn['emdCardNumber'] = item['emdCardNumber']
         arr.append(dictIn)
-    socketio.emit("latlngarrofobj", arr)
+    #socketio.emit("latlngarrofobj", arr)
+    return arr
 
 
 def createDBDate(dt):
