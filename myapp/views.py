@@ -62,8 +62,8 @@ def getDate (msg):
     if (delta > 14):
         arr = getIncidentHeat(start, end)
         # getCrimeData(start, end, "heat")
-        from flask_socketio import send, emit
         print request.sid
+        from flask_socketio import send, emit
         socketio.emit("latlngarrofobj",arr,room=request.sid)
         # emit("latlngarrofobj", arr)
 
