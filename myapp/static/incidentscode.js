@@ -33,7 +33,7 @@ function initMap() {
     // Create the DIV to hold the control and call the TopRightControl()
     // constructor passing in this DIV.
     var topControlDiv = document.createElement('div');
-    var topControl = new TopRightControl(topControlDiv, map, "Add a depot");
+    var topControl = new TopRightControl(topControlDiv, map, "Add a fire station");
     topControlDiv.index = 2;
     topControlDiv.id = "addDepot";
     topControlDiv.style.display = "none";
@@ -42,7 +42,7 @@ function initMap() {
     // Create the DIV to hold the control and call the TopRightControl()
     // constructor passing in this DIV.
     var topControlDiv2 = document.createElement('div');
-    var topControl2 = new TopRightControl(topControlDiv2, map, "Clear my depots");
+    var topControl2 = new TopRightControl(topControlDiv2, map, "Clear my fire stations");
     topControlDiv2.index = 1;
     topControlDiv2.id = "clearDepot";
     topControlDiv2.style.display = "none";
@@ -51,7 +51,7 @@ function initMap() {
     // Create the DIV to hold the control and call the TopRightControl()
     // constructor passing in this DIV.
     var topControlDiv4 = document.createElement('div');
-    var topControl4 = new TopRightControl(topControlDiv4, map, "Show/hide real depots");
+    var topControl4 = new TopRightControl(topControlDiv4, map, "Show/hide real fire stations");
     topControlDiv4.index = 1;
     topControlDiv4.id = "realDepot";
     topControlDiv4.style.display = "none";
@@ -59,6 +59,8 @@ function initMap() {
 
     var today = new Date();
     document.getElementById('timeNow').innerHTML=today.toLocaleDateString() + "  " + today.toLocaleTimeString();
+
+
     
 }
 
@@ -457,15 +459,15 @@ function TopRightControl(controlDiv, map, msg) {
     controlUI.appendChild(controlText);
 
     // Setup the click event listeners: simply set the map to Nashville.
-    if (msg === "Add a depot") {
+    if (msg === "Add a fire station") {
         controlUI.addEventListener(
             'click', addDepot
         ); 
-    } else if (msg === "Clear my depots") {
+    } else if (msg === "Clear my fire stations") {
         controlUI.addEventListener(
             'click', clearDepot
         );
-    } else if (msg === "Show/hide real depots") {
+    } else if (msg === "Show/hide real fire stations") {
         controlUI.addEventListener(
             'click', toggleRealDepot
         );
@@ -513,7 +515,7 @@ function addDepot() {
     marker.addListener('position_changed', 
         function(){
             var latLng = marker.getPosition();
-            var contentString = '<b>Custom depot moved.</b><br>' +
+            var contentString = '<b>Custom fire station moved.</b><br>' +
             'New lat long is: ' + latLng.lat() + ', ' + latLng.lng();
             // Set the info window's content and position.
             infoWindow.setContent(contentString);
@@ -727,26 +729,34 @@ function setIncident(r, index) {
 
 /* socket to get depots location from server*/
 socket.on('depots_data', function(msg) {
+    console.log('Received Depot Data');
     arr_depots = msg.depotLocation;
     arr_vehicles = msg.depotInterior;
 
+    // var image = {
+    //     url: 'http://policyadvantage.com/wp-content/uploads/2016/05/ER-5.png',
+    //     scaledSize: new google.maps.Size(25, 25)
+    // };
+
     var imgDepot = {
-        url: 'https://hydra-media.cursecdn.com/simcity.gamepedia.com/1/13/Fire_station_garage.png?version=e2d13f3d48d4d276f64d0cb8c04adbee',
+        url: './static/img/fire-department.png',
         scaledSize: new google.maps.Size(23, 23)
     };
     for (var i=0; i<arr_depots.length; i++) {
         var content = "<p><b>&#x1F6F1; Vehicles from this depot are: </b></p>";
-        for (var j=0; j<(arr_vehicles[i]).length; j++) {
+        for (var j=0; j<arr_vehicles[i].length; j++) {
             content += (arr_vehicles[i])[j];
             content += ", ";
         }
-        var latLng = new google.maps.LatLng((arr_depots[i])[0], (arr_depots[i])[1]),
-            marker = new google.maps.Marker(createMarkerObj(latLng,map,imgDepot,content));
+        var tempArr = arr_depots[i];
+        var latLng = new google.maps.LatLng(tempArr[0][0], tempArr[0][1]);
+        //var latLng = new google.maps.LatLng(36.130629,-86.835828);
+        var marker = new google.maps.Marker(createMarkerObj(latLng,map,imgDepot,content));
         setInfoWindow(marker);
         markersRealDepots.push(marker);
     }
 
-    // console.log("depots_data length"+":  "+arr_depots.length);
+    console.log("depots_data length"+":  "+arr_depots.length);
 });
 
 
@@ -1289,7 +1299,7 @@ function changeMode(i) {
 
         var div = document.getElementById("spaceExplore");
         div.style.display = "block";
-        div.innerHTML = "Best depot location has been updated: ";
+        div.innerHTML = "Best fire station location has been updated: ";
         var butto = document.createElement("button");
             butto.className = "button";
             butto.id = "buttonOptimize";
@@ -1311,7 +1321,7 @@ function changeMode(i) {
             butto1.style.marginLeft = "5px";
             butto1.style.fontFamily = "Zilla Slab";
             butto1.style.fontSize = "14px";
-            butto1.innerHTML = "Submit new depot location!";
+            butto1.innerHTML = "Submit new fire station location!";
             div.appendChild(butto1);
             butto1.addEventListener ("click", function() {
                 alert("grids selected, recalculating response time now...");

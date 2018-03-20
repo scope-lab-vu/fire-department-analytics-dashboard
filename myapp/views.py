@@ -15,6 +15,7 @@ import os
 from myconfig import MONGODB_HOST, MONGODB_PORT
 from math import ceil
 from copy import deepcopy
+from flask_socketio import send, emit
 
 url_mongo_fire_depart = "%s:%d/fire_department" % (MONGODB_HOST, MONGODB_PORT)
 print "--> url_mongo_fire_depart:", url_mongo_fire_depart
@@ -63,11 +64,10 @@ def getDate (msg):
         arr = getIncidentHeat(start, end)
         # getCrimeData(start, end, "heat")
         print request.sid
-        from flask_socketio import send, emit
-        emit("latlngarrofobj",arr,broadcast=False)
-        # emit("latlngarrofobj", arr)
 
-        socketio.emit("heat-success")
+        emit("latlngarrofobj",arr)
+        # emit("latlngarrofobj", arr)
+        emit("heat-success")
     else:
         #log time
         timeStart = datetime.datetime.now()
@@ -80,6 +80,7 @@ def getDate (msg):
 
         # getCrimeData(start, end, "markers")
         socketio.emit("markers-success")
+        # emit("markers-success")
     
 @socketio.on('predictNOW')
 def getPredict(msg):
@@ -211,7 +212,7 @@ def getIncidentData(start, end):
     ############################
 
 
-    items = db.find({'alarmDateTime':{'$gte':start,'$lt':end}})
+    items = db.find({'alarmDateTime':{'$gte':start,'$lt':end}}).limit(600)
     #items = db.find({'alarmDateTime': {'$lt': datetime.datetime.now()}})
     print "Items that match date : {}".format(items.count())
 
@@ -279,8 +280,8 @@ def getIncidentData(start, end):
 depot_cache = [];
 # Retrieve fire depots location and what vehicles live there
 def getDepotsData():
-    depot = [];
-    global depot_cache
+    # global depot_cache
+    depot_cache = []
     print "-> getDepotsData()\n"
 
     client = MongoClient(url_mongo_fire_depart)
@@ -289,9 +290,10 @@ def getDepotsData():
     items = list(db.aggregate(pipeline))
     vehiclesInDepot = [deepcopy([]) for x in range(len(items))]
     for counter in range(len(items)):
-        if items[counter]['vehicle'][0] == 'sample':
-            vehiclesInDepot[counter] = items[counter]['vehicle']
-            depot_cache.append(items[counter]['_id'])
+        if items[counter]['vehicle'][0] == 'sample' or items[counter]['_id'][0] is None or items[counter]['vehicle'] == []:
+            continue
+        vehiclesInDepot[counter] = items[counter]['vehicle']
+        depot_cache.append(items[counter]['_id'])
 
 
     # count = 0
@@ -313,8 +315,8 @@ def getDepotsData():
     #             vehiclesInDepot[indexOfthis] = [];
     #         vehiclesInDepot[indexOfthis].append(item['apparatusID'])
 
-    depot_cache = depot
-    socketio.emit("depots_data", {'depotLocation': depot_cache, 'depotInterior': vehiclesInDepot})
+    # depot_cache = depot
+    emit("depots_data", {'depotLocation': depot_cache, 'depotInterior': vehiclesInDepot})
 
 
 
