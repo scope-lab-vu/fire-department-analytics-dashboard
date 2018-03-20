@@ -46,12 +46,12 @@ def socketio_connet():
     with open('myapp/cached_shared_segments.json') as data_file:
         data_segments = json.load(data_file)
     print "data_segments", len(data_segments)
-    socketio.emit('draw_all_route_segments', {'data': data_segments})
+    emit('draw_all_route_segments', {'data': data_segments})
     # end: t-hub dashboard
     '''
     
     print "-> socketio_connect()\n"
-    socketio.emit("success")
+    emit("success")
 
 @socketio.on('get_date')
 def getDate (msg):
@@ -79,7 +79,7 @@ def getDate (msg):
         timeEnd = datetime.datetime.now()
 
         # getCrimeData(start, end, "markers")
-        socketio.emit("markers-success")
+        emit("markers-success")
         # emit("markers-success")
     
 @socketio.on('predictNOW')
@@ -146,7 +146,7 @@ def findMinMax():
 
         lastsearch = time.time()
         # print [minT, maxT]
-        socketio.emit("gotNewMinMaxTime", minmax)
+        emit("gotNewMinMaxTime", minmax)
 
 
 
@@ -175,7 +175,7 @@ def getIncidentHeat(start, end):
         dictIn['lng'] = item['longitude']
         dictIn['emdCardNumber'] = item['emdCardNumber']
         arr.append(dictIn)
-    #socketio.emit("latlngarrofobj", arr)
+    #emit("latlngarrofobj", arr)
     return arr
 
 
@@ -275,7 +275,7 @@ def getIncidentData(start, end):
         except:
             continue
 
-    socketio.emit("incident_data", arr)
+    emit("incident_data", arr)
 
 depot_cache = [];
 # Retrieve fire depots location and what vehicles live there
@@ -342,14 +342,14 @@ def getCrimeData(start, end, str):
                     obj[header[j]] = row[j]
                 arr.append(obj)
     if (str == "heat"):
-        socketio.emit("crime_heat", arr)
+        emit("crime_heat", arr)
     else: 
         if (arr != []):
             print "-----> arr is NOT empty"
-            socketio.emit("crime_data", arr)
+            emit("crime_data", arr)
         else:
             print "-----> arr is empty"
-            socketio.emit("crime_none")
+            emit("crime_none")
     
 
 
@@ -396,11 +396,11 @@ def getPredictions(type):
                 coordinates = list(p1(predictionsOutput[indSample][0],predictionsOutput[indSample][1],inverse=True))
                 coordinates.append(predictionsOutput[indSample][2])
                 output.append(coordinates)
-            socketio.emit("predictions_data", output)
+            emit("predictions_data", output)
 
         else:
             print"Did not find prediction file"
-            socketio.emit("predictions_none", [])
+            emit("predictions_none", [])
     elif type == "crime":
         if os.path.isfile(filepath + "crimePredicted.xls"):
             predictedWorkbook = xlrd.open_workbook(filepath + "crimePredicted.xls")
@@ -425,10 +425,10 @@ def getPredictions(type):
                 output.append(row)
                 numSampled+=1
             print len(output)
-            socketio.emit("predictions_data_crime", output)
+            emit("predictions_data_crime", output)
         else:
             print"Did not find prediction file"
-            socketio.emit("predictions_none", [])
+            emit("predictions_none", [])
 
 def getBestDepotPos():
     print "--> get best bestAssignment of depots"
@@ -458,7 +458,7 @@ def getBestDepotPos():
             for grid in dicOfDepot[key]:
                 dic["inChargeOf"].append(contents[grid])
             arrOfDict.append(dic)
-        socketio.emit("bestAreaInCharge", arrOfDict)
+        emit("bestAreaInCharge", arrOfDict)
 
 
 '''
@@ -490,7 +490,7 @@ def time_change_simulation():
         current_timestamp = data['timestamp']
         print "-current_timestamp", current_timestamp
         date_time = datetime.datetime.fromtimestamp(current_timestamp, pytz.timezone('America/Chicago'))
-        socketio.emit('simulated_time', {'timestamp': date_time.strftime("%Y-%m-%d %H:%M")})
+        emit('simulated_time', {'timestamp': date_time.strftime("%Y-%m-%d %H:%M")})
 
 # @socketio.on('connect')
 # def socketio_connect():
@@ -500,7 +500,7 @@ def time_change_simulation():
     # with open('myapp/cached_shared_segments.json') as data_file:
     #     data_segments = json.load(data_file)
     # print "data_segments", len(data_segments)
-    # socketio.emit('draw_all_route_segments', {'data': data_segments})
+    # emit('draw_all_route_segments', {'data': data_segments})
 
 @socketio.on('get_map_routes')
 def socketio_get_map_routes(message):
@@ -511,7 +511,7 @@ def socketio_get_map_routes(message):
         with open('myapp/cached_shared_segments.json') as data_file:
             data_segments = json.load(data_file)
         print "data_segments", len(data_segments)
-        socketio.emit('draw_all_route_segments', {'data': data_segments})
+        emit('draw_all_route_segments', {'data': data_segments})
     else:
         data_segments = []
         with open('myapp/routes_coors.json') as data_file:
@@ -529,7 +529,7 @@ def socketio_get_map_routes(message):
         elif selected==4:
             with open('myapp/optimized_performance_june.json') as data_file:
                 performance = json.load(data_file)
-        socketio.emit('response_map_routes', {'data': data_segments, 'performance': performance})
+        emit('response_map_routes', {'data': data_segments, 'performance': performance})
 
 
 @socketio.on('get_vehicle_location_for_trip')
@@ -543,7 +543,7 @@ def socketio_get_vehicle_location_for_trip(message):
     # data = route_segment.get_vehicle_location_for_trip(trip_id)
     print 'vehicle location', data
     if data[0] != -1:
-        socketio.emit('vehicle_location_for_trip', {'coordinate': data})
+        emit('vehicle_location_for_trip', {'coordinate': data})
     print data
 
 @socketio.on('get_predictions_for_trip')
@@ -555,14 +555,14 @@ def socketio_get_predictions_for_trip(message):
     segments = route_segment.get_segments_for_tripid(trip_id)
     print "trip_id", trip_id
     print data['coordinates']
-    socketio.emit('predictions_for_trip', {'prediction': data['prediction'], 'coordinates': data['coordinates'], 'segments': segments})
+    emit('predictions_for_trip', {'prediction': data['prediction'], 'coordinates': data['coordinates'], 'segments': segments})
 
 @socketio.on('get_all_routeid')
 def socketio_get_all_routeid():
     route_segment = dashboard.route_segment()
     data = route_segment.get_all_routeid()
     # print "dfasdfasdf:", data
-    socketio.emit('all_routeid', {'data': data})
+    emit('all_routeid', {'data': data})
 
 @socketio.on('get_directions_for_routeid')
 def socketio_get_directions_for_routeid(message):
@@ -570,7 +570,7 @@ def socketio_get_directions_for_routeid(message):
     route_id = message.get('route_id')
     data = route_segment.get_all_headsigns(route_id)
     print data
-    socketio.emit('directions_for_routeid', {'data': data})
+    emit('directions_for_routeid', {'data': data})
 
 @socketio.on('get_trips_for_routeid_direction')
 def socketio_get_trips_for_routeid_direction(message):
@@ -579,6 +579,6 @@ def socketio_get_trips_for_routeid_direction(message):
     route_id = message.get('route_id')
     trip_headsign = message.get('trip_headsign')
     data = route_segment.get_trips(route_id, trip_headsign)
-    socketio.emit('trips_for_routeid_direction', {'tripids': data[0], 'departuretimes': data[1]})
+    emit('trips_for_routeid_direction', {'tripids': data[0], 'departuretimes': data[1]})
 '''
 
