@@ -1,24 +1,219 @@
-from myapp import app
-from flask import Flask, render_template, session, request
-from flask_socketio import SocketIO
-from flask_socketio import send, emit
-from myapp import socketio
-from pymongo import MongoClient
-import datetime
-import time
-import json
-import requests
-import pytz
 import csv
-import xlrd
-import os
-from myconfig import MONGODB_HOST, MONGODB_PORT
-from math import ceil
+import datetime
+import pickle
+import time
 from copy import deepcopy
-from flask_socketio import send, emit
+import os
+from operator import itemgetter
+from math import atan, sin, cos, copysign, sqrt
+import random
+import numpy as np
+import bisect
+
+import xlrd
+from flask import render_template, request
+from flask_socketio import emit
+from pymongo import MongoClient
+
+from myapp import app
+from myapp import socketio
+from myapp.utilities import utilities
+from myconfig import MONGODB_HOST, MONGODB_PORT
 
 url_mongo_fire_depart = "%s:%d/fire_department" % (MONGODB_HOST, MONGODB_PORT)
 print "--> url_mongo_fire_depart:", url_mongo_fire_depart
+
+
+velocity = 1.3
+utilDumpPath = os.getcwd() + "/utilsDump"
+if os.path.isfile(utilDumpPath):
+    with open(utilDumpPath, "rb") as input_file:
+        utils = pickle.load(input_file)
+        print "Loaded Utils"
+else:
+    utils = utilities()
+    with open("utilsDump", "wb") as output_file:
+            pickle.dump(utils, output_file)
+
+
+def checkIfDestinationExceeded(dest, curr, dir1, dir2):
+    dir1Check = True if dir1 * (curr[0] - dest[0]) > 0 else False
+    dir2Check = True if dir2 * (curr[1] - dest[1]) > 0 else False
+    if dir2Check or dir1Check:
+        return True
+    else:
+        return False
+
+
+def getRouteUpdated(gridFrom, gridTo, velocity):
+    route = []
+    if gridFrom == gridTo:
+        return [[gridTo, 0]]
+    coord1 = utils.reverseCoordinates[gridFrom]
+    coord2 = utils.reverseCoordinates[gridTo]
+    slope = (coord1[1] - coord2[1]) / (coord1[0] - coord2[0])
+    theta = atan(slope)
+    xSign = getSign(coord2[0] - coord1[0])  # which direction are we changing x?
+    ySign = getSign(coord2[1] - coord1[1])  # which direction are we changing y?
+    v_x = xSign * abs(velocity * cos(theta) * 1609.34)
+    v_y = ySign * abs(velocity * sin(theta) * 1609.34)
+    xTemp = coord1[0]
+    yTemp = coord1[1]
+
+    if gridFrom == gridTo:
+        return [gridTo, 0]
+    reached = False
+    while not reached:
+        xTemp += v_x
+        yTemp += v_y
+        gridTemp = utils.getGridNumForCoordinate([xTemp, yTemp], utils.xLow, utils.yLow)
+        if checkIfDestinationExceeded(coord2, [xTemp, yTemp], xSign, ySign):
+            # update travel time or grid by adjusting for over travel
+            dExtra = sqrt((xTemp - coord2[0]) ** 2 + (yTemp - coord2[1]) ** 2)
+            tExtra = dExtra / (velocity * 1609.34 / 60)
+            route.append([gridTo, 60 - tExtra])
+            break
+        else:
+            # the vehicle has taken full 60 minutes to travel
+            gridX = int(gridTemp[0])
+            gridY = int(gridTemp[1])
+            gridNumTemp = gridY * len(utils.grids) + gridX
+            route.append([gridNumTemp, 60])
+
+
+    # sanity check
+    try:
+        if route[-1][0] != gridTo:
+            print "Error calculating route between grid {} and {}".format(gridFrom, gridTo)
+    except IndexError:
+        if route[-1][0] != gridTo:
+            # print "Error calculating route between grid {} and {}".format(gridFrom, gridTo)
+            raise Exception("Error calculating route between grid {} and {}".format(gridFrom, gridTo))
+
+    return route
+
+
+def updateResponder(t):
+    for responder in responders:
+        responder.updateResponder(t)
+
+
+def checkIfIncident():
+    pass
+
+def getTravelTime(grid1, grid2):
+    # assume that it takes 1 minute to travel a mile. reasonable for emergency vehicles
+    # return to and fro travel time
+    try:
+        coord1 = utils.reverseCoordinates[grid1]
+        coord2 = utils.reverseCoordinates[grid2]
+    except TypeError:
+        raise Exception("Reverse Coordinate Error")
+    except KeyError:
+        return 0
+    dist = (np.sqrt(
+        (coord1[0] - coord2[0]) ** 2 + (coord1[1] - coord2[1]) ** 2)) / 1609.34  # convert meters to miles
+    distMinutes = dist / velocity
+    return distMinutes * 60  # convert to seconds and return
+
+def dispatchResponder(responders,grid,t):
+    bestDist = 1e10
+    for responder in responders:
+        distTemp = utils.dist(responder.currentPosition,grid)
+        if distTemp < bestDist:
+            bestDist = distTemp
+            bestDispatch = responder.id
+
+    depotDispatch = utils.gridAssignment[grid]
+    for responder in responders:
+        if responder.currentPosition == depotDispatch and responder.assignedDepot == depotDispatch and responder.statusFree == True:
+            if utils.dist(depotDispatch,grid) < bestDist:
+                bestDispatch = responder.id
+
+    responders[bestDispatch].statusFree = False
+    responders[bestDispatch].assignedRoute = getRouteUpdated(responders[bestDispatch].currentPosition,grid,velocity)
+    travelTime = getTravelTime(responders[bestDispatch].currentPosition,grid)
+    responders[bestDispatch].nextTime = t + travelTime + 30*60
+    responders[bestDispatch].currentPosition = grid #this is not true, but this will never be checked for a busy responder. So it does not matter
+    return travelTime, t + travelTime + 30*60
+
+def pickIncidentChain():
+    fileName = random.choice(os.listdir(os.getcwd() + "/myapp/data/incidentChain"))
+    fileName = os.getcwd() + "/myapp/data/incidentChain/" + fileName
+    with open(fileName, 'rb') as f:
+        incidentChain = pickle.load(f)
+    #create incident chain by seconds:
+
+    return incidentChain
+
+
+def simulate():
+    timeToSimulate = 7 * 24 * 3600
+    waitQueue = []
+    incidents = utils.times
+    incidents = sorted(incidents,key=itemgetter(0))
+    incidentTimes = [x[0] for x in incidents]
+    totalWaitTime = 0
+    incidentsCounter = 0
+    timesToCheck = deepcopy(incidentTimes)
+
+    for t in timesToCheck:
+        incidentGrid = -1
+        if t in incidentTimes:
+            incidentGrid = incidents[incidentsCounter][1]
+            incidentsCounter += 1
+        updateResponder(t)
+        if incidentGrid != -1:
+            travelTime, nextTime = dispatchResponder(responders,incidentGrid,t)
+            bisect.insort(timesToCheck,nextTime)
+            totalWaitTime += travelTime
+    print "Total wait time calculated"
+
+        # create responders
+        # create incident chain -- load precomputed incident chains
+        # simulate for time in parallel
+
+
+# def calculateResponseTime(msg):
+
+class responder():
+    def __init__(self, depot, id):
+        self.id = id
+        self.statusFree = True
+        self.assignedDepot = depot
+        self.currentPosition = depot
+        self.assignedRoute = None
+        self.nextTime = None
+        self.step = 0
+
+    def updateResponder(self,t):
+        if self.statusFree:
+            if self.currentPosition == self.assignedDepot:
+                self.nextTime = None
+                return
+            else:
+                self.currentPosition = self.assignedRoute[self.step][0]
+                self.step += 1
+
+        if not self.statusFree:
+            if t >= self.nextTime:
+                self.statusFree = True
+                self.assignedRoute = getRouteUpdated(self.currentPosition,self.assignedDepot,velocity)
+                self.step = 0
+                self.nextTime = None
+
+
+
+depotDetails = utils.vehiclesInDepot
+
+getSign = lambda num : copysign(1, num)
+
+responders = []
+for key,value in depotDetails.iteritems():
+    responders.append(responder(key,len(responders)))
+
+simulate()
+
 
 @app.route('/')
 @app.route('/index')
@@ -52,6 +247,100 @@ def socketio_connet():
     
     print "-> socketio_connect()\n"
     emit("success")
+
+
+@socketio.on('pre_process')
+def preProcess():
+    utils = utilities()
+    with open("utilsDump", "wb") as output_file:
+            pickle.dump(utils, output_file)
+
+
+
+
+@socketio.on('get_dispatch')
+def getPending(msg):
+    pendingIncidents = msg[0]
+    #sort pending incidents according to time
+    pendingIncidents = sorted(pendingIncidents,key=itemgetter(1))
+    dispatch = {}
+    for incident in pendingIncidents:
+        grid = incident[0]
+        incidentID = incident[1]
+        dispatchSolution = utils.gridAssignment[grid]
+        dispatch[incidentID] = dispatchSolution
+
+    emit("dispatch_solution", dispatch)
+
+@socketio.on('get_responseTime')
+def getResponseTime():
+    return random.choice(range(10000,25000))
+
+
+@socketio.on('get_pending')
+def getPending(msg):
+    print "-> getIncidentData()\n"
+    client = MongoClient(url_mongo_fire_depart)
+    db = client["fire_department"]["simple_incidents"]
+
+    ############################
+    ############################
+    ############################
+    # REMOVE BEFORE CHECK IN
+    # print "Debug: remove before check in. Start and end dates modified"
+    # start = datetime.datetime(2011, 1, 1)
+    # end = datetime.datetime(2018, 1, 1)
+    ############################
+    ############################
+    ############################
+
+
+    items = db.find({'served': {'$ne': 'true'}})
+    # items = db.find({'alarmDateTime': {'$lt': datetime.datetime.now()}})
+    print "Items that match date : {}".format(items.count())
+
+    arr = []
+    # for counterBatch in range(totalBatches):
+    for item in items:
+        try:
+            time = item['alarmDateTime']
+            if not isinstance(time, datetime.date):
+                time = datetime.datetime.strptime(time, '%Y,%m,%d,%H,%M,%S,%f')
+
+            # if (start <= time <= end):
+            dictIn = {}
+            dictIn['_id'] = str(item['_id'])
+            dictIn['incidentNumber'] = item['incidentNumber']
+            dictIn['_lat'] = item['latitude']
+            dictIn['_lng'] = item['longitude']
+            dictIn['alarmDate'] = str(item['alarmDateTime'])
+            dictIn['fireZone'] = item['fireZone']
+            dictIn['emdCardNumber'] = item['emdCardNumber']
+
+            dictIn['city'] = item['city'] if ('city' in item) else "na"
+            dictIn['county'] = item['county'] if ('county' in item) else "na"
+            dictIn['streetNumber'] = item['streetNumber'] if ('streetNumber' in item) else "na"
+            dictIn['streetPrefix'] = item['streetPrefix'] if ('streetPrefix' in item) else "na"
+            dictIn['streetName'] = item['streetName'] if ('streetName' in item) else "na"
+            dictIn['streetType'] = item['streetType'] if ('streetType' in item) else "na"
+            dictIn['streetSuffix'] = item['streetSuffix'] if ('streetSuffix' in item) else "na"
+            dictIn['apartment'] = item['apartment'] if ('apartment' in item) else "na"
+            dictIn['zipCode'] = ((item['zipCode']).split('.'))[0] if ('zipCode' in item) else "na"
+
+            # batchIncident.append(dictIn)
+
+            arr.append(dictIn)
+
+        except:
+            continue
+    emit("incident_data", arr)
+
+@socketio.on('get_action')
+def getAction():
+    #get action from MDP
+    #create state for MDP : See if the actions exists
+    #
+    pass
 
 @socketio.on('get_date')
 def getDate (msg):
