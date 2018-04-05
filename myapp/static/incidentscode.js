@@ -1274,8 +1274,8 @@ function changeMode(i) {
         // o[0].style.display = "none";
         cr.style.display = "block";
 
-        ad.style.display = "inline";
-        cd.style.display = "inline";
+        ad.style.display = "none";
+        cd.style.display = "none";
         rd.style.display = "inline";
 
         ad.style.visibility = "visible";
@@ -1382,7 +1382,7 @@ function changeMode(i) {
             butto1.innerHTML = "Submit new fire station location!";
             div.appendChild(butto1);
             butto1.addEventListener ("click", function() {
-                alert("Calculating response times");
+                // alert("Calculating response times");
                 document.getElementById("loader").style.display = "block";
                 socket.emit('get_responseTime', customDepotsLatLng);
             });
@@ -1402,7 +1402,7 @@ function changeMode(i) {
         // o[0].style.display = "none";
         cr.style.display = "block";
 
-        ad.style.display = "inline";
+        ad.style.display = "none";
         cd.style.display = "inline";
         rd.style.display = "inline";
 
