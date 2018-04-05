@@ -49,16 +49,19 @@ class utilities:
         self.createIncidentChains()
 
     def createIncidentChains(self):
-        #create chains 3 months long
+        #create chains 1 months long
         self.times = [] #what times do incidents happen
         for grid in range(900):
+            t=0
             if grid in self.gridWiseLambda.keys():
-                sample = ceil(np.random.exponential(1/self.gridWiseLambda[grid]))
-                if sample > 3*30*24*60*60:
-                    continue
-                else:
-                    self.times.append([sample,grid])
-
+                while t<30*24*3600:
+                    sample = ceil(np.random.exponential(1/self.gridWiseLambda[grid]))
+                    if sample > 3*30*24*60*60:
+                        break
+                    else:
+                        self.times.append([sample,grid])
+                        t+=sample
+        self.times = sorted(self.times,key=itemgetter(0))
         print "generated static samples"
 
 
@@ -267,11 +270,3 @@ class utilities:
             self.gridWiseLambda[grid] = 1/lambdaTemp
 
         print "Inter-Arrival Rates Calculated"
-
-
-
-
-
-
-
-

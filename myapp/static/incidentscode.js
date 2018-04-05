@@ -37,7 +37,7 @@ function initMap() {
     topControlDiv.index = 2;
     topControlDiv.id = "addDepot";
     topControlDiv.style.display = "none";
-    map.controls[google.maps.ControlPosition.RIGHT_TOP].push(topControlDiv);
+    map.controls[google.maps.ControlPosition.TOP_RIGHT].push(topControlDiv);
 
     // Create the DIV to hold the control and call the TopRightControl()
     // constructor passing in this DIV.
@@ -281,6 +281,8 @@ socket.on('responderData', function(msg) {
 });
 
 
+
+
 /* ON SUBMIT button: 
  * get data from left menu bar, 
  * calls to formulate data correctly 
@@ -460,9 +462,11 @@ function TopRightControl(controlDiv, map, msg) {
 
     // Setup the click event listeners: simply set the map to Nashville.
     if (msg === "Add a fire station") {
+        controlUI.style.marginRight = "150px";
         controlUI.addEventListener(
             'click', addDepot
         ); 
+
     } else if (msg === "Clear my fire stations") {
         controlUI.addEventListener(
             'click', clearDepot
@@ -480,24 +484,25 @@ function TopRightControl(controlDiv, map, msg) {
 var markersRealDepots = [];
 
 function toggleRealDepot() {
-    try {
+    if (markersRealDepots.length == 0) {
+        console.log("markersRealDepots is an empty array");
+        socket.emit('get_depots');
+    } else {
+        console.log(markersRealDepots);
         if (markersRealDepots[0].getVisible()) {
             for (var i=0; i<markersRealDepots.length; i++) {
                 markersRealDepots[i].setVisible(false);
             }
         } else {
-            for (var k=0; k<markersRealDepots.length; k++) {
-                markersRealDepots[k].setVisible(true);
+            for (var i=0; i<markersRealDepots.length; i++) {
+                markersRealDepots[i].setVisible(true);
             }
         }
-    } catch (error) {
-        console.log("!!!Caught: toggleRealDepot():" + error.message);
     }
-    
-
 }
 
-var customDepots = [];
+var customDepotsMarkers = [];
+var customDepotsLatLng = [];
 function addDepot() {
     var imgDepot = {
         url: 'https://cdn1.iconfinder.com/data/icons/orientation-2/32/location-add-512.png',
@@ -510,11 +515,18 @@ function addDepot() {
       draggable: true,
       map: map
     });
+    var lat;
+    var lng;
+    var latLng = marker.getPosition();
+    lat = latLng.lat();
+    lng = latLng.lng();
     // Add an event listener on the draggable marker.
     infoWindow = new google.maps.InfoWindow();
     marker.addListener('position_changed', 
         function(){
             var latLng = marker.getPosition();
+            lat = latLng.lat();
+            lng = latLng.lng();
             var contentString = '<b>Custom fire station moved.</b><br>' +
             'New lat long is: ' + latLng.lat() + ', ' + latLng.lng();
             // Set the info window's content and position.
@@ -523,13 +535,14 @@ function addDepot() {
             infoWindow.open(map);
         }
     );
-    customDepots.push(marker);
+    customDepotsMarkers.push(marker);
+    customDepotsLatLng.push([lat, lng]);
 }
 function clearDepot() {
-    for (var i=0; i<customDepots.length; i++) {
-        customDepots[i].setMap(null);
+    for (var i=0; i<customDepotsMarkers.length; i++) {
+        customDepotsMarkers[i].setMap(null);
     }
-    customDepots = [];
+    customDepotsMarkers = [];
 }
 
 // socket.on('success', function() {
@@ -727,6 +740,10 @@ function setIncident(r, index) {
 
 }
 
+socket.on('dispatch_solution', function(msg){
+    document.getElementById("barView").innerHTML = msg;
+});
+
 /* socket to get depots location from server*/
 socket.on('depots_data', function(msg) {
     console.log('Received Depot Data');
@@ -743,7 +760,7 @@ socket.on('depots_data', function(msg) {
         scaledSize: new google.maps.Size(23, 23)
     };
     for (var i=0; i<arr_depots.length; i++) {
-        var content = "<p><b>&#x1F6F1; Vehicles from this depot are: </b></p>";
+        var content = "<p><b>&#x1F692; Vehicles from this depot are: </b></p>";
         for (var j=0; j<arr_vehicles[i].length; j++) {
             content += (arr_vehicles[i])[j];
             content += ", ";
@@ -798,7 +815,7 @@ socket.on('markers-success', function() {
     // console.log("vehiclesArr length:   "+ vehiclesArr.length);  
     // console.log(markersArr); // should look like [Incidents: Array(x), Burglary: Array(y)]
     
-    setBar(sumOfIncidents);
+    setBar(sumOfIncidents, "historic");
     var arr = [['Types', 'Number']];
     for (var j=0; j<types.length; j++) {
         var a = [];
@@ -829,7 +846,7 @@ socket.on('heat-success', function() {
         map: map,
         radius: 0.01
     });
-    setBar(sumOfIncidents);
+    setBar(sumOfIncidents, "historic");
 
     var arr = [['Types', 'Number']];
     for (var j=0; j<types.length; j++) {
@@ -1076,7 +1093,7 @@ function help() {
 
 
 // set a bar chart according to data passed
-function setBar(data) {
+function setBar(data, mode) {
     // remove current bar chart first
     d3.select(".bar").selectAll("div").remove();
     var sum = 0;
@@ -1087,20 +1104,44 @@ function setBar(data) {
         .domain([0, d3.max(data)])
         .range([0, 400]);
 
-    var severity = ["O","A","B","C","D","E","N.A"];
-    d3.select(".bar")
-        .selectAll("div")
-        .data(data)
-        .enter().append("div")
-        .style("width", function (d) {
-            return x(d) + "px";
-        })
-        .style("background-color", function(d,i){
-            return colors[i];
-        })
-        .text(function (d,i) {
-            return "Severity"+ "["+severity[i]+"]"+(d*100/sum).toFixed(1)+"%";
-        });
+    if (mode == "historic") {
+        var severity = ["O","A","B","C","D","E","N.A"];
+        d3.select(".bar")
+            .selectAll("div")
+            .data(data)
+            .enter().append("div")
+            .style("width", function (d) {
+                return x(d) + "px";
+            })
+            .style("background-color", function(d,i){
+                return colors[i];
+            })
+            .text(function (d,i) {
+                return "Severity"+ "["+severity[i]+"]"+(d*100/sum).toFixed(1)+"%";
+            });
+    }
+    var labelWidth = 0;
+
+    if (mode == "explore") {
+        var list = ["current : ", "updated :"];
+        d3.select(".bar")
+            .selectAll("div")
+            .data(data)
+            .enter().append("div")
+            .style("width", function (d) {
+                return x(d)+ "px";
+            })
+            .style("height", "60px")
+            .style("background-color", function(d,i){
+                return colors[i];
+            })
+            .text(function (d,i) {
+                return "Response time "+list[i]+d+" seconds";
+            })
+            .style("font-size", "16px")
+            .attr("dy", ".95em");
+    }
+    
     console.log("-->Bar chart success");
     document.getElementsByClassName("loading")[1].style.display= "none";
 }
@@ -1134,7 +1175,6 @@ function setPie(arr) {
  * "bar" to "x" function
  * show/hide side nav bar */
 function barToX(x) {
-    console.log(x);
     x.classList.toggle("change");
     var w = document.getElementById("mySideNav");
     if(w.style.width === "0px" || w.style.width ==="") {
@@ -1205,6 +1245,12 @@ function changeMode(i) {
     }
 
     if (i === 1) { // predicion mode
+        for (var l=0; l<customDepotsMarkers.length; l++) {
+            if (!customDepotsMarkers[l].getVisible()){
+                break;
+            }
+            customDepotsMarkers[l].setVisible(false);
+        }
         map.setCenter(centerNash);
         showmenuBtn.style.display = "none";
         // document.body.style.overflowY = "hidden";
@@ -1242,6 +1288,13 @@ function changeMode(i) {
         document.getElementById("gradient").style.visibility = "hidden";
     
     } else if (i === 0){ // historic mode
+        for (var l=0; l<customDepotsMarkers.length; l++) {
+            if (!customDepotsMarkers[l].getVisible()){
+                break;
+            }
+            customDepotsMarkers[l].setVisible(false);
+        }
+        document.getElementsByClassName("title")[1].innerHTML = "Bar Chart - Severity Level";
         // map.setOptions({styles: oldStyles});
         playground[0].style.width = "90%";
         playground[0].style.left = "5%";
@@ -1274,7 +1327,14 @@ function changeMode(i) {
         document.getElementById("spaceExplore").style.display = "none";
         // o[0].style.display = "block";
 
-    } else { // explore mode
+    } else if (i === 2){ // explore mode
+        for (var l=0; l<customDepotsMarkers.length; l++) {
+            if (customDepotsMarkers[l].getVisible()){
+                break;
+            }
+            customDepotsMarkers[l].setVisible(true);
+        }
+        document.getElementsByClassName("title")[1].innerHTML = "Bar Chart - Old vs New Response Time";
         map.setCenter(centerNash);
         showmenuBtn.style.display = "none";
         c.style.display = "none";
@@ -1299,19 +1359,20 @@ function changeMode(i) {
 
         var div = document.getElementById("spaceExplore");
         div.style.display = "block";
-        div.innerHTML = "Best fire station location has been updated: ";
-        var butto = document.createElement("button");
-            butto.className = "button";
-            butto.id = "buttonOptimize";
-            butto.style.backgroundColor = "#A1A5E7";
-            butto.style.marginLeft = "5px";
-            butto.style.fontFamily = "Zilla Slab";
-            butto.style.fontSize = "14px";
-            butto.innerHTML = "Optimize!";
-            div.appendChild(butto);
-            butto.addEventListener ("click", function() {
-                socket.emit('getOptimization');
-            });
+        div.innerHTML = "Add a new depot and click to check how it affects response times : ";
+        // var butto = document.createElement("button");
+        //     butto.className = "button";
+        //     butto.id = "buttonOptimize";
+        //     butto.style.backgroundColor = "#A1A5E7";
+        //     butto.style.marginLeft = "5px";
+        //     butto.style.fontFamily = "Zilla Slab";
+        //     butto.style.fontSize = "14px";
+        //     butto.innerHTML = "Optimize!";
+        //     butto.visibility
+        //     div.appendChild(butto);
+        //     butto.addEventListener ("click", function() {
+        //         socket.emit('getOptimization');
+        //     });
         
 
         var butto1 = document.createElement("button");
@@ -1323,13 +1384,72 @@ function changeMode(i) {
             butto1.style.fontSize = "14px";
             butto1.innerHTML = "Submit new fire station location!";
             div.appendChild(butto1);
-            butto1.addEventListener ("click", function() {
-                alert("grids selected, recalculating response time now...");
+            butto1.addEventListener ("click", function() {                
                 document.getElementById("loader").style.display = "block";
+                socket.emit('get_responseTime', customDepotsLatLng);
+            });
+        }
+    else { // dispatch
+        map.setCenter(centerNash);
+        showmenuBtn.style.display = "none";
+        c.style.display = "none";
+        // document.body.style.overflowY = "hidden";
+
+        mode[0].style.backgroundColor = "white";
+        mode[1].style.backgroundColor = "white";
+        mode[2].style.backgroundColor = "#83c985";
+
+        document.getElementById("inputSingle").style.display = "none";
+        changeColor("#A1A5E7");
+        // o[0].style.display = "none";
+        cr.style.display = "block";
+
+        ad.style.display = "inline";
+        cd.style.display = "inline";
+        rd.style.display = "inline";
+
+        ad.style.visibility = "visible";
+        cd.style.visibility = "visible";
+        rd.style.visibility = "visible";
+
+        var div = document.getElementById("spaceExplore");
+        div.style.display = "block";
+        div.innerHTML = "Plot Pending Incidents and check suggested dispatch policy: ";
+        var butto = document.createElement("button");
+            butto.className = "button";
+            butto.id = "buttonPlotPending";
+            butto.style.backgroundColor = "#A1A5E7";
+            butto.style.marginLeft = "5px";
+            butto.style.fontFamily = "Zilla Slab";
+            butto.style.fontSize = "14px";
+            butto.innerHTML = "Plot Pending Incidents";
+            div.appendChild(butto);
+            butto.addEventListener ("click", function() {
+                socket.emit('get_pending');
+            });
+
+
+        var butto1 = document.createElement("button");
+            butto1.className = "button";
+            butto1.id = "buttonCalculate";
+            butto1.style.backgroundColor = "#A1A5E7";
+            butto1.style.marginLeft = "5px";
+            butto1.style.fontFamily = "Zilla Slab";
+            butto1.style.fontSize = "14px";
+            butto1.innerHTML = "Get Dispatch Decisions";
+            div.appendChild(butto1);
+            butto1.addEventListener ("click", function() {
+                socket.emit('get_dispatch');
             });
         }
 
 }
+
+socket.on('gotNewResponseTime', function(msg) {
+    console.log(msg);
+    setBar(msg, "explore");
+    document.getElementById("loader").style.display = "none";
+});
 
 /* Change interface color*/
 function changeColor(color) {

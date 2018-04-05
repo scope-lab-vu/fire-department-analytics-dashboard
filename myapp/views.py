@@ -25,6 +25,7 @@ print "--> url_mongo_fire_depart:", url_mongo_fire_depart
 
 
 velocity = 1.3
+getSign = lambda num: copysign(1, num)
 utilDumpPath = os.getcwd() + "/utilsDump"
 if os.path.isfile(utilDumpPath):
     with open(utilDumpPath, "rb") as input_file:
@@ -35,6 +36,8 @@ else:
     with open("utilsDump", "wb") as output_file:
             pickle.dump(utils, output_file)
 
+depotDetails = utils.vehiclesInDepot
+
 
 def checkIfDestinationExceeded(dest, curr, dir1, dir2):
     dir1Check = True if dir1 * (curr[0] - dest[0]) > 0 else False
@@ -43,7 +46,6 @@ def checkIfDestinationExceeded(dest, curr, dir1, dir2):
         return True
     else:
         return False
-
 
 def getRouteUpdated(gridFrom, gridTo, velocity):
     route = []
@@ -92,11 +94,9 @@ def getRouteUpdated(gridFrom, gridTo, velocity):
 
     return route
 
-
-def updateResponder(t):
+def updateResponder(t,responders):
     for responder in responders:
         responder.updateResponder(t)
-
 
 def checkIfIncident():
     pass
@@ -147,8 +147,8 @@ def pickIncidentChain():
     return incidentChain
 
 
-def simulate():
-    timeToSimulate = 7 * 24 * 3600
+def simulate(responders):
+    timeToSimulate = 10 * 24 * 3600
     waitQueue = []
     incidents = utils.times
     incidents = sorted(incidents,key=itemgetter(0))
@@ -158,16 +158,22 @@ def simulate():
     timesToCheck = deepcopy(incidentTimes)
 
     for t in timesToCheck:
+        if t>timeToSimulate:
+            break
         incidentGrid = -1
         if t in incidentTimes:
-            incidentGrid = incidents[incidentsCounter][1]
-            incidentsCounter += 1
-        updateResponder(t)
+            try:
+                incidentGrid = incidents[incidentsCounter][1]
+                incidentsCounter += 1
+            except IndexError:
+                break
+        updateResponder(t,responders)
         if incidentGrid != -1:
             travelTime, nextTime = dispatchResponder(responders,incidentGrid,t)
             bisect.insort(timesToCheck,nextTime)
             totalWaitTime += travelTime
-    print "Total wait time calculated"
+    # print "Total wait time calculated"
+    return totalWaitTime
 
         # create responders
         # create incident chain -- load precomputed incident chains
@@ -204,15 +210,6 @@ class responder():
 
 
 
-depotDetails = utils.vehiclesInDepot
-
-getSign = lambda num : copysign(1, num)
-
-responders = []
-for key,value in depotDetails.iteritems():
-    responders.append(responder(key,len(responders)))
-
-simulate()
 
 
 @app.route('/')
@@ -248,18 +245,15 @@ def socketio_connet():
     print "-> socketio_connect()\n"
     emit("success")
 
-
 @socketio.on('pre_process')
 def preProcess():
     utils = utilities()
     with open("utilsDump", "wb") as output_file:
             pickle.dump(utils, output_file)
 
-
-
-
 @socketio.on('get_dispatch')
-def getPending(msg):
+def getDispatch():
+    '''
     pendingIncidents = msg[0]
     #sort pending incidents according to time
     pendingIncidents = sorted(pendingIncidents,key=itemgetter(1))
@@ -269,33 +263,96 @@ def getPending(msg):
         incidentID = incident[1]
         dispatchSolution = utils.gridAssignment[grid]
         dispatch[incidentID] = dispatchSolution
+    '''
 
+
+    client = MongoClient(url_mongo_fire_depart)
+    db = client["fire_department"]["simple_incidents"]
+
+    items = db.find({'served': {'$eq': 'False'}})
+    # items = db.find({'alarmDateTime': {'$lt': datetime.datetime.now()}})
+    print "Items that match date : {}".format(items.count())
+
+    pendingIncidents = []
+    # for counterBatch in range(totalBatches):
+    for item in items:
+        try:
+            time = item['alarmDateTime']
+            if not isinstance(time, datetime.date):
+                time = datetime.datetime.strptime(time, '%Y,%m,%d,%H,%M,%S,%f')
+
+            # if (start <= time <= end):
+            dictIn = {}
+            tempID = str(item['_id'])
+            tempIncidentNumber = item['incidentNumber']
+            tempLat = item['latitude']
+            tempLong = item['longitude']
+            coordX, coordY = p1(tempLong,tempLat)
+            gridTemp = utils.getGridForCoordinate([coordX,coordY],utils.xLow,utils.yLow)
+            pendingIncidents.append([gridTemp,tempID,tempLat,tempLong])
+        except:
+            continue
+
+    dispatch = "<b><u> DISPATCH GUIDANCE </u></b> <br>"
+    depotVehicles = deepcopy(utils.vehiclesInDepot)
+    depotsWithCalls = [utils.gridAssignment[x[0]] for x in pendingIncidents]
+    for incident in pendingIncidents:
+        incidentGrid = incident[0]
+        if depotVehicles[utils.gridAssignment[incidentGrid]] > 0:
+            dispatch += "Dispatch Vehicle from Depot ID: {} to incident {} <br>".format(utils.gridAssignment[incidentGrid],incident[1])
+
+
+
+
+    # depots = [1,2,3,4,5,6,7,8]
+    # dispatch = []
+    # for incident in pendingIncidents:
+    #     incidentID = incident[1]
+    #     dispatch.append([incidentID,random.choice(depots)])
     emit("dispatch_solution", dispatch)
 
 @socketio.on('get_responseTime')
-def getResponseTime():
-    return random.choice(range(10000,25000))
+def getResponseTime(msg):
+    depotDetails = utils.vehiclesInDepot
+    responders = []
+    for key, value in depotDetails.iteritems():
+        responders.append(responder(key, len(responders)))
+
+    oldTravelTime = simulate(responders)
+
+    #re-init depots
+    responders = []
+    for key, value in depotDetails.iteritems():
+        responders.append(responder(key, len(responders)))
+    # add a depot from the msg
+    for tempDepot in msg:
+        newDepotLat = tempDepot[0]
+        newDepotLong = tempDepot[1]
+        coordX, coordY = p1(newDepotLong,newDepotLat)
+        depotGrid = utils.getGridForCoordinate([coordX,coordY],utils.xLow,utils.yLow)
+
+        for counterTemp in range(2):
+            responders.append(responder(depotGrid, len(responders)))
+
+
+
+        if depotGrid in utils.vehiclesInDepot.keys():
+            utils.vehiclesInDepot[depotGrid] += 3
+        else:
+            utils.vehiclesInDepot[depotGrid] = 3
+
+    newTravelTime = simulate(responders)
+    emit("gotNewResponseTime", [oldTravelTime,newTravelTime])
+    # return [random.choice(range(10000,25000)),random.choice(range(10000,25000))]
 
 
 @socketio.on('get_pending')
-def getPending(msg):
+def getPending():
     print "-> getIncidentData()\n"
     client = MongoClient(url_mongo_fire_depart)
     db = client["fire_department"]["simple_incidents"]
 
-    ############################
-    ############################
-    ############################
-    # REMOVE BEFORE CHECK IN
-    # print "Debug: remove before check in. Start and end dates modified"
-    # start = datetime.datetime(2011, 1, 1)
-    # end = datetime.datetime(2018, 1, 1)
-    ############################
-    ############################
-    ############################
-
-
-    items = db.find({'served': {'$ne': 'true'}})
+    items = db.find({'served': {'$eq': 'False'}})
     # items = db.find({'alarmDateTime': {'$lt': datetime.datetime.now()}})
     print "Items that match date : {}".format(items.count())
 
@@ -327,6 +384,30 @@ def getPending(msg):
             dictIn['apartment'] = item['apartment'] if ('apartment' in item) else "na"
             dictIn['zipCode'] = ((item['zipCode']).split('.'))[0] if ('zipCode' in item) else "na"
 
+            if 'respondingVehicles' in item:
+                tmp = item['respondingVehicles']
+                allIDs = ""
+                for i in tmp:  # i is a dict
+                    if 'dispatchDateTime' not in i:
+                        i['dispatchDateTime'] = "na"
+                    else:
+                        i['dispatchDateTime'] = str(i['dispatchDateTime'])
+                    if 'arrivalDateTime' not in i:
+                        i['arrivalDateTime'] = "na"
+                    else:
+                        i['arrivalDateTime'] = str(i['arrivalDateTime'])
+                    if 'clearDateTime' not in i:
+                        i['clearDateTime'] = "na"
+                    else:
+                        i['clearDateTime'] = str(i['clearDateTime'])
+                    allIDs += i['apparatusID'] + "| "
+
+                dictIn['allIDs'] = allIDs
+                dictIn['respondingVehicles'] = tmp
+            else:
+                dictIn['respondingVehicles'] = "na"
+                dictIn['allIDs'] = "na"
+
             # batchIncident.append(dictIn)
 
             arr.append(dictIn)
@@ -341,6 +422,10 @@ def getAction():
     #create state for MDP : See if the actions exists
     #
     pass
+
+@socketio.on('get_depots')
+def getDepots():
+    getDepotsData()
 
 @socketio.on('get_date')
 def getDate (msg):
@@ -607,10 +692,6 @@ def getDepotsData():
     # depot_cache = depot
     emit("depots_data", {'depotLocation': depot_cache, 'depotInterior': vehiclesInDepot})
 
-
-
-# retrieve data from csv file
-
 def getCrimeData(start, end, str):
     print(" --> get Crime Markers csv")
     arr = []
@@ -639,10 +720,6 @@ def getCrimeData(start, end, str):
         else:
             print "-----> arr is empty"
             emit("crime_none")
-    
-
-
-
 
 # 
 # Incidents Predictions
