@@ -19,6 +19,8 @@ from myapp import app
 from myapp import socketio
 from myapp.utilities import utilities
 from myconfig import MONGODB_HOST, MONGODB_PORT
+from multiprocessing import Pool
+from math import ceil
 
 url_mongo_fire_depart = "%s:%d/fire_department" % (MONGODB_HOST, MONGODB_PORT)
 print "--> url_mongo_fire_depart:", url_mongo_fire_depart
@@ -149,8 +151,7 @@ def pickIncidentChain():
 
 def simulate(responders):
     timeToSimulate = 10 * 24 * 3600
-    waitQueue = []
-    incidents = utils.times
+    incidents = utils.times[0:1200]
     incidents = sorted(incidents,key=itemgetter(0))
     incidentTimes = [x[0] for x in incidents]
     totalWaitTime = 0
@@ -173,7 +174,7 @@ def simulate(responders):
             bisect.insort(timesToCheck,nextTime)
             totalWaitTime += travelTime
     print "Total wait time calculated"
-    return totalWaitTime
+    return ceil(totalWaitTime)
 
         # create responders
         # create incident chain -- load precomputed incident chains
@@ -311,8 +312,54 @@ def getDispatch():
     #     dispatch.append([incidentID,random.choice(depots)])
     emit("dispatch_solution", dispatch)
 
+
+def calculateResponseTime(responders):
+    travelTime = simulate(responders)
+    return travelTime
+
 @socketio.on('get_responseTime')
 def getResponseTime(msg):
+    # pool = Pool(2)
+    # inputs = []
+    #
+    # depotDetails = deepcopy(utils.vehiclesInDepot)
+    # responders = []
+    # for key, value in depotDetails.iteritems():
+    #     responders.append(responder(key, len(responders)))
+    #
+    # inputs.append(responders)
+    #
+    # depotDetails = deepcopy(utils.vehiclesInDepot)
+    # updatedResponders = []
+    # for key, value in depotDetails.iteritems():
+    #     updatedResponders.append(responder(key, len(responders)))
+    #
+    # # add a depot from the msg
+    # for tempDepot in msg:
+    #     newDepotLat = tempDepot[0]
+    #     newDepotLong = tempDepot[1]
+    #     coordX, coordY = p1(newDepotLong, newDepotLat)
+    #     depotGrid = utils.getGridForCoordinate([coordX, coordY], utils.xLow, utils.yLow)
+    #
+    #     for counterTemp in range(2):
+    #         updatedResponders.append(responder(depotGrid, len(responders)))
+    #
+    #     if depotGrid in utils.vehiclesInDepot.keys():
+    #         utils.vehiclesInDepot[depotGrid] += 3
+    #     else:
+    #         utils.vehiclesInDepot[depotGrid] = 3
+    #
+    # inputs.append(updatedResponders)
+    #
+    # results = pool.map(calculateResponseTime, inputs)
+    #
+    # pool.close()
+    # pool.join()
+    # pool.terminate()
+
+    # emit("gotNewResponseTime", [results[0], results[1]])
+
+
     print "calculating repsonse time"
     depotDetails = utils.vehiclesInDepot
     responders = []
