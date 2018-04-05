@@ -172,7 +172,7 @@ def simulate(responders):
             travelTime, nextTime = dispatchResponder(responders,incidentGrid,t)
             bisect.insort(timesToCheck,nextTime)
             totalWaitTime += travelTime
-    # print "Total wait time calculated"
+    print "Total wait time calculated"
     return totalWaitTime
 
         # create responders
@@ -313,6 +313,7 @@ def getDispatch():
 
 @socketio.on('get_responseTime')
 def getResponseTime(msg):
+    print "calculating repsonse time"
     depotDetails = utils.vehiclesInDepot
     responders = []
     for key, value in depotDetails.iteritems():

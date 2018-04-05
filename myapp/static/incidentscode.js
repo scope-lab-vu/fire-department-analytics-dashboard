@@ -281,8 +281,6 @@ socket.on('responderData', function(msg) {
 });
 
 
-
-
 /* ON SUBMIT button: 
  * get data from left menu bar, 
  * calls to formulate data correctly 
@@ -760,7 +758,7 @@ socket.on('depots_data', function(msg) {
         scaledSize: new google.maps.Size(23, 23)
     };
     for (var i=0; i<arr_depots.length; i++) {
-        var content = "<p><b>&#x1F692; Vehicles from this depot are: </b></p>";
+        var content = "<p><b>&#x1F692; Vehicles from this fire station are: </b></p>";
         for (var j=0; j<arr_vehicles[i].length; j++) {
             content += (arr_vehicles[i])[j];
             content += ", ";
@@ -1123,7 +1121,7 @@ function setBar(data, mode) {
     var labelWidth = 0;
 
     if (mode == "explore") {
-        var list = ["current : ", "updated :"];
+        var list = ["current: ", "updated: "];
         d3.select(".bar")
             .selectAll("div")
             .data(data)
@@ -1359,7 +1357,7 @@ function changeMode(i) {
 
         var div = document.getElementById("spaceExplore");
         div.style.display = "block";
-        div.innerHTML = "Add a new depot and click to check how it affects response times : ";
+        div.innerHTML = "Add a new station and click to get estimated change in response time: ";
         // var butto = document.createElement("button");
         //     butto.className = "button";
         //     butto.id = "buttonOptimize";
@@ -1368,7 +1366,6 @@ function changeMode(i) {
         //     butto.style.fontFamily = "Zilla Slab";
         //     butto.style.fontSize = "14px";
         //     butto.innerHTML = "Optimize!";
-        //     butto.visibility
         //     div.appendChild(butto);
         //     butto.addEventListener ("click", function() {
         //         socket.emit('getOptimization');
@@ -1384,7 +1381,8 @@ function changeMode(i) {
             butto1.style.fontSize = "14px";
             butto1.innerHTML = "Submit new fire station location!";
             div.appendChild(butto1);
-            butto1.addEventListener ("click", function() {                
+            butto1.addEventListener ("click", function() {
+                alert("Calculating response times");
                 document.getElementById("loader").style.display = "block";
                 socket.emit('get_responseTime', customDepotsLatLng);
             });
@@ -1414,7 +1412,7 @@ function changeMode(i) {
 
         var div = document.getElementById("spaceExplore");
         div.style.display = "block";
-        div.innerHTML = "Plot Pending Incidents and check suggested dispatch policy: ";
+        div.innerHTML = "Plot incidents awaiting service and get a suggested dispatch policy ";
         var butto = document.createElement("button");
             butto.className = "button";
             butto.id = "buttonPlotPending";
