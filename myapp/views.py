@@ -17,7 +17,7 @@ from pymongo import MongoClient
 
 from myapp import app
 from myapp import socketio
-from myapp.utilities import utilities
+#from myapp.utilities import utilities
 from myconfig import MONGODB_HOST, MONGODB_PORT
 from multiprocessing import Pool
 from math import ceil
@@ -29,6 +29,7 @@ print "--> url_mongo_fire_depart:", url_mongo_fire_depart
 velocity = 1.3
 getSign = lambda num: copysign(1, num)
 utilDumpPath = os.getcwd() + "/utilsDump"
+'''
 if os.path.isfile(utilDumpPath):
     with open(utilDumpPath, "rb") as input_file:
         utils = pickle.load(input_file)
@@ -39,7 +40,7 @@ else:
             pickle.dump(utils, output_file)
 
 depotDetails = utils.vehiclesInDepot
-
+'''
 
 def checkIfDestinationExceeded(dest, curr, dir1, dir2):
     dir1Check = True if dir1 * (curr[0] - dest[0]) > 0 else False
@@ -513,6 +514,8 @@ def getPredict(msg):
         getPredictions("fire")
 
 
+
+
 @socketio.on('getOptimization')
 def getOptimization():
     getBestDepotPos()
@@ -569,7 +572,10 @@ def findMinMax():
         # print [minT, maxT]
         emit("gotNewMinMaxTime", minmax)
 
-
+@socketio.on('getHeat_entire')
+def getHeat_entire():
+    arr = getIncidentHeat(minmax[0], minmax[1])
+    emit("gotHeat_entire",arr)
 
 # retrieve a simplified list of information for just heat map layer
 def getIncidentHeat(start, end):

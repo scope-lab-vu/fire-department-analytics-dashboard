@@ -6,6 +6,7 @@ var map;
 var centerNash = {lat: 36.18, lng: -86.7816};
 var minDate;
 var maxDate;
+var _modeNum_;
 
 // Create an initial map - plain, center at centerNash
 function initMap() {
@@ -56,6 +57,25 @@ function initMap() {
     topControlDiv4.id = "realDepot";
     topControlDiv4.style.display = "none";
     map.controls[google.maps.ControlPosition.LEFT_TOP].push(topControlDiv4);
+
+
+    var div = document.getElementById("popopo");
+    div.style.display = "block"
+    var butto = document.createElement("button");
+        butto.id = "showHeat_explore";
+        butto.style.backgroundColor = "red";
+        butto.style.marginLeft = "175px";
+        butto.style.display = "absolute";
+        butto.style.zIndex = "20";
+        butto.style.top = "310px";
+        butto.style.fontFamily = "Zilla Slab";
+        butto.style.fontSize = "14px";
+        butto.innerHTML = "Show/hide heat map";
+        div.appendChild(butto);
+        butto.addEventListener ("click", function() {
+            getHeat_Explore();
+        });
+    
 
     var today = new Date();
     document.getElementById('timeNow').innerHTML=today.toLocaleDateString() + "  " + today.toLocaleTimeString();
@@ -230,6 +250,7 @@ socket.on('gotNewMinMaxTime', function(msg) {
     maxDate = msg[1];
     createSlider();
 });
+
 
 socket.on('emergency', function(msg) {
     console.log("--> button is clicked: grid number: " + msg[0]);
@@ -470,33 +491,79 @@ function TopRightControl(controlDiv, map, msg) {
             'click', clearDepot
         );
     } else if (msg === "Show/hide real fire stations") {
-        controlUI.addEventListener(
-            'click', toggleRealDepot
-        );
         controlUI.style.marginLeft = "58px";
+        controlUI.addEventListener(
+            'click', function() {
+                toggleRealDepot()
+            }
+        );
     }
-
-
 }
 
-var markersRealDepots = [];
-
-function toggleRealDepot() {
-    if (markersRealDepots.length == 0) {
-        console.log("markersRealDepots is an empty array");
-        socket.emit('get_depots');
+function getHeat_Explore() {
+    if (heatmap_Explore) {
+        heatmap_Explore.setMap(heatmap_Explore.getMap() ? null : map);
     } else {
-        console.log(markersRealDepots);
-        if (markersRealDepots[0].getVisible()) {
-            for (var i=0; i<markersRealDepots.length; i++) {
-                markersRealDepots[i].setVisible(false);
-            }
+        console.log("getHeat_ExploregetHeat_ExploregetHeat_ExploregetHeat_ExploregetHeat_ExploregetHeat_ExploregetHeat_ExploregetHeat_Explore")
+        socket.emit('getHeat_entire');
+    }
+    
+}
+
+var heatmap_Explore;
+socket.on("gotHeat_entire", function(msg) {
+    console.log(msg);
+    var dataAll = [];
+    for (var i=0; i<msg.length; i++) {
+        var latLng = new google.maps.LatLng((msg[i]).lat, (msg[i]).lng);
+        dataAll.push(latLng);
+    }
+
+    heatmap_Explore = new google.maps.visualization.HeatmapLayer({
+        data: dataAll,
+        dissipating: false,
+        map: map,
+        radius: 0.01
+    });
+});
+
+var markersRealDepots = [];
+var markersExploreDepots = [];
+function toggleRealDepot() {
+    if (_modeNum_ == 2) {
+        if (markersExploreDepots.length == 0) { // only called first time user click this button and when historic mode hasn't been used
+            console.log("markersExploreDepots is an empty array");
+            socket.emit('get_depots');
         } else {
-            for (var i=0; i<markersRealDepots.length; i++) {
-                markersRealDepots[i].setVisible(true);
+            console.log(markersExploreDepots);
+            if (markersExploreDepots[0].getVisible()) {
+                for (var i=0; i<markersExploreDepots.length; i++) {
+                    markersExploreDepots[i].setVisible(false);
+                }
+            } else {
+                for (var i=0; i<markersExploreDepots.length; i++) {
+                    markersExploreDepots[i].setVisible(true);
+                }
+            }
+        }
+    } else {
+        if (markersRealDepots.length == 0) { // only called first time user click this button and when historic mode hasn't been used
+            console.log("markersRealDepots is an empty array");
+            socket.emit('get_depots');
+        } else {
+            console.log(markersRealDepots);
+            if (markersRealDepots[0].getVisible()) {
+                for (var i=0; i<markersRealDepots.length; i++) {
+                    markersRealDepots[i].setVisible(false);
+                }
+            } else {
+                for (var i=0; i<markersRealDepots.length; i++) {
+                    markersRealDepots[i].setVisible(true);
+                }
             }
         }
     }
+    
 }
 
 var customDepotsMarkers = [];
@@ -768,7 +835,12 @@ socket.on('depots_data', function(msg) {
         //var latLng = new google.maps.LatLng(36.130629,-86.835828);
         var marker = new google.maps.Marker(createMarkerObj(latLng,map,imgDepot,content));
         setInfoWindow(marker);
-        markersRealDepots.push(marker);
+        if (_modeNum_ === 2) {
+            markersExploreDepots.push(marker);
+            marker.setDraggable(true);
+        } else {
+            markersRealDepots.push(marker);
+        }
     }
 
     console.log("depots_data length"+":  "+arr_depots.length);
@@ -1218,6 +1290,19 @@ function enlargeMap() {
  * 3) create a single input date box*/
 function changeMode(i) {
     prepMarkers(); // clear map first
+    _modeNum_ = i;
+    if (i === 2) { // explore mode
+        for (var p=0; p<markersRealDepots.length; p++) {
+            markersRealDepots[p].setDraggable(true);
+        }
+        document.getElementById("showHeat_explore").style.display = "inline";
+    } else {
+        for (var p=0; p<markersRealDepots.length; p++) {
+            markersRealDepots[p].setDraggable(false);
+        }
+        document.getElementById("showHeat_explore").style.display = "none";
+    }
+
     var a = document.getElementsByClassName("column");
     var c = document.getElementById("sliderDouble");
     var d = document.getElementById("initialMsgOnMap");
@@ -1229,6 +1314,7 @@ function changeMode(i) {
     var cd = document.getElementById("clearDepot");
     var cr = document.getElementById("clockRetrain");
     var rd = document.getElementById("realDepot");
+    //var rdE = document.getElementById("realDepotExplore");
 
     var mode = document.getElementsByClassName("buttonChangeMode");
     var playground = document.getElementsByClassName("playground");
@@ -1242,6 +1328,35 @@ function changeMode(i) {
         w.style.width = "0px";
     }
 
+    if (i === 2) {
+        for (var l=0; l<markersRealDepots.length; l++) {
+            if (!markersRealDepots[l].getVisible()){
+                break;
+            }
+            markersRealDepots[l].setVisible(false);
+        }
+        for (var l=0; l<markersExploreDepots.length; l++) {
+            if (markersExploreDepots[l].getVisible()){
+                break;
+            }
+            markersExploreDepots[l].setVisible(true);
+        }
+    } else {
+        for (var l=0; l<markersExploreDepots.length; l++) {
+
+            if (!markersExploreDepots[l].getVisible()){
+                break;
+            }
+            markersExploreDepots[l].setVisible(false);
+        }
+        for (var l=0; l<markersRealDepots.length; l++) {
+            if (markersRealDepots[l].getVisible()){
+                break;
+            }
+            markersRealDepots[l].setVisible(true);
+        }
+    }
+
     if (i === 1) { // predicion mode
         for (var l=0; l<customDepotsMarkers.length; l++) {
             if (!customDepotsMarkers[l].getVisible()){
@@ -1250,7 +1365,8 @@ function changeMode(i) {
             customDepotsMarkers[l].setVisible(false);
         }
         map.setCenter(centerNash);
-        showmenuBtn.style.display = "none";
+        showmenuBtn.style.display = "block";
+        w.style.width = "300px";
         // document.body.style.overflowY = "hidden";
 
         mode[0].style.backgroundColor = "white";
@@ -1284,6 +1400,13 @@ function changeMode(i) {
 
         document.getElementById("heatHide").style.visibility = "hidden";
         document.getElementById("gradient").style.visibility = "hidden";
+
+        if (!document.getElementById('selectTypePredict')) {
+            createSelectType();
+        } else {
+            document.getElementById('selectTypePredict').style.display = "block";
+        }
+        
     
     } else if (i === 0){ // historic mode
         for (var l=0; l<customDepotsMarkers.length; l++) {
@@ -1323,6 +1446,7 @@ function changeMode(i) {
         document.getElementById("sliderNew").style.display = "none";
         document.getElementById("inputSingle").style.display = "none";
         document.getElementById("spaceExplore").style.display = "none";
+        document.getElementById('selectTypePredict').style.display = "none";
         // o[0].style.display = "block";
 
     } else if (i === 2){ // explore mode
@@ -1386,8 +1510,13 @@ function changeMode(i) {
                 document.getElementById("loader").style.display = "block";
                 socket.emit('get_responseTime', customDepotsLatLng);
             });
+    } else { // dispatch
+        for (var l=0; l<customDepotsMarkers.length; l++) {
+            if (!customDepotsMarkers[l].getVisible()){
+                break;
+            }
+            customDepotsMarkers[l].setVisible(false);
         }
-    else { // dispatch
         map.setCenter(centerNash);
         showmenuBtn.style.display = "none";
         c.style.display = "none";
@@ -1440,7 +1569,7 @@ function changeMode(i) {
                 socket.emit('get_dispatch');
             });
         }
-
+    
 }
 
 socket.on('gotNewResponseTime', function(msg) {
@@ -1448,6 +1577,34 @@ socket.on('gotNewResponseTime', function(msg) {
     setBar(msg, "explore");
     document.getElementById("loader").style.display = "none";
 });
+
+function createSelectType() {
+    var div = document.getElementById("mySideMenu");
+    var selectList = document.createElement("select");
+    selectList.id = "selectTypePredict";
+    selectList.multiple = "multiple";
+    selectList.style.marginLeft = '40px';
+    selectList.style.borderRadius = '4px';
+    selectList.style.height = "100px";
+    selectList.style.width = "120px";
+    // selectList.style.overflowY = "scroll";
+    div.appendChild(selectList);
+
+    // create 5 main groups under the select list
+    var optionGroup = document.createElement("optGroup");
+        optionGroup.label = "Categories";
+        selectList.appendChild(optionGroup);
+
+    var types = ["Cardiac", "Trauma", "MVA", "Fire", "Other"];
+    // put all types into their respective main option group
+    for (var i=0; i<types.length; i++) {
+        var appended = false;
+        var option = document.createElement("option");
+        option.id = types[i];
+        option.text = types[i];
+        optionGroup.appendChild(option);
+    }
+}
 
 /* Change interface color*/
 function changeColor(color) {
@@ -1554,6 +1711,11 @@ function createSingleSlider() {
         inputbox.value = formulateDate(date);
     });
 
+    var dateValues = document.getElementById('event');
+    singleSlider.noUiSlider.on('update', function(values) {
+        dateValues.innerHTML = "Date in future selected: "+formatDate(new Date(+values[0]));
+    });
+
     // handle changes along input table
     inputbox.addEventListener('change', function(){
         // console.log(this.value);
@@ -1611,7 +1773,24 @@ function createSubmitBtn(div) {
         } else {
             answer = "crime";
         }
-        socket.emit('predictNOW', {ans: answer});
+        var types = ["Cardiac", "Trauma", "MVA", "Fire", "Other"];
+        var selected = false;
+        var cat;
+        for (var i=0; i<types.length; i++) {
+            if (selected && document.getElementById(types[i]).selected === true) {
+                alert("! You can only select one category at a time for predictions !");
+                cat = "NULL";
+                break;
+            } 
+            if (document.getElementById(types[i]).selected === true) {
+                selected = true;
+                cat = types[i];
+            }
+        }
+        console.log("cat = ... "+cat);
+        if (cat != "NULL") {
+            socket.emit('predictNOW', {ans: answer, category: cat});
+        }
     });
 }
 
@@ -1619,6 +1798,9 @@ function createSubmitBtn(div) {
 socket.on('predictions_data', function(msg) {
     // console.log("--> predictions_data length is: " + msg.length);
     setPredictions(msg);
+
+    var w = document.getElementById("mySideMenu");
+    w.style.width = "0px";
 });
 
 // predictions is empty []
@@ -1630,7 +1812,7 @@ socket.on('predictions_none', function(msg) {
 // get predictions_data from python file
 socket.on('predictions_data_crime', function(msg) {
     // console.log("--> predictions_data CRIME length is: " + msg.length);
-    setPrediction(msg);
+    setPredictions_Crime(msg);
 
 });
 
@@ -1664,7 +1846,7 @@ function setPredictions(arr) {
     heatmapPredict = heatmapPredictNew;
 }
 
-function setPrediction(arr) {
+function setPredictions_Crime(arr) {
     var heatMapData = [];
     for (var i=0; i<arr.length; i++) {
         heatMapData.push(new google.maps.LatLng(arr[i][3], arr[i][4]));
