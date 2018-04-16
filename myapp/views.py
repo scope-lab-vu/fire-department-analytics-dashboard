@@ -84,7 +84,6 @@ def getRouteUpdated(gridFrom, gridTo, velocity):
             gridNumTemp = gridY * len(utils.grids) + gridX
             route.append([gridNumTemp, 60])
 
-
     # sanity check
     try:
         if route[-1][0] != gridTo:
@@ -777,9 +776,22 @@ from random import randint
 import os
 import pickle
 from pyproj import Proj
+import random
 
 p1 = Proj(
     '+proj=lcc +lat_1=36.41666666666666 +lat_2=35.25 +lat_0=34.33333333333334 +lon_0=-86 +x_0=600000 +y_0=0 +ellps=GRS80 +datum=NAD83 +no_defs')
+
+def getPredictions(category):
+    #returns incidents from a specific category (Cardiac, MVA...)
+    incidentChains = utils.categoryWiseGrids[category]
+    chosenChainIndex = randint(0, len(incidentChains))
+    chosenChain = incidentChains[chosenChainIndex]
+    incidents = []
+    for counter in range(len(chosenChain)):
+        coordinates = utils.reverseCoordinates[chosenChain[counter]]
+        lat, long = p1(coordinates[0], coordinates[1], inverse=True)
+        incidents.append([lat, long])
+    return incidents
 
 
 def getPredictions(type):

@@ -15,12 +15,23 @@ import operator
 from operator import itemgetter
 import numpy as np
 from math import ceil
+from numpy.random import exponential
+import random
+from random import randint
 
 url_mongo_fire_depart = "%s:%d/fire_department" % (MONGODB_HOST, MONGODB_PORT)
 p1 = Proj('+proj=lcc +lat_1=36.41666666666666 +lat_2=35.25 +lat_0=34.33333333333334 +lon_0=-86 +x_0=600000 +y_0=0 +ellps=GRS80 +datum=NAD83 +no_defs')
 
 gridSize = 1609.34
 mileToMeter = 1609.34
+
+incidentCategorization= {
+		"Cardiac":["6", "9", "11", "12", "19", "28", "31", "32"],
+		"Trauma":["1", "2", "3", "4", "5", "7", "8", "10", "13", "14", "15", "16", "17", "18", "20", "21", "22", "23", "24", "25", "26", "27", "30"],
+		"MVA":["29"],
+		"Fire":["51", "52", "53", "54", "55", "56", "57", "58", "59", "60", "61", "62", "63", "64", "65", "66", "67", "68", "69", "70", "71", "72", "73", "74", "75"]
+}
+
 
 Config = ConfigParser.ConfigParser()
 Config.read("params.conf")
@@ -43,10 +54,108 @@ class utilities:
         self.grids, self.xLow, self.yLow = self.getGrid()
         self.getData()
         self.calculateGridWiseIncidentArrival()
+        self.calculateCategoryWiseSurvival()
+        self.createPredictionsForHeat()
         self.getNumberOfServersPerDepot()
         self.calculateGridWiseArrivalLambda()
         self.calculateDepotAssignemnts()
         self.createIncidentChains()
+
+    def parseEMDCard(self,emd):
+        categoryTemp = None
+        severity = "OABCDE"
+        for u in range(0,len(emd)):
+            if emd[u] not in severity:
+                pass
+            else:
+                categoryTemp = str(emd[0:u])
+                break
+
+        if categoryTemp is not None:
+            for type, categories in incidentCategorization.iteritems():
+                if categoryTemp in categories:
+                    return type
+
+        return None
+
+
+    def calculateCategoryWiseSurvival(self):
+        print "Calculating category wise models"
+        self.categoryWiseData = {"Cardiac":[],"Trauma":[],"MVA":[],"Fire":[]}
+        self.categoryWiseMean = {"Cardiac":0,"Trauma":0,"MVA":0,"Fire":0}
+        self.categoryWiseGridWeights = {"Cardiac":{},"Trauma":{},"MVA":{},"Fire":{}}
+        for row in self.data:
+            emd = row[3]
+            category = self.parseEMDCard(emd)
+            if category in self.categoryWiseData.keys():
+                self.categoryWiseData[category].append(row)
+
+        print "Categry wise data segregated"
+        #category wise data populated, calculate inter-arrival times
+        for category in self.categoryWiseData.keys():
+            #sort arrival data according to time
+            sorted(self.categoryWiseData[category],key=itemgetter(3))
+            data = self.categoryWiseData[category]
+            #calculate time differences
+            interArrivalTimes = [] #store interarrival times
+            gridNums = {} #which grid sees how many incidents
+            for counter in range(len(data)):
+                coordinates = list(p1(data[counter][1], data[counter][0]))
+                gridNumTemp = int(self.getGridForCoordinate(coordinates,self.xLow,self.yLow))
+                if counter == 0:
+                    timeTemp = (data[counter][2] - datetime(2014,1,1)).total_seconds()
+                else:
+                    timeTemp = (data[counter][2] - data[counter-1][2]).total_seconds()
+
+                if gridNumTemp in gridNums:
+                    gridNums[gridNumTemp] += 1
+                else:
+                    gridNums[gridNumTemp] = 1
+
+                interArrivalTimes.append(timeTemp)
+
+
+            #fit and exponential Arrival Model
+            exponMeanTemp = sum(interArrivalTimes)/len(interArrivalTimes)
+            self.categoryWiseMean[category] = exponMeanTemp
+            #Normalize grid arrival count
+            denominator = sum(gridNums.values())
+            for key in gridNums:
+                gridNums[key] /= denominator
+
+            self.categoryWiseGridWeights[category] = gridNums
+
+    def weighted_random_by_dct(self,dct):
+        rand_val = random.random()
+        total = 0
+        for k, v in dct.items():
+            total += v
+            if rand_val <= total:
+                return k
+
+    def createPredictionsForHeat(self):
+        #create chains 24 hour long only. Prediction is only for a day
+        baseTime = datetime(2018,1,1,0,0)
+        numSampleRunsToGenerate = 20
+        self.categoryWiseGrids = {"Cardiac":[],"Trauma":[],"MVA":[],"Fire":[]}
+        for counterRun in range(numSampleRunsToGenerate):
+            for category in self.categoryWiseMean:
+                incidents = []
+                currTime = datetime(2018, 1, 1, 0, 0)
+                dayLeft = True
+                while dayLeft:
+                    sample = exponential(self.categoryWiseMean[category])
+                    if currTime + timedelta(seconds=sample) > baseTime + timedelta(days=1):
+                        break
+                    else:
+                        currTime += timedelta(seconds=sample)
+                        dictToSample = self.categoryWiseGridWeights[category]
+                        grid = self.weighted_random_by_dct(dictToSample)
+                        incidents.append(grid)
+
+                self.categoryWiseGrids[category].append(incidents)
+        print "Created predictions for Heat Map"
+
 
     def createIncidentChains(self):
         #create chains 1 months long
@@ -119,8 +228,13 @@ class utilities:
         return gridX, gridY
 
 
-    def getCoordinateForGrid(self):
-        pass
+    def getCoordinateForGrid(self,gridNum):
+        y = floor(gridNum/30)
+        x = gridNum%30
+        coordX = self.xLow + gridSize * x
+        coordY = self.yLow + gridSize * y
+        return [coordX,coordY]
+
 
     def getData(self):
         client = MongoClient(url_mongo_fire_depart)
@@ -129,6 +243,7 @@ class utilities:
         # items = db.find({'alarmDateTime': {'$lt': datetime.datetime.now()}})
         print "Items that match date : {}".format(items.count())
         self.gridWiseIncidents = {}
+        self.data = []
 
         arr = []
         # for counterBatch in range(totalBatches):
@@ -137,6 +252,8 @@ class utilities:
                 time = item['alarmDateTime']
                 lat = item['latitude']
                 long = item['longitude']
+                emd = item['emdCardNumber']
+                self.data.append([lat,long,time,emd])
                 coordinates = list(p1(long,lat))
                 grid = int(self.getGridForCoordinate([coordinates[0],coordinates[1]],self.xLow,self.yLow))
                 if not isinstance(time, datetime):
