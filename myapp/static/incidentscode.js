@@ -63,7 +63,7 @@ function initMap() {
     topControlDiv5.index = 1;
     topControlDiv5.id = "showHeat";
     topControlDiv5.style.display = "none";
-    map.controls[google.maps.ControlPosition.TOP_LEFT].push(topControlDiv5);
+    map.controls[google.maps.ControlPosition.LEFT_BOTTOM].push(topControlDiv5);
 
 
     // var div = document.getElementById("popopo");
@@ -891,7 +891,7 @@ socket.on('depots_data', function(msg) {
                     var latLng = marker.getPosition();
                     lat = latLng.lat();
                     lng = latLng.lng();
-                    customDepotsMarkers.push(marker);
+                    // customDepotsMarkers.push(marker);
                     movedDepotsLatLng.push([lat, lng]);
                     // movedDepots.push({
                     //     id:   marker.metadata.id,
@@ -1418,7 +1418,7 @@ function changeMode(i) {
             if (markersRealDepots[l].getVisible()){
                 break;
             }
-            markersRealDepots[l].setVisible(true);
+            markersRealDepots[l].setVisible(false);
         }
     }
 
