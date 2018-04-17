@@ -17,7 +17,7 @@ from pymongo import MongoClient
 
 from myapp import app
 from myapp import socketio
-#from myapp.utilities import utilities
+from myapp.utilities import utilities
 from myconfig import MONGODB_HOST, MONGODB_PORT
 from multiprocessing import Pool
 from math import ceil
@@ -26,10 +26,10 @@ url_mongo_fire_depart = "%s:%d/fire_department" % (MONGODB_HOST, MONGODB_PORT)
 print "--> url_mongo_fire_depart:", url_mongo_fire_depart
 
 
-velocity = 1.3
+velocity = 2.5
 getSign = lambda num: copysign(1, num)
 utilDumpPath = os.getcwd() + "/utilsDump"
-'''
+
 if os.path.isfile(utilDumpPath):
     with open(utilDumpPath, "rb") as input_file:
         utils = pickle.load(input_file)
@@ -40,7 +40,7 @@ else:
             pickle.dump(utils, output_file)
 
 depotDetails = utils.vehiclesInDepot
-'''
+
 
 def checkIfDestinationExceeded(dest, curr, dir1, dir2):
     dir1Check = True if dir1 * (curr[0] - dest[0]) > 0 else False
@@ -116,6 +116,8 @@ def getTravelTime(grid1, grid2):
     dist = (np.sqrt(
         (coord1[0] - coord2[0]) ** 2 + (coord1[1] - coord2[1]) ** 2)) / 1609.34  # convert meters to miles
     distMinutes = dist / velocity
+    if distMinutes > 15:
+        distMinutes = 15 #outlier data point for dashboard
     return distMinutes * 60  # convert to seconds and return
 
 def dispatchResponder(responders,grid,t):
@@ -135,9 +137,9 @@ def dispatchResponder(responders,grid,t):
     responders[bestDispatch].statusFree = False
     responders[bestDispatch].assignedRoute = getRouteUpdated(responders[bestDispatch].currentPosition,grid,velocity)
     travelTime = getTravelTime(responders[bestDispatch].currentPosition,grid)
-    responders[bestDispatch].nextTime = t + travelTime + 30*60
+    responders[bestDispatch].nextTime = t + travelTime + 15*60
     responders[bestDispatch].currentPosition = grid #this is not true, but this will never be checked for a busy responder. So it does not matter
-    return travelTime, t + travelTime + 30*60
+    return travelTime, t + travelTime + 15*60
 
 def pickIncidentChain():
     fileName = random.choice(os.listdir(os.getcwd() + "/myapp/data/incidentChain"))
@@ -174,7 +176,7 @@ def simulate(responders):
             bisect.insort(timesToCheck,nextTime)
             totalWaitTime += travelTime
     print "Total wait time calculated"
-    return ceil(totalWaitTime)
+    return ceil(totalWaitTime), len(incidents)
 
         # create responders
         # create incident chain -- load precomputed incident chains
@@ -361,19 +363,40 @@ def getResponseTime(msg):
 
 
     print "calculating repsonse time"
-    depotDetails = utils.vehiclesInDepot
+    depotDetails = deepcopy(utils.vehiclesInDepot)
     responders = []
     for key, value in depotDetails.iteritems():
         responders.append(responder(key, len(responders)))
 
-    oldTravelTime = simulate(responders)
+    oldTravelTime, numIncidents = simulate(responders)
 
     #re-init depots
     responders = []
+    customDepots = msg[0]
+    movedDepots = msg[1]
+    for tempDepotKey, tempDepotLoc in movedDepots.iteritems():
+        newDepotLat = tempDepotLoc[0][0]
+        newDepotLong = tempDepotLoc[0][1]
+        coordX, coordY = p1(newDepotLong, newDepotLat)
+        depotGridOriginal = utils.getGridForCoordinate([coordX, coordY], utils.xLow, utils.yLow)
+
+        newDepotLat = tempDepotLoc[1][0]
+        newDepotLong = tempDepotLoc[1][1]
+        coordX, coordY = p1(newDepotLong, newDepotLat)
+        depotGridNew = utils.getGridForCoordinate([coordX, coordY], utils.xLow, utils.yLow)
+        vehiclesInDepot = utils.vehiclesInDepot[depotGridOriginal]
+        depotDetails.pop(depotGridOriginal)
+        if depotGridOriginal != depotGridNew:
+            print "found moved depot"
+        depotDetails[depotGridNew] = vehiclesInDepot
+
+
+    #initiate responders from original depots: even the ones that might have been moved
     for key, value in depotDetails.iteritems():
         responders.append(responder(key, len(responders)))
+
     # add a depot from the msg
-    for tempDepot in msg:
+    for tempDepot in customDepots:
         newDepotLat = tempDepot[0]
         newDepotLong = tempDepot[1]
         coordX, coordY = p1(newDepotLong,newDepotLat)
@@ -389,8 +412,8 @@ def getResponseTime(msg):
         else:
             utils.vehiclesInDepot[depotGrid] = 3
 
-    newTravelTime = simulate(responders)
-    emit("gotNewResponseTime", [oldTravelTime,newTravelTime])
+    newTravelTime, numIncidents = simulate(responders)
+    emit("gotNewResponseTime", [oldTravelTime/float(60),newTravelTime/float(60), numIncidents])
     # return [random.choice(range(10000,25000)),random.choice(range(10000,25000))]
 
 
@@ -511,7 +534,8 @@ def getPredict(msg):
         getPredictions("crime")
     else:
         print "-----> get predict for FIRE"
-        getPredictions("fire")
+        getPredictionsByCategory(msg['category'])
+        # getPredictions("fire")
 
 
 
@@ -530,41 +554,41 @@ minmax = [None] * 2
 global lastsearch
 lastsearch = None
 def findMinMax():
-    # global minmax
-    # global lastsearch
-    # if (not minmax or not lastsearch or time.time() - lastsearch > 24 * 60 * 60):
-    #     client = MongoClient("mongodb://127.0.0.1:27017/fire_department")
-    #     db = client["fire_department"]["simple__incident"]
-    #     items = db.find()
-    #     pretime = (items[0])['alarmDateTime']
-    #     if isinstance(pretime, unicode):
-    #         pretime = datetime.datetime.strptime(pretime, "%Y,%m,%d,%H,%M,%S,%f")
-    #         print pretime
-    #     maxT = pretime
-    #     minT = pretime
-
-    #     for item in items:
-    #         _time_ = item['alarmDateTime']
-    #         if isinstance(_time_, unicode):
-    #             if (_time_[0]!="2"): # _time_: "Essentially the time at which the accident occurred"
-    #                 continue
-    #             else:
-    #                 _time_ = datetime.datetime.strptime(_time_, "%Y,%m,%d,%H,%M,%S,%f")
-
-    #         if (_time_>maxT):
-    #             maxT = _time_
-            
-    #         if (_time_<minT):
-    #             minT = _time_
-
-    #     minmax[0] = (minT - datetime.datetime(1970,1,1)).total_seconds()
-    #     minmax[1] = (maxT - datetime.datetime(1970,1,1)).total_seconds()
-
-        '''
-        2014-03-21 10:02:48.253000
-        [datetime.datetime(2014, 2, 20, 10, 24, 51, 297000), datetime.datetime(2017, 6, 20, 13, 31, 11)]
-        '''
-
+#     # global minmax
+#     # global lastsearch
+#     # if (not minmax or not lastsearch or time.time() - lastsearch > 24 * 60 * 60):
+#     #     client = MongoClient("mongodb://127.0.0.1:27017/fire_department")
+#     #     db = client["fire_department"]["simple__incident"]
+#     #     items = db.find()
+#     #     pretime = (items[0])['alarmDateTime']
+#     #     if isinstance(pretime, unicode):
+#     #         pretime = datetime.datetime.strptime(pretime, "%Y,%m,%d,%H,%M,%S,%f")
+#     #         print pretime
+#     #     maxT = pretime
+#     #     minT = pretime
+#
+#     #     for item in items:
+#     #         _time_ = item['alarmDateTime']
+#     #         if isinstance(_time_, unicode):
+#     #             if (_time_[0]!="2"): # _time_: "Essentially the time at which the accident occurred"
+#     #                 continue
+#     #             else:
+#     #                 _time_ = datetime.datetime.strptime(_time_, "%Y,%m,%d,%H,%M,%S,%f")
+#
+#     #         if (_time_>maxT):
+#     #             maxT = _time_
+#
+#     #         if (_time_<minT):
+#     #             minT = _time_
+#
+#     #     minmax[0] = (minT - datetime.datetime(1970,1,1)).total_seconds()
+#     #     minmax[1] = (maxT - datetime.datetime(1970,1,1)).total_seconds()
+#
+#         '''
+#         2014-03-21 10:02:48.253000
+#         [datetime.datetime(2014, 2, 20, 10, 24, 51, 297000), datetime.datetime(2017, 6, 20, 13, 31, 11)]
+#         '''
+#
         minmax[0] = (datetime.datetime(2014,2,21) - datetime.datetime(1970,1,1)).total_seconds()
         minmax[1] = (datetime.datetime(2017,6,19) - datetime.datetime(1970,1,1)).total_seconds()
 
@@ -574,7 +598,7 @@ def findMinMax():
 
 @socketio.on('getHeat_entire')
 def getHeat_entire():
-    arr = getIncidentHeat(minmax[0], minmax[1])
+    arr = getIncidentHeat(datetime.datetime(2014,1,1),datetime.datetime(2016,1,1))
     emit("gotHeat_entire",arr)
 
 # retrieve a simplified list of information for just heat map layer
@@ -787,7 +811,7 @@ import random
 p1 = Proj(
     '+proj=lcc +lat_1=36.41666666666666 +lat_2=35.25 +lat_0=34.33333333333334 +lon_0=-86 +x_0=600000 +y_0=0 +ellps=GRS80 +datum=NAD83 +no_defs')
 
-def getPredictions(category):
+def getPredictionsByCategory(category):
     #returns incidents from a specific category (Cardiac, MVA...)
     incidentChains = utils.categoryWiseGrids[category]
     chosenChainIndex = randint(0, len(incidentChains))
@@ -796,8 +820,13 @@ def getPredictions(category):
     for counter in range(len(chosenChain)):
         coordinates = utils.reverseCoordinates[chosenChain[counter]]
         lat, long = p1(coordinates[0], coordinates[1], inverse=True)
-        incidents.append([lat, long])
-    return incidents
+        incidents.append([lat, long, utils.categoryWiseGridWeights[category][chosenChain[counter]]])
+    #normalize data weights
+    normalizer = sum([x[2] for x in incidents])
+    for counter in range(len(incidents)):
+        incidents[counter][2] /= float(normalizer)
+    emit("predictions_data", incidents)
+    # return incidents
 
 
 def getPredictions(type):

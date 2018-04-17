@@ -57,24 +57,31 @@ function initMap() {
     topControlDiv4.id = "realDepot";
     topControlDiv4.style.display = "none";
     map.controls[google.maps.ControlPosition.LEFT_TOP].push(topControlDiv4);
+    
+    var topControlDiv5 = document.createElement('div');
+    var topControl5 = new TopRightControl(topControlDiv5, map, "Show/hide heat map");
+    topControlDiv5.index = 1;
+    topControlDiv5.id = "showHeat";
+    topControlDiv5.style.display = "none";
+    map.controls[google.maps.ControlPosition.TOP_LEFT].push(topControlDiv5);
 
 
-    var div = document.getElementById("popopo");
-    div.style.display = "block"
-    var butto = document.createElement("button");
-        butto.id = "showHeat_explore";
-        butto.style.backgroundColor = "red";
-        butto.style.marginLeft = "175px";
-        butto.style.display = "absolute";
-        butto.style.zIndex = "20";
-        butto.style.top = "310px";
-        butto.style.fontFamily = "Zilla Slab";
-        butto.style.fontSize = "14px";
-        butto.innerHTML = "Show/hide heat map";
-        div.appendChild(butto);
-        butto.addEventListener ("click", function() {
-            getHeat_Explore();
-        });
+    // var div = document.getElementById("popopo");
+    // div.style.display = "block";
+    // var butto = document.createElement("button");
+    //     buttso.id = "showHeat_explore";
+    //     butto.style.backgroundColor = "red";
+    //     butto.style.marginLeft = "175px";
+    //     butto.style.display = "absolute";
+    //     butto.style.zIndex = "20";
+    //     butto.style.top = "310px";
+    //     butto.style.fontFamily = "Zilla Slab";
+    //     butto.style.fontSize = "14px";
+    //     butto.innerHTML = "Show/hide heat map";
+    //     div.appendChild(butto);
+    //     butto.addEventListener ("click", function() {
+    //         getHeat_Explore();
+    //     });
     
 
     var today = new Date();
@@ -498,7 +505,34 @@ function TopRightControl(controlDiv, map, msg) {
             }
         );
     }
+
+    else if (msg === "Show/hide heat map") {
+        controlUI.style.marginLeft = "58px";
+        controlUI.addEventListener(
+            'click', function() {
+                getHeat_Explore()
+            }
+        );
+    }
+
 }
+
+
+function getHeatAll(){
+    var start_Hour = new Date(2014, 1, 1, 0, 0, 0, 0);
+    var end_Hour = new Date(2016, 1, 1, 0, 0, 0, 0);
+    socket.emit('getHeat_entire');
+}
+
+function clearHeat()
+{
+    if (heatmap_Explore)
+    {
+        heatmap_Explore.setMap(null);
+    }
+
+}
+
 
 function getHeat_Explore() {
     if (heatmap_Explore) {
@@ -507,7 +541,7 @@ function getHeat_Explore() {
         console.log("getHeat_ExploregetHeat_ExploregetHeat_ExploregetHeat_ExploregetHeat_ExploregetHeat_ExploregetHeat_ExploregetHeat_Explore")
         socket.emit('getHeat_entire');
     }
-    
+
 }
 
 var heatmap_Explore;
@@ -568,6 +602,10 @@ function toggleRealDepot() {
 
 var customDepotsMarkers = [];
 var customDepotsLatLng = [];
+var movedDepotsLatLng = [];
+var movedDepots = {};
+
+
 function addDepot() {
     var imgDepot = {
         url: 'https://cdn1.iconfinder.com/data/icons/orientation-2/32/location-add-512.png',
@@ -834,10 +872,35 @@ socket.on('depots_data', function(msg) {
         var latLng = new google.maps.LatLng(tempArr[0][0], tempArr[0][1]);
         //var latLng = new google.maps.LatLng(36.130629,-86.835828);
         var marker = new google.maps.Marker(createMarkerObj(latLng,map,imgDepot,content));
+        lat = latLng.lat();
+        lng = latLng.lng();
+        marker.metadata = {type: "point", id: i};
+        // movedDepots.push({
+        //                 id:   marker.metadata.id,
+        //                 location: [lat,lng]
+        //             });
+        //format: original location, current location
+        movedDepots[marker.metadata.id] = [[lat,lng],[lat,lng]];
+
         setInfoWindow(marker);
         if (_modeNum_ === 2) {
             markersExploreDepots.push(marker);
             marker.setDraggable(true);
+            marker.addListener('click',
+                function() {
+                    var latLng = marker.getPosition();
+                    lat = latLng.lat();
+                    lng = latLng.lng();
+                    customDepotsMarkers.push(marker);
+                    movedDepotsLatLng.push([lat, lng]);
+                    // movedDepots.push({
+                    //     id:   marker.metadata.id,
+                    //     location: [lat,lng]
+                    // });
+                    movedDepots[this.metadata.id][1] = [lat,lng];
+                });
+
+
         } else {
             markersRealDepots.push(marker);
         }
@@ -1187,7 +1250,7 @@ function setBar(data, mode) {
                 return colors[i];
             })
             .text(function (d,i) {
-                return "Severity"+ "["+severity[i]+"]"+(d*100/sum).toFixed(1)+"%";
+                return "Severity "+ "["+severity[i]+"] "+(d*100/sum).toFixed(1)+"%";
             });
     }
     var labelWidth = 0;
@@ -1206,7 +1269,7 @@ function setBar(data, mode) {
                 return colors[i];
             })
             .text(function (d,i) {
-                return "Response time "+list[i]+d+" seconds";
+                return "Response time "+list[i]+Math.round(d/60)+" min, "+Math.round(d%60)+ "sec";
             })
             .style("font-size", "16px")
             .attr("dy", ".95em");
@@ -1223,7 +1286,7 @@ function setPie(arr) {
 
     var options = {
         title: 'Percentage of incidents',
-        is3D: true,
+        is3D: false,
         backgroundColor: "transparent",
         sliceVisibilityThreshold: .015,
         legend: {
@@ -1291,16 +1354,17 @@ function enlargeMap() {
 function changeMode(i) {
     prepMarkers(); // clear map first
     _modeNum_ = i;
+    clearHeat();
     if (i === 2) { // explore mode
         for (var p=0; p<markersRealDepots.length; p++) {
             markersRealDepots[p].setDraggable(true);
         }
-        document.getElementById("showHeat_explore").style.display = "inline";
+        // document.getElementById("showHeat_explore").style.display = "inline";
     } else {
         for (var p=0; p<markersRealDepots.length; p++) {
             markersRealDepots[p].setDraggable(false);
         }
-        document.getElementById("showHeat_explore").style.display = "none";
+        // document.getElementById("showHeat_explore").style.display = "none";
     }
 
     var a = document.getElementsByClassName("column");
@@ -1314,6 +1378,7 @@ function changeMode(i) {
     var cd = document.getElementById("clearDepot");
     var cr = document.getElementById("clockRetrain");
     var rd = document.getElementById("realDepot");
+    var sh = document.getElementById("showHeat");
     //var rdE = document.getElementById("realDepotExplore");
 
     var mode = document.getElementsByClassName("buttonChangeMode");
@@ -1357,7 +1422,7 @@ function changeMode(i) {
         }
     }
 
-    if (i === 1) { // predicion mode
+    if (i === 1) { // prediction mode
         for (var l=0; l<customDepotsMarkers.length; l++) {
             if (!customDepotsMarkers[l].getVisible()){
                 break;
@@ -1393,11 +1458,13 @@ function changeMode(i) {
         ad.style.display = "none";
         cd.style.display = "none";
         rd.style.display = "inline";
+        sh.style.display = "none";
 
         ad.style.visibility = "visible";
         cd.style.visibility = "visible";
         rd.style.visibility = "visible";
 
+        document.getElementById("showHeat").style.visibility = "hidden";
         document.getElementById("heatHide").style.visibility = "hidden";
         document.getElementById("gradient").style.visibility = "hidden";
 
@@ -1435,7 +1502,11 @@ function changeMode(i) {
         ad.style.display = "none";
         cd.style.display = "none";
         cr.style.display = "none";
-        rd.style.display = "none";
+        rd.style.display = "inline";
+        rd.style.visibility = "visible";
+        sh.style.display = "none";
+        document.getElementById("showHeat").style.visibility = "hidden";
+
         for (var j=0; j<3; j++) {
             a[j].style.borderColor = "#4f4f4f";
         }
@@ -1474,10 +1545,12 @@ function changeMode(i) {
         ad.style.display = "inline";
         cd.style.display = "inline";
         rd.style.display = "inline";
+        sh.style.display = "inline";
 
         ad.style.visibility = "visible";
         cd.style.visibility = "visible";
         rd.style.visibility = "visible";
+        sh.style.visibility = "visible";
 
         var div = document.getElementById("spaceExplore");
         div.style.display = "block";
@@ -1508,7 +1581,7 @@ function changeMode(i) {
             butto1.addEventListener ("click", function() {
                 // alert("Calculating response times");
                 document.getElementById("loader").style.display = "block";
-                socket.emit('get_responseTime', customDepotsLatLng);
+                socket.emit('get_responseTime', [customDepotsLatLng, movedDepots]);
             });
     } else { // dispatch
         for (var l=0; l<customDepotsMarkers.length; l++) {
@@ -1527,6 +1600,8 @@ function changeMode(i) {
         mode[2].style.backgroundColor = "#83c985";
 
         document.getElementById("inputSingle").style.display = "none";
+        document.getElementById("showHeat").style.visibility = "hidden";
+
         changeColor("#A1A5E7");
         // o[0].style.display = "none";
         cr.style.display = "block";
@@ -1534,6 +1609,7 @@ function changeMode(i) {
         ad.style.display = "none";
         cd.style.display = "inline";
         rd.style.display = "inline";
+        sh.style.display = "none";
 
         ad.style.visibility = "visible";
         cd.style.visibility = "visible";
@@ -1572,9 +1648,11 @@ function changeMode(i) {
     
 }
 
+var numIncidents = 0;
 socket.on('gotNewResponseTime', function(msg) {
     console.log(msg);
-    setBar(msg, "explore");
+    numIncidents = msg[2];
+    setBar(msg.slice(0,2), "explore");
     document.getElementById("loader").style.display = "none";
 });
 
@@ -1595,7 +1673,7 @@ function createSelectType() {
         optionGroup.label = "Categories";
         selectList.appendChild(optionGroup);
 
-    var types = ["Cardiac", "Trauma", "MVA", "Fire", "Other"];
+    var types = ["Cardiac", "Trauma", "MVA", "Fire"];
     // put all types into their respective main option group
     for (var i=0; i<types.length; i++) {
         var appended = false;
@@ -1773,7 +1851,7 @@ function createSubmitBtn(div) {
         } else {
             answer = "crime";
         }
-        var types = ["Cardiac", "Trauma", "MVA", "Fire", "Other"];
+        var types = ["Cardiac", "Trauma", "MVA", "Fire"];
         var selected = false;
         var cat;
         for (var i=0; i<types.length; i++) {
