@@ -22,6 +22,7 @@ from myconfig import MONGODB_HOST, MONGODB_PORT
 from multiprocessing import Pool
 from math import ceil
 
+
 url_mongo_fire_depart = "%s:%d/fire_department" % (MONGODB_HOST, MONGODB_PORT)
 print "--> url_mongo_fire_depart:", url_mongo_fire_depart
 
@@ -150,7 +151,6 @@ def pickIncidentChain():
 
     return incidentChain
 
-
 def simulate(responders):
     timeToSimulate = 10 * 24 * 3600
     incidents = utils.times[0:1200]
@@ -182,7 +182,6 @@ def simulate(responders):
         # create incident chain -- load precomputed incident chains
         # simulate for time in parallel
 
-
 # def calculateResponseTime(msg):
 
 class responder():
@@ -210,9 +209,6 @@ class responder():
                 self.assignedRoute = getRouteUpdated(self.currentPosition,self.assignedDepot,velocity)
                 self.step = 0
                 self.nextTime = None
-
-
-
 
 
 @app.route('/')
@@ -302,7 +298,7 @@ def getDispatch():
     for incident in pendingIncidents:
         incidentGrid = incident[0]
         if depotVehicles[utils.gridAssignment[incidentGrid]] > 0:
-            dispatch += "Dispatch Vehicle from Depot ID: {} to incident {} <br>".format(utils.gridAssignment[incidentGrid],incident[1])
+            dispatch += "Dispatch Vehicle from Fire Station ID: {} to incident {} <br>".format(utils.gridAssignment[incidentGrid],incident[1])
 
 
 
@@ -415,7 +411,6 @@ def getResponseTime(msg):
     newTravelTime, numIncidents = simulate(responders)
     emit("gotNewResponseTime", [oldTravelTime/float(60),newTravelTime/float(60), numIncidents])
     # return [random.choice(range(10000,25000)),random.choice(range(10000,25000))]
-
 
 @socketio.on('get_pending')
 def getPending():
@@ -537,9 +532,6 @@ def getPredict(msg):
         getPredictionsByCategory(msg['category'])
         # getPredictions("fire")
 
-
-
-
 @socketio.on('getOptimization')
 def getOptimization():
     getBestDepotPos()
@@ -647,6 +639,7 @@ def createDBDate(dt):
 
 # retrieve data from mongo db
 def getIncidentData(start, end):
+    getDepotsData()
     print "-> getIncidentData()\n"
     client = MongoClient(url_mongo_fire_depart)
     db = client["fire_department"]["simple_incidents"]
@@ -827,7 +820,6 @@ def getPredictionsByCategory(category):
         incidents[counter][2] /= float(normalizer)
     emit("predictions_data", incidents)
     # return incidents
-
 
 def getPredictions(type):
     #type can either be fire or crime

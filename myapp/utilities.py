@@ -76,21 +76,83 @@ class utilities:
                 if categoryTemp in categories:
                     return type
 
-        return None
+        return None    
+    
+    def updateCategoryWiseDataStream(self):
+        #given a streaming data source, update the category wise data model
+        categoryWiseData = {"Cardiac": [], "Trauma": [], "MVA": [], "Fire": []}
 
+        # get data to update
+        try:
+            tempData = self.getStreamingData(self.lastUpdateDate)
+        except AttributeError:
+            #if update has no history, start with using data from the last 24 hours
+            self.lastUpdateDate = datetime.now() - timedelta(seconds=3600*24)
+            tempData = self.getStreamingData(self.lastUpdateDate)
+
+        if tempData is not None:
+            for row in tempData:
+                emd = row[3]
+                category = self.parseEMDCard(emd)
+                if category in self.categoryWiseData.keys():
+                    categoryWiseData[category].append(row)
+
+            print "Category wise data segregated"
+            # category wise data populated, calculate inter-arrival times
+            for category in categoryWiseData.keys():
+                # sort arrival data according to time
+                sorted(categoryWiseData[category], key=itemgetter(3))
+                data = categoryWiseData[category]
+                # calculate time differences
+                interArrivalTimes = []  # store interarrival times
+                gridNums = {}  # which grid sees how many incidents
+                for counter in range(len(data)):
+                    coordinates = list(p1(data[counter][1], data[counter][0]))
+                    gridNumTemp = int(self.getGridForCoordinate(coordinates, self.xLow, self.yLow))
+                    if counter == 0:
+                        timeTemp = (data[counter][2] - datetime(2014, 1, 1)).total_seconds()
+                    else:
+                        timeTemp = (data[counter][2] - data[counter - 1][2]).total_seconds()
+
+                    if gridNumTemp in gridNums:
+                        gridNums[gridNumTemp] += 1
+                    else:
+                        gridNums[gridNumTemp] = 1
+
+                    interArrivalTimes.append(timeTemp)
+
+                # fit and exponential Arrival Model
+                lastSum = self.categoryWiseExponDenom[category] * self.categoryWiseMean[category]
+                exponMeanTemp = (sum(interArrivalTimes) + lastSum) / float(len(interArrivalTimes) + self.categoryWiseExponDenom[category])
+                self.categoryWiseMean[category] = exponMeanTemp
+                # Normalize grid arrival count
+                denominator = sum(gridNums.values())
+                for key in gridNums:
+                    lastGridArrivalSum = self.categoryWiseCountDenom[category] * self.categoryWiseGridWeights[category][key]
+                    currSum = gridNums[key] + lastGridArrivalSum
+                    currDenom = denominator + self.categoryWiseCountDenom[category]
+                    gridNums[key] = currSum/float(currDenom)
+
+                self.categoryWiseGridWeights[category] = gridNums
+
+        self.lastUpdateDate = datetime.now()
 
     def calculateCategoryWiseSurvival(self):
         print "Calculating category wise models"
+        self.lastUpdateDate = datetime(2010,1,1)#arbitrary date before start time
         self.categoryWiseData = {"Cardiac":[],"Trauma":[],"MVA":[],"Fire":[]}
         self.categoryWiseMean = {"Cardiac":0,"Trauma":0,"MVA":0,"Fire":0}
         self.categoryWiseGridWeights = {"Cardiac":{},"Trauma":{},"MVA":{},"Fire":{}}
+        self.categoryWiseExponDenom = {"Cardiac":0,"Trauma":0,"MVA":0,"Fire":0}
+        self.categoryWiseCountDenom = {"Cardiac":0,"Trauma":0,"MVA":0,"Fire":0}
+
         for row in self.data:
             emd = row[3]
             category = self.parseEMDCard(emd)
             if category in self.categoryWiseData.keys():
                 self.categoryWiseData[category].append(row)
 
-        print "Categry wise data segregated"
+        print "Category wise data segregated"
         #category wise data populated, calculate inter-arrival times
         for category in self.categoryWiseData.keys():
             #sort arrival data according to time
@@ -118,12 +180,16 @@ class utilities:
             #fit and exponential Arrival Model
             exponMeanTemp = sum(interArrivalTimes)/len(interArrivalTimes)
             self.categoryWiseMean[category] = exponMeanTemp
+            self.categoryWiseExponDenom[category] = len(interArrivalTimes)
             #Normalize grid arrival count
             denominator = sum(gridNums.values())
+            self.categoryWiseCountDenom[category] = denominator
             for key in gridNums:
                 gridNums[key] /= denominator
 
             self.categoryWiseGridWeights[category] = gridNums
+
+        self.lastUpdateDate = datetime.now()
 
     def weighted_random_by_dct(self,dct):
         rand_val = random.random()
@@ -234,13 +300,52 @@ class utilities:
         coordX = self.xLow + gridSize * x
         coordY = self.yLow + gridSize * y
         return [coordX,coordY]
-
-
-    def getData(self):
+    
+    def getStreamingData(self,upperDate):
         client = MongoClient(url_mongo_fire_depart)
         db = client["fire_department"]["simple_incidents"]
-        items = db.find({'served': {'$ne': 'true'}})
-        # items = db.find({'alarmDateTime': {'$lt': datetime.datetime.now()}})
+        if upperDate is None:
+            items = db.find({'served': {'$ne': 'true'}})
+        else:
+            items = db.find({"$and": [{"served": {'$ne': 'true'}},
+                                      {"alarmDateTime": {'$gt': upperDate}}]})
+
+        print "Items that match date : {}".format(items.count())
+        self.gridWiseIncidents = {}
+        tempData = []
+
+        arr = []
+        # for counterBatch in range(totalBatches):
+        for item in items:
+            try:
+                time = item['alarmDateTime']
+                lat = item['latitude']
+                long = item['longitude']
+                emd = item['emdCardNumber']
+                tempData.append([lat, long, time, emd])
+                coordinates = list(p1(long, lat))
+                grid = int(self.getGridForCoordinate([coordinates[0], coordinates[1]], self.xLow, self.yLow))
+                if not isinstance(time, datetime):
+                    time = datetime.datetime.strptime(time, '%Y,%m,%d,%H,%M,%S,%f')
+                if grid not in self.gridWiseIncidents.keys():
+                    self.gridWiseIncidents[grid] = [time]
+                else:
+                    self.gridWiseIncidents[grid].append(time)
+            except:
+                continue
+
+        return tempData
+    
+    
+    def getData(self,upperDate=None):
+        client = MongoClient(url_mongo_fire_depart)
+        db = client["fire_department"]["simple_incidents"]
+        if upperDate is None:
+            items = db.find({'served': {'$ne': 'true'}})
+        else:
+            items = db.find({"$and": [{"served": {'$ne': 'true'}},
+                                      {"alarmDateTime": {'$lt': self.lastUpdateDate}}]})
+
         print "Items that match date : {}".format(items.count())
         self.gridWiseIncidents = {}
         self.data = []

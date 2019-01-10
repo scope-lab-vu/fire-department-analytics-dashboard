@@ -845,6 +845,7 @@ function setIncident(r, index) {
 
 socket.on('dispatch_solution', function(msg){
     document.getElementById("barView").innerHTML = msg;
+    // document.getElementById("loadingBar").innerHTML = msg;
 });
 
 /* socket to get depots location from server*/
