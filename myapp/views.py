@@ -581,8 +581,8 @@ def findMinMax():
 #         [datetime.datetime(2014, 2, 20, 10, 24, 51, 297000), datetime.datetime(2017, 6, 20, 13, 31, 11)]
 #         '''
 #
-        minmax[0] = (datetime.datetime(2014,2,21) - datetime.datetime(1970,1,1)).total_seconds()
-        minmax[1] = (datetime.datetime(2017,6,19) - datetime.datetime(1970,1,1)).total_seconds()
+        minmax[0] = (datetime.datetime(2015,2,21) - datetime.datetime(1970,1,1)).total_seconds()
+        minmax[1] = (datetime.datetime(2019,6,19) - datetime.datetime(1970,1,1)).total_seconds()
 
         lastsearch = time.time()
         # print [minT, maxT]

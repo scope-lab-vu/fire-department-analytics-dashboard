@@ -127,7 +127,7 @@ function createSlider() {
         // Steps of one day
         step: 24 * 60 * 60 * 1000,
         // Two more timestamps indicate the handle starting positions.
-        start: [timestamp(start), timestamp(end)]
+        start: [timestamp(end), timestamp(end)]
     });
     
     // change connect color between two handles according to date interval length
