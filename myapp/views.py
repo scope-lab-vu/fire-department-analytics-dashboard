@@ -266,7 +266,7 @@ def getDispatch():
 
 
     client = MongoClient(url_mongo_fire_depart)
-    db = client["fire_department"]["simple_incidents"]
+    db = client["fire_department"]["geo_incidents"]
 
     items = db.find({'served': {'$eq': 'False'}})
     # items = db.find({'alarmDateTime': {'$lt': datetime.datetime.now()}})
@@ -416,7 +416,7 @@ def getResponseTime(msg):
 def getPending():
     print "-> getIncidentData()\n"
     client = MongoClient(url_mongo_fire_depart)
-    db = client["fire_department"]["simple_incidents"]
+    db = client["fire_department"]["geo_incidents"]
 
     items = db.find({'served': {'$eq': 'False'}})
     # items = db.find({'alarmDateTime': {'$lt': datetime.datetime.now()}})
@@ -597,7 +597,7 @@ def getHeat_entire():
 def getIncidentHeat(start, end):
     print "-> getIncidentHeat()\n"
     client = MongoClient(url_mongo_fire_depart)
-    db = client["fire_department"]["simple_incidents"]
+    db = client["fire_department"]["geo_incidents"]
     #items = db.find()
     items = db.find({'alarmDateTime': {'$gte': start, '$lt': end}}).limit(1000)
     arr = []
@@ -642,7 +642,7 @@ def getIncidentData(start, end):
     getDepotsData()
     print "-> getIncidentData()\n"
     client = MongoClient(url_mongo_fire_depart)
-    db = client["fire_department"]["simple_incidents"]
+    db = client["fire_department"]["geo_incidents"]
 
     ############################
     ############################

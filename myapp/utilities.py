@@ -303,7 +303,7 @@ class utilities:
     
     def getStreamingData(self,upperDate):
         client = MongoClient(url_mongo_fire_depart)
-        db = client["fire_department"]["simple_incidents"]
+        db = client["fire_department"]["geo_incidents"]
         if upperDate is None:
             items = db.find({'served': {'$ne': 'true'}})
         else:
