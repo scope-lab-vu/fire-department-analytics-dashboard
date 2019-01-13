@@ -795,7 +795,7 @@ function setIncident(r, index) {
             + r.streetName + " " + r.streetSuffix + " " + r.streetType + ", "
             + r.city + ", " + r.county + ", TN " + r.zipCode + 
         '</br><b>EMD Card Number: </b>' + r.emdCardNumber +
-        '</br><b>Fire Zone: </b>' + r.fireZone +
+        //'</br><b>Fire Zone: </b>' + r.fireZone +
         '</br><b>Responding Vehicles: </b>' + r.allIDs
         '</br>Object Id: ' + r._id
     content = content.replace(/na/g, "");

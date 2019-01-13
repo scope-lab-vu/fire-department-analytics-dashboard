@@ -84,7 +84,7 @@ def process_file(filename):
 
         emdCardNumber = event.find('incident_type_id')
         if emdCardNumber is not None:
-            emdCardNumber = emdCardNumber
+            emdCardNumber = emdCardNumber.text
 
 
         alarmTime = event.find('AlarmTime')   
@@ -133,8 +133,10 @@ def process_file(filename):
             # alarmTimeDateTime = datetime.datetime.strptime(alarmTime, '%Y-%m-%dT%H:%M:%S')
 
             # TODO this is for testing!!!!
+            parsedDate = None
             if alarmTime is not None:
-                weatherInfo = get_weather_icon(latitude, longitude, parser.parse(alarmTime))
+                parsedDate = parser.parse(alarmTime)
+                weatherInfo = get_weather_icon(latitude, longitude, parsedDate)
             else:
                 weatherInfo = "None"
 
@@ -147,10 +149,11 @@ def process_file(filename):
                 'latitude': float(latitude),
                 'longitude': float(longitude),
                 'emdCardNumber': str(emdCardNumber),
-                'alarmDateTime': str(alarmTime),
+                'alarmDateTime': parsedDate,
                 'arrivalDateTime': str(arrivalTime),
                 'weather': str(weatherInfo),
                 'location': loc,
+                'fireZone': str(fireZone),
                 'respondingVehicles': [{'dispatchDateTime': str(dispatchTime),
                                          'arrivalDateTime': str(arrivalTime),
                                          'clearDateTime': str(clearTime),
@@ -160,7 +163,7 @@ def process_file(filename):
             #print(post)
 
 
-            col_inc.insert_one(post)
+            #col_inc.insert_one(post)
 
         else: 
             # it is in the db! 
@@ -178,9 +181,9 @@ def process_file(filename):
                     db_arrival = parser.parse(db_arrival)
 
                     if parser.parse(arrivalTime) < db_arrival:
-                        en_db_entry['arrivalDateTime'] = arrivalTime
+                        en_db_entry['arrivalDateTime'] = parser.parse(arrivalTime)
                 else: 
-                    en_db_entry['arrivalDateTime'] = arrivalTime
+                    en_db_entry['arrivalDateTime'] = parser.parse(arrivalTime)
             
 
 
@@ -192,15 +195,19 @@ def process_file(filename):
             vehicle_in_list = False
             vehicle_pos = None
             for pos, entry in enumerate(db_vehcile_list):
-                if entry['apparatusID'] == vehicleId:
+                if str(entry['apparatusID']) == str(vehicleId):
                     vehicle_in_list = True
                     vehicle_pos = pos
 
             if vehicle_in_list: 
-                en_db_entry['respondingVehicles'][vehicle_pos]['dispatchDateTime'] = str(dispatchTime)
-                en_db_entry['respondingVehicles'][vehicle_pos]['arrivalDateTime'] = str(arrivalTime)
-                en_db_entry['respondingVehicles'][vehicle_pos]['clearDateTime'] = str(clearTime)
-                en_db_entry['respondingVehicles'][vehicle_pos]['apparatusID'] = str(vehicleId)
+                if dispatchTime is not None: 
+                    en_db_entry['respondingVehicles'][vehicle_pos]['dispatchDateTime'] = str(dispatchTime)
+                if arrivalTime is not None: 
+                    en_db_entry['respondingVehicles'][vehicle_pos]['arrivalDateTime'] = str(arrivalTime)
+                if clearTime is not None: 
+                    en_db_entry['respondingVehicles'][vehicle_pos]['clearDateTime'] = str(clearTime)
+                if vehicleId is not None: 
+                    en_db_entry['respondingVehicles'][vehicle_pos]['apparatusID'] = str(vehicleId)
 
             else: 
                 en_db_entry['respondingVehicles'].append({'dispatchDateTime': str(dispatchTime),
@@ -212,8 +219,14 @@ def process_file(filename):
             #new_json = json.dumps(en_db_entry)
             #print(new_json)
 
-            col_inc.replace_one({'incident_number': str(incident_number)},
+
+            test_res = col_inc.replace_one({'incidentNumber': str(incident_number)},
                 en_db_entry)
+
+            #print(test_res)
+            #print(test_res.acknowledged)
+            #print(test_res.matched_count, test_res.modified_count, test_res.raw_result)
+            #exit(1)
 
         
 
@@ -240,6 +253,9 @@ def visitfile(file):
     ### psudo code
 
     process_file(file)
+
+    #exit(1)
+
     # TODO move to processed
     file_base_name = os.path.basename(file)
     #print(file_base_name) 

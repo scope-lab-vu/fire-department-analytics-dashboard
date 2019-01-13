@@ -437,7 +437,7 @@ def getPending():
             dictIn['_lat'] = item['latitude']
             dictIn['_lng'] = item['longitude']
             dictIn['alarmDate'] = str(item['alarmDateTime'])
-            dictIn['fireZone'] = item['fireZone']
+            #dictIn['fireZone'] = item['fireZone']
             dictIn['emdCardNumber'] = item['emdCardNumber']
 
             dictIn['city'] = item['city'] if ('city' in item) else "na"
@@ -675,7 +675,7 @@ def getIncidentData(start, end):
             dictIn['_lat'] = item['latitude']
             dictIn['_lng'] = item['longitude']
             dictIn['alarmDate'] = str(item['alarmDateTime'])
-            dictIn['fireZone'] = item['fireZone']
+            #dictIn['fireZone'] = item['fireZone']
             dictIn['emdCardNumber'] = item['emdCardNumber']
 
             dictIn['city'] = item['city'] if ('city' in item) else "na"
