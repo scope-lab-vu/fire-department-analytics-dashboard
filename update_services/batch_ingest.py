@@ -163,7 +163,7 @@ def process_file(filename):
             #print(post)
 
 
-            #col_inc.insert_one(post)
+            col_inc.insert_one(post)
 
         else: 
             # it is in the db! 
