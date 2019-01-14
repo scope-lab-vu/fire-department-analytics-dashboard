@@ -12,6 +12,9 @@ from datetime import datetime as dt
 from dateutil import parser
 import time 
 import configparser
+from pytz import timezone
+
+central = timezone('US/Central')
 
 CONFIG_FILE = "/home/vol-gpettet/analytics-dashboard/update_services/ingest_config.cfg"
 
@@ -136,6 +139,7 @@ def process_file(filename):
             parsedDate = None
             if alarmTime is not None:
                 parsedDate = parser.parse(alarmTime)
+                parsedDate = central.localize(parsedDate)
                 weatherInfo = get_weather_icon(latitude, longitude, parsedDate)
             else:
                 weatherInfo = "None"
@@ -174,21 +178,23 @@ def process_file(filename):
             #en_db_entry = json.loads(curr_db_entry)
 
             if arrivalTime is not None: 
+                parsed_arrival = central.localize(parser.parse(arrivalTime))
 
                 db_arrival = en_db_entry['arrivalDateTime']
 
                 if db_arrival is not None and db_arrival != 'None':
                     if type(db_arrival) is datetime.datetime:
-                        if parser.parse(arrivalTime) < db_arrival:
-                            en_db_entry['arrivalDateTime'] = parser.parse(arrivalTime)
+                        db_arrival = central.localize(db_arrival)
+                        if parsed_arrival < db_arrival:
+                            en_db_entry['arrivalDateTime'] = parsed_arrival
 
                     else:
                         db_arrival = parser.parse(db_arrival)
 
-                        if parser.parse(arrivalTime) < db_arrival:
-                            en_db_entry['arrivalDateTime'] = parser.parse(arrivalTime)
+                        if parsed_arrival < db_arrival:
+                            en_db_entry['arrivalDateTime'] = parsed_arrival
                 else: 
-                    en_db_entry['arrivalDateTime'] = parser.parse(arrivalTime)
+                    en_db_entry['arrivalDateTime'] = parsed_arrival
             
 
 
