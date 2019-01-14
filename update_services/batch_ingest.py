@@ -12,11 +12,14 @@ from datetime import datetime as dt
 from dateutil import parser
 import time 
 import configparser
+from pytz import timezone
+
 
 CONFIG_FILE = "/home/vol-gpettet/analytics-dashboard/update_services/ingest_config.cfg"
 
 config = configparser.ConfigParser()
 config.read(CONFIG_FILE)
+central = timezone('US/Central')
 
 # TODO - need to move parameters to a single config files
 
@@ -136,6 +139,8 @@ def process_file(filename):
             parsedDate = None
             if alarmTime is not None:
                 parsedDate = parser.parse(alarmTime)
+                if parsedDate.tzinfo is None or parsedDate.tzinfo.utcoffset(parsedDate) is None:
+                    parsedDate = central.localize(parsedDate)
                 weatherInfo = get_weather_icon(latitude, longitude, parsedDate)
             else:
                 weatherInfo = "None"
@@ -174,16 +179,26 @@ def process_file(filename):
             #en_db_entry = json.loads(curr_db_entry)
 
             if arrivalTime is not None: 
+                parsed_arrival = parser.parse(arrivalTime)
+                if parsed_arrival.tzinfo is None or parsed_arrival.tzinfo.utcoffset(parsed_arrival) is None:
+                    parsed_arrival = central.localize(parsed_arrival)
 
                 db_arrival = en_db_entry['arrivalDateTime']
 
                 if db_arrival is not None and db_arrival != 'None':
-                    db_arrival = parser.parse(db_arrival)
+                    if type(db_arrival) is datetime.datetime:
+                        if db_arrival.tzinfo is None or db_arrival.tzinfo.utcoffset(db_arrival) is None:
+                            db_arrival = central.localize(db_arrival)
+                        if parsed_arrival < db_arrival:
+                            en_db_entry['arrivalDateTime'] = parsed_arrival
 
-                    if parser.parse(arrivalTime) < db_arrival:
-                        en_db_entry['arrivalDateTime'] = parser.parse(arrivalTime)
+                    else:
+                        db_arrival = parser.parse(db_arrival)
+
+                        if parsed_arrival < db_arrival:
+                            en_db_entry['arrivalDateTime'] = parsed_arrival
                 else: 
-                    en_db_entry['arrivalDateTime'] = parser.parse(arrivalTime)
+                    en_db_entry['arrivalDateTime'] = parsed_arrival
             
 
 
