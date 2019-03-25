@@ -729,7 +729,9 @@ def getDepotsData():
     print "-> getDepotsData()\n"
 
     client = MongoClient(url_mongo_fire_depart)
-    db = client["fire_department"]["depot_details"]
+    #db = client["fire_department"]["depot_details"]
+    db = client["fire_department"]["newStations2019"]
+
     pipeline = [{'$group': {'_id':"$stationLocation","vehicle":{'$addToSet':'$apparatusID'}}}]
     items = list(db.aggregate(pipeline))
     vehiclesInDepot = [deepcopy([]) for x in range(len(items))]
