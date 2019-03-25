@@ -20,6 +20,9 @@
 - Display optimal placement of responders and depots
 - Can customize depot locations
 
+### Acknowledgements
+
+This work is sponsored by the National Science Foundation under award numbers CNS1640624 and IIS1814958.  We also thank our partners from Metro Nashville Fire Department and Metro Nashville Information Technology Services in this work.
 
 ### Requirements
 ```
