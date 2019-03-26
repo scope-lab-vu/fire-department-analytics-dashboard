@@ -88,7 +88,7 @@ Modes - description
 Historical Mode
 ---------------
 
-![](images/1.png)
+![Fig 1](images/1.png "Fig 1")
 
 The tool starts with the home screen shown in Fig. 1, waiting for the
 user input. To work with the historical mode, one should --
