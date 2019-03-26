@@ -88,8 +88,7 @@ Modes - description
 Historical Mode
 ---------------
 
-![](media/image1.png){width="5.309722222222222in"
-height="2.472916666666667in"}
+![](images/1.jpg?raw=true)
 
 The tool starts with the home screen shown in Fig. 1, waiting for the
 user input. To work with the historical mode, one should --
