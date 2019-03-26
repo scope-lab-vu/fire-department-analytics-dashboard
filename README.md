@@ -105,11 +105,9 @@ user input. To work with the historical mode, one should --
     button, which loads the map and the statistics (Fig. 4), as shown in
     the figures below.
 
-    ![](media/image2.png){width="4.625694444444444in"
-    height="2.1840277777777777in"}
+![Fig 2](images/2.png "Fig 2")
 
-![/Users/ayanmukhopadhyay/Desktop/IncidentMap.png](media/image3.png){width="4.804841426071741in"
-height="2.363888888888889in"}
+![Fig 3](images/3.png "Fig 3")
 
 Figure : Incident Map (Date Range \<= 14 days)
 
@@ -123,8 +121,7 @@ severity in the form of a bar chart, as well as a breakdown of incidents
 by category/cause (chest pain, fall, sexual assault, stroke etc.) in the
 form of a pie chart.
 
-![/Users/ayanmukhopadhyay/Desktop/SummaryStat.png](media/image4.png){width="4.68125in"
-height="2.195275590551181in"}
+![Fig 4](images/4.png "Fig 4")
 
 Figure : Summary Statistics of Historical Data
 
@@ -137,8 +134,7 @@ any screen, the user can access the menu bar (using the three horizontal
 green bars on the left of the main screen) as shown in Fig. 5. This lets
 the user navigate from one mode to the other.
 
-![/Users/ayanmukhopadhyay/Desktop/ModeMenu.png](media/image5.png){width="6.5in"
-height="2.875in"}Figure : Menu Modes
+![Fig 5](images/5.png "Fig 5")
 
 Once in the prediction mode, the user can:
 
@@ -151,13 +147,11 @@ Once in the prediction mode, the user can:
     figure shows an example prediction for the "cardiac" incident
     category (Fig. 7).
 
-![/Users/ayanmukhopadhyay/Desktop/PredictionCategory.png](media/image6.png){width="6.486111111111111in"
-height="2.861111111111111in"}
+![Fig 6](images/6.png "Fig 6")
 
 Figure : Choose Prediction Category
 
-![/Users/ayanmukhopadhyay/Desktop/PredictionMap.png](media/image7.png){width="6.486111111111111in"
-height="2.9166666666666665in"}
+![Fig 7](images/7.png "Fig 7")
 
 Figure : Prediction Heat Map
 
@@ -183,15 +177,13 @@ response time. In order to do so, the user needs to:
     button, the user can get the summary of difference in response times
     due to the new station (Fig. 10).
 
-![../../Desktop/OldFireStations.png](media/image8.png){width="6.486111111111111in"
-height="2.9305555555555554in"}
+![Fig 8](images/8.png "Fig 8")
 
 Figure : Visualizing existing Fire Stations
 
-![](media/image9.png){width="6.5in" height="2.9166666666666665in"}
+![Fig 9](images/9.png "Fig 9")
 
-![../../Desktop/ResponseOptimization.png](media/image10.png){width="6.486111111111111in"
-height="2.9583333333333335in"}
+![Fig 10](images/10.png "Fig 10")
 
 Figure : Response Time Optimization Summary
 
@@ -211,11 +203,9 @@ mode, the user needs to
 -   The user can get dispatch guidance by clicking on the "Get Dispatch
     Decisions" button (Fig. 12).
 
-![../../Desktop/Pending.png](media/image11.png){width="6.486111111111111in"
-height="2.9583333333333335in"}Figure : Plot Pending Incidents
+![Fig 11](images/11.png "Fig 11")
 
-![../../Desktop/Dispatch.png](media/image12.png){width="6.486111111111111in"
-height="2.5833333333333335in"}
+![Fig 12](images/12.png "Fig 12")
 
 Figure : Get Dispatch Decisions
 
