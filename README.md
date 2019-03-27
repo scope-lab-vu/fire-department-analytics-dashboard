@@ -2,16 +2,31 @@
 
 The objective of this research is to understand and improve the resource coordination and dispatch mechanisms used by first responders in smart and connected communities. In prior art, as well as practice, incident forecasting and response are typically siloed by category and department, reducing effectiveness of prediction and precluding efficient coordination of resources. This research project funded from a grant by National Science Foundation has provided us the capability to study and develop algorithms for  integrating both the data and emergency resources from distinct urban agencies in the City of Nashville along with other widely available data such as pedestrian traffic, road characteristics, traffic congestion, and weather. Our results include models for anticipating heterogeneous incidents such as distinct categories of crime, as well as vehicular accidents.  With these models we have also developed decision support tools to optimize both resource  allocation and response times. These tools will help the emergency responders determine which units to dispatch (police, fire, or both) in order to minimize expected response time, and what equipment is most appropriate, taking into account the time, location, and nature of incidents, as well as those predicted to occur in the future. Ultimately, the methods developed in this research can be applied to other domains where multi-resource spatio-temporal scheduling is a challenge.
 
+## Acknowledgements
+
+This work is sponsored by the National Science Foundation under award numbers CNS1640624 and IIS1814958.  We also thank our partners from Metro Nashville Fire Department and Metro Nashville Information Technology Services in this work.
+
+
+## Key Contributions: *add in all the contributions (one line summary) and a link to the papers*
+
+- Streaming Survival Analysis: 
+
+- Dashboard
+
+- etc...
+
+*instilation instructions pending*
 
 NFD DASHBOARD TOOL USAGE GUIDE
+
+*video: * 
+[Youtube Video Demonstration](https://www.youtube.com/watch?v=HDNpg4Q3CZw)
 
 Note - This document is intended as a guide for the end-user, and not a
 technical guide to the setup or the algorithmic background for the tool.
 In case you have issues, please contact the team at Vanderbilt for help.
 
-Development Team:
-
-Faculty Members --
+Key Contributors: *Make in alph order*
 
 1.  Abhishek Dubey
 
@@ -271,11 +286,6 @@ ingest\_config.cfg file.
 
 Note - If any of the parameters are updated, the systemd service must be
 restarted.
-
-
-### Acknowledgements
-
-This work is sponsored by the National Science Foundation under award numbers CNS1640624 and IIS1814958.  We also thank our partners from Metro Nashville Fire Department and Metro Nashville Information Technology Services in this work.
 
 ### Requirements
 ```
